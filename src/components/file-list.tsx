@@ -22,8 +22,9 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { FileItem } from "~/lib/interface";
-import { mockData } from "../_mock";
-import { useState } from "react";
+import { mockData } from "../app/_mock";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 
 type SortField = "name" | "modified" | "size" | "owner";
 type SortDirection = "asc" | "desc";
@@ -48,41 +49,50 @@ const getFileIcon = (type: string) => {
 };
 
 export default function FileList() {
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const router = useRouter();
+  const { folderId: currentFolderId } = useParams<{
+    folderId: string | undefined;
+  }>();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
-  const getCurrentItems = () => {
-    return mockData.filter((item) => item.parentId === currentFolderId);
-  };
+  const [currentItems, setCurrentItems] = useState<FileItem[]>([]);
 
-  const sortedItems = getCurrentItems().sort((a, b) => {
-    let aValue: string | number = "";
-    let bValue: string | number = "";
+  useEffect(() => {
+    const filtered = mockData.filter(
+      (item) => item.parentId == currentFolderId
+    );
 
-    switch (sortField) {
-      case "name":
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-        break;
-      case "modified":
-        aValue = new Date(a.modified).getTime();
-        bValue = new Date(b.modified).getTime();
-        break;
-      case "size":
-        aValue = a.size || "";
-        bValue = b.size || "";
-        break;
-      case "owner":
-        aValue = a.owner.toLowerCase();
-        bValue = b.owner.toLowerCase();
-        break;
-    }
+    const sortedItems = filtered.sort((a, b) => {
+      let aValue: string | number = "";
+      let bValue: string | number = "";
 
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+      switch (sortField) {
+        case "name":
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case "modified":
+          aValue = new Date(a.modified).getTime();
+          bValue = new Date(b.modified).getTime();
+          break;
+        case "size":
+          aValue = a.size || "";
+          bValue = b.size || "";
+          break;
+        case "owner":
+          aValue = a.owner.toLowerCase();
+          bValue = b.owner.toLowerCase();
+          break;
+      }
+
+      if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setCurrentItems(sortedItems);
+  }, [currentFolderId]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -95,7 +105,7 @@ export default function FileList() {
 
   const handleItemClick = (item: FileItem) => {
     if (item.type === "folder") {
-      setCurrentFolderId(item.id);
+      router.push(`/drive/folders/${item.id}`);
     } else if (item.url) {
       window.open(item.url, "_blank");
     }
@@ -143,7 +153,7 @@ export default function FileList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedItems.map((item) => (
+          {currentItems.map((item) => (
             <TableRow
               key={item.id}
               className="border-gray-700 hover:bg-gray-750 cursor-pointer"
@@ -168,20 +178,17 @@ export default function FileList() {
           ))}
         </TableBody>
       </Table>
+      {currentItems.length === 0 && (
+        <div className="text-center py-12">
+          <Folder className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+          <h3 className="text-lg font-medium text-gray-300 mb-2">
+            This folder is empty
+          </h3>
+          <p className="text-gray-500">
+            Upload files or create folders to get started
+          </p>
+        </div>
+      )}
     </div>
   );
-
-  {
-    sortedItems.length === 0 && (
-      <div className="text-center py-12">
-        <Folder className="mx-auto h-12 w-12 text-gray-500 mb-4" />
-        <h3 className="text-lg font-medium text-gray-300 mb-2">
-          This folder is empty
-        </h3>
-        <p className="text-gray-500">
-          Upload files or create folders to get started
-        </p>
-      </div>
-    );
-  }
 }

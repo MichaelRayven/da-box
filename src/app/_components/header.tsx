@@ -20,7 +20,7 @@ export default function Header() {
           <Button variant="ghost" size="icon">
             <Settings className="h-4 w-4" />
           </Button>
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 rounded-full flex items-center justify-center bg-foreground">
             <AvatarImage src="/placeholder-user.jpg" />
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
