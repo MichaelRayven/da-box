@@ -17,7 +17,7 @@ export interface File {
   type: "file";
   size: string;
   url: string;
-  parentId: string;
+  parent: string;
   modified: string;
   owner: string;
 }
@@ -26,6 +26,6 @@ export interface Folder {
   id: string;
   name: string;
   type: "folder";
-  parentId: string | null;
+  parent: string | null;
   owner: string;
 }

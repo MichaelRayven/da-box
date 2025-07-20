@@ -24,11 +24,11 @@ export default function FileList() {
 
   useEffect(() => {
     const filteredFiles = mockFiles.filter(
-      (item) => item.parentId == currentFolderId
+      (item) => item.parent == currentFolderId
     );
 
     const filteredFolders = mockFolders.filter(
-      (item) => item.parentId == currentFolderId
+      (item) => item.parent == currentFolderId
     );
 
     setCurrentFiles(filteredFiles);

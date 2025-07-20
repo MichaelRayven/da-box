@@ -21,7 +21,7 @@ export default function Breadcrumbs({ className }: BreadcrumbProps) {
       const folder = mockFolders.find((item) => item.id === currentId);
       if (folder) {
         breadcrumbs.unshift(folder);
-        currentId = folder.parentId ?? "root";
+        currentId = folder.parent ?? "root";
       } else {
         break;
       }
