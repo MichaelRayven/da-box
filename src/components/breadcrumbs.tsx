@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "~/components/ui/button";
-import { mockData } from "../app/_mock";
 import { useParams, useRouter } from "next/navigation";
+import { Button } from "~/components/ui/button";
+import { mockFolders } from "../app/_mock";
 
 interface BreadcrumbProps {
   className?: string;
@@ -10,19 +10,18 @@ interface BreadcrumbProps {
 
 export default function Breadcrumbs({ className }: BreadcrumbProps) {
   const router = useRouter();
-  const { folderId: currentFolderId } = useParams<{
-    folderId: string | undefined;
-  }>();
+  const params = useParams<{ folderId: string | undefined }>();
+  const currentFolderId = params.folderId || "root";
 
   const getBreadcrumbs = () => {
     const breadcrumbs = [];
     let currentId = currentFolderId;
 
-    while (currentId) {
-      const folder = mockData.find((item) => item.id === currentId);
+    while (currentId !== "root") {
+      const folder = mockFolders.find((item) => item.id === currentId);
       if (folder) {
         breadcrumbs.unshift(folder);
-        currentId = folder.parentId;
+        currentId = folder.parentId ?? "root";
       } else {
         break;
       }
