@@ -1,5 +1,12 @@
+import "server-only"; // Runtime or build error when importing on the client
+
 import { relations, sql } from "drizzle-orm";
-import { index, pgTableCreator, primaryKey } from "drizzle-orm/pg-core";
+import {
+	foreignKey,
+	index,
+	pgTableCreator,
+	primaryKey,
+} from "drizzle-orm/pg-core";
 import type { AdapterAccount } from "next-auth/adapters";
 
 /**
@@ -10,28 +17,63 @@ import type { AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = pgTableCreator((name) => `da-box_${name}`);
 
-export const posts = createTable(
-	"post",
+export const files_table = createTable(
+	"files_table",
 	(d) => ({
 		id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-		name: d.varchar({ length: 256 }),
-		createdById: d
-			.varchar({ length: 255 })
+		name: d.varchar({ length: 256 }).notNull(),
+		size: d.integer().notNull(),
+		url: d.varchar({ length: 256 }).notNull(),
+		parent: d
+			.integer()
 			.notNull()
-			.references(() => users.id),
+			.references(() => folders_table.id),
+		// owner: d
+		//   .varchar({ length: 255 })
+		//   .notNull()
+		//   .references(() => users.id),
+		modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 		createdAt: d
 			.timestamp({ withTimezone: true })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
 	}),
 	(t) => [
-		index("created_by_idx").on(t.createdById),
-		index("name_idx").on(t.name),
+		index("modified_files_idx").on(t.modified),
+		// index("owner_files_idx").on(t.owner),
+		index("parent_files_idx").on(t.parent),
 	],
 );
 
-export const users = createTable("user", (d) => ({
+export const folders_table = createTable(
+	"folders_table",
+	(d) => {
+		return {
+			id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+			name: d.varchar({ length: 256 }).notNull(),
+			parent: d.integer(),
+			// owner: d
+			//   .varchar({ length: 255 })
+			//   .notNull()
+			//   .references(() => users.id),
+			modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+			createdAt: d
+				.timestamp({ withTimezone: true })
+				.default(sql`CURRENT_TIMESTAMP`)
+				.notNull(),
+		};
+	},
+	(t) => [
+		foreignKey({ columns: [t.parent], foreignColumns: [t.id] }).onDelete(
+			"cascade",
+		),
+		index("modified_folders_idx").on(t.modified),
+		// index("owner_folders_idx").on(t.owner),
+		index("parent_folders_idx").on(t.parent),
+	],
+);
+
+export const users = createTable("users_table", (d) => ({
 	id: d
 		.varchar({ length: 255 })
 		.notNull()
@@ -53,7 +95,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 export const accounts = createTable(
-	"account",
+	"accounts_table",
 	(d) => ({
 		userId: d
 			.varchar({ length: 255 })
@@ -81,7 +123,7 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 }));
 
 export const sessions = createTable(
-	"session",
+	"sessions_table",
 	(d) => ({
 		sessionToken: d.varchar({ length: 255 }).notNull().primaryKey(),
 		userId: d
