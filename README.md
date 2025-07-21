@@ -26,5 +26,5 @@ Configured test db connection, next steps:
 ## Note from 7/22/2025
 
 - [x] Change folders to link components, remove all client state
-- [ ] Clean up the database and data fetching patterns
+- [x] Clean up the database and data fetching patterns
 - [ ] Add a homepage
