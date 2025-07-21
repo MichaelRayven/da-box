@@ -17,7 +17,7 @@ import type { AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = pgTableCreator((name) => `da-box_${name}`);
 
-export const files = createTable(
+export const files_table = createTable(
   "files_table",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
@@ -27,7 +27,7 @@ export const files = createTable(
     parent: d
       .integer()
       .notNull()
-      .references(() => folders.id),
+      .references(() => folders_table.id),
     // owner: d
     //   .varchar({ length: 255 })
     //   .notNull()
@@ -45,7 +45,7 @@ export const files = createTable(
   ]
 );
 
-export const folders = createTable(
+export const folders_table = createTable(
   "folders_table",
   (d) => {
     return {

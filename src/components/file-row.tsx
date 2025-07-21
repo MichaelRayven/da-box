@@ -1,9 +1,9 @@
 import { FileText, Folder } from "lucide-react";
 import Link from "next/link";
 import { TableCell, TableRow } from "~/components/ui/table";
-import type { files, folders } from "~/server/db/schema";
+import type { files_table, folders_table } from "~/server/db/schema";
 
-export function FileRow({ file }: { file: typeof files.$inferSelect }) {
+export function FileRow({ file }: { file: typeof files_table.$inferSelect }) {
   return (
     <TableRow className="border-gray-700 hover:bg-gray-750 cursor-pointer">
       <TableCell className="p-0 text-white hover:text-blue-400">
@@ -21,7 +21,11 @@ export function FileRow({ file }: { file: typeof files.$inferSelect }) {
   );
 }
 
-export function FolderRow({ folder }: { folder: typeof folders.$inferSelect }) {
+export function FolderRow({
+  folder,
+}: {
+  folder: typeof folders_table.$inferSelect;
+}) {
   return (
     <TableRow className="border-gray-700 hover:bg-gray-750 cursor-pointer">
       <TableCell className="p-0 text-white hover:text-blue-400">

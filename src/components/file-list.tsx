@@ -7,11 +7,11 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { FileRow, FolderRow } from "./file-row";
-import type { files, folders } from "~/server/db/schema";
+import type { files_table, folders_table } from "~/server/db/schema";
 
 export default function FileList(props: {
-  files: (typeof files.$inferSelect)[];
-  folders: (typeof folders.$inferSelect)[];
+  files: (typeof files_table.$inferSelect)[];
+  folders: (typeof folders_table.$inferSelect)[];
 }) {
   return (
     <div className="bg-gray-800 rounded-lg border border-gray-700">
