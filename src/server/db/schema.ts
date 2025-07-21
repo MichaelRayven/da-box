@@ -1,3 +1,5 @@
+import "server-only"; // Runtime or build error when importing on the client
+
 import { relations, sql } from "drizzle-orm";
 import {
   foreignKey,
