@@ -1,58 +1,34 @@
-"use client";
-
-import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { mockFolders } from "../app/_mock";
+import type { folders } from "~/server/db/schema";
 
 interface BreadcrumbProps {
   className?: string;
+  breadcrumbs?: (typeof folders.$inferSelect)[];
 }
 
-export default function Breadcrumbs({ className }: BreadcrumbProps) {
-  const router = useRouter();
-  const params = useParams<{ folderId: string | undefined }>();
-  const currentFolderId = params.folderId || "root";
-
-  const getBreadcrumbs = () => {
-    const breadcrumbs = [];
-    let currentId = currentFolderId;
-
-    while (currentId !== "root") {
-      const folder = mockFolders.find((item) => item.id === currentId);
-      if (folder) {
-        breadcrumbs.unshift(folder);
-        currentId = folder.parent ?? "root";
-      } else {
-        break;
-      }
-    }
-
-    return breadcrumbs;
-  };
-
+export default function Breadcrumbs({
+  breadcrumbs = [],
+  className,
+}: BreadcrumbProps) {
   return (
     <div className={className}>
-      {/* Breadcrumbs */}
       <Button
         variant="ghost"
-        onClick={() => {
-          router.push(`/drive`);
-        }}
+        asChild
         className="text-gray-300 hover:bg-gray-800"
       >
-        My Drive
+        <Link href="/drive">My Drive</Link>
       </Button>
-      {getBreadcrumbs().map((folder, index) => (
+      {breadcrumbs.map((folder) => (
         <div key={folder.id} className="flex items-center">
           <span className="mx-2 text-gray-500">{">"}</span>
           <Button
             variant="ghost"
+            asChild
             className="text-gray-300 hover:bg-gray-800"
-            onClick={() => {
-              router.push(`/drive/folders/${folder.id}`);
-            }}
           >
-            {folder.name}
+            <Link href={`/drive/folders/${folder.id}`}>{folder.name}</Link>
           </Button>
         </div>
       ))}

@@ -1,47 +1,64 @@
-import { FolderPlus, Grid3X3, List, Upload } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import Breadcrumbs from "~/components/breadcrumbs";
-import FileList from "~/components/file-list";
+import { eq } from "drizzle-orm";
+import DriveContents from "~/app/_components/drive-contents";
+import { db } from "~/server/db";
+import {
+  files as filesSchema,
+  folders as foldersSchema,
+} from "~/server/db/schema";
 
-export default function GoogleDriveClone() {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <Breadcrumbs className="flex items-center space-x-2" />
+async function getParents(folderId: number) {
+  const parents = [];
+  let currentId: number | null = folderId;
 
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-transparent"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Upload
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-600 text-gray-300 hover:bg-gray-800 bg-transparent"
-          >
-            <FolderPlus className="mr-2 h-4 w-4" />
-            New Folder
-          </Button>
-          <div className="flex border border-gray-600 rounded">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="border-r border-gray-600 bg-gray-800"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+  while (currentId !== null) {
+    const folder: typeof foldersSchema.$inferSelect | undefined = (
+      await db
+        .select()
+        .from(foldersSchema)
+        .where(eq(foldersSchema.id, currentId))
+    )[0];
 
-      <FileList />
-    </div>
-  );
+    if (!folder) {
+      throw new Error("Folder not found");
+    }
+    parents.unshift(folder);
+    currentId = folder.parent;
+  }
+
+  return parents;
+}
+
+export default async function GoogleDriveClone({
+  params,
+}: {
+  params: Promise<{ folderId: string }>;
+}) {
+  const { folderId } = await params; // Promise indicates this is a dynamic route
+
+  const parsedFolderId = parseInt(folderId);
+
+  if (isNaN(parsedFolderId)) {
+    throw new Error("Invalid folder ID"); // TODO: Throw 404
+  }
+
+  // Execute in parallel
+  const filesPromise = db
+    .select()
+    .from(filesSchema)
+    .where(eq(filesSchema.parent, parsedFolderId));
+
+  const foldersPromise = db
+    .select()
+    .from(foldersSchema)
+    .where(eq(foldersSchema.parent, parsedFolderId));
+
+  const parentsPromise = getParents(parsedFolderId);
+
+  const [folders, files, parents] = await Promise.all([
+    foldersPromise,
+    filesPromise,
+    parentsPromise,
+  ]);
+
+  return <DriveContents folders={folders} files={files} parents={parents} />;
 }
