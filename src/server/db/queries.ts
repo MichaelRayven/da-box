@@ -1,3 +1,5 @@
+import "server-only";
+
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
 import { files_table, folders_table } from "~/server/db/schema";
