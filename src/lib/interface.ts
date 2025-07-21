@@ -12,20 +12,20 @@
 // }
 
 export interface File {
-  id: string;
-  name: string;
-  type: "file";
-  size: string;
-  url: string;
-  parent: string;
-  modified: string;
-  owner: string;
+	id: string;
+	name: string;
+	type: "file";
+	size: string;
+	url: string;
+	parent: string;
+	modified: string;
+	owner: string;
 }
 
 export interface Folder {
-  id: string;
-  name: string;
-  type: "folder";
-  parent: string | null;
-  owner: string;
+	id: string;
+	name: string;
+	type: "folder";
+	parent: string | null;
+	owner: string;
 }

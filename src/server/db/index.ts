@@ -9,7 +9,7 @@ import * as schema from "./schema";
  * update.
  */
 const globalForDb = globalThis as unknown as {
-  conn: postgres.Sql | undefined;
+	conn: postgres.Sql | undefined;
 };
 
 const connectionUrl = `postgresql://${env.DATABASE_USER}:${env.DATABASE_PASS}@${env.DATABASE_HOST}:${env.DATABASE_PORT}/${env.DATABASE_DB_NAME}`;
