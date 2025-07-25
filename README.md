@@ -9,3 +9,29 @@ You can check it out at: https://da-box.netlify.app/
 - [x] Move folder open state to URL
 - [ ] Add auth
 - [ ] Add file uploading
+- [ ] Date, size filtering
+
+## Note from 7/21/2025
+
+Configured test db connection, next steps:
+
+- [ ] Publically host db
+- [ ] Set env on deployment server
+- [x] Update schema to show files and folders
+- [x] Manually insert examples
+- [x] Render them in the UI
+- [ ] QA and deploy 👍!
+
+## Note from 7/22/2025
+
+- [x] Change folders to link components, remove all client state
+- [x] Clean up the database and data fetching patterns
+- [ ] Add a homepage
+
+# TODO Auth
+
+- [ ] Setup email server
+- [ ] Add password login
+- [ ] Add Google OAuth login
+- [ ] Create sign in form
+- [ ] Create sign up form
