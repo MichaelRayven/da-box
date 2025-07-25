@@ -5,7 +5,8 @@ You can check it out at: https://da-box.netlify.app/
 
 ## TODO:
 
-- [ ] Set up database and data model
+- [x] Set up local database and data model
+- [ ] Set up remote database
 - [x] Move folder open state to URL
 - [ ] Add auth
 - [ ] Add file uploading
