@@ -11,17 +11,19 @@ export const env = createEnv({
       process.env.NODE_ENV === "production"
         ? z.string()
         : z.string().optional(),
-    AUTH_DISCORD_ID: z.string(),
-    AUTH_DISCORD_SECRET: z.string(),
+    AUTH_GOOGLE_ID: z.string(),
+    AUTH_GOOGLE_SECRET: z.string(),
+    AUTH_GITHUB_ID: z.string(),
+    AUTH_GITHUB_SECRET: z.string(),
     DATABASE_USER: z.string(),
     DATABASE_PASS: z.string(),
     DATABASE_HOST: z.string(),
-    DATABASE_PORT: z.number(),
+    DATABASE_PORT: z.coerce.number(),
     DATABASE_DB_NAME: z.string(),
     EMAIL_SERVER_USER: z.string(),
     EMAIL_SERVER_PASSWORD: z.string(),
-    EMAIL_SERVER_HOST: z.string().url(),
-    EMAIL_SERVER_PORT: z.number(),
+    EMAIL_SERVER_HOST: z.string(),
+    EMAIL_SERVER_PORT: z.coerce.number(),
     EMAIL_FROM: z.string().email(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
@@ -43,8 +45,10 @@ export const env = createEnv({
    */
   runtimeEnv: {
     AUTH_SECRET: process.env.AUTH_SECRET,
-    AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
-    AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
+    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+    AUTH_GITHUB_ID: process.env.AUTH_GITHUB_ID,
+    AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
     DATABASE_USER: process.env.DATABASE_USER,
     DATABASE_PASS: process.env.DATABASE_PASS,
     DATABASE_HOST: process.env.DATABASE_HOST,
