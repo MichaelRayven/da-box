@@ -1,13 +1,18 @@
 import { LogInIcon } from "lucide-react";
-import Link from "next/link";
 import { Button } from "~/components/ui/button";
+import { signIn } from "~/server/auth";
 
 export default function SignInButton() {
-	return (
-		<Link href="api/auth/signin">
-			<Button>
-				<LogInIcon /> Sign In
-			</Button>
-		</Link>
-	);
+  return (
+    <form
+      action={async () => {
+        "use server";
+        await signIn();
+      }}
+    >
+      <Button>
+        <LogInIcon /> Sign In
+      </Button>
+    </form>
+  );
 }

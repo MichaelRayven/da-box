@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@auth/drizzle-adapter':
         specifier: ^1.7.2
-        version: 1.10.0(nodemailer@7.0.5)
+        version: 1.10.0(nodemailer@6.9.4)
       '@hookform/resolvers':
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.61.1(react@19.1.0))
@@ -49,10 +49,10 @@ importers:
         version: 15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       next-auth:
         specifier: 5.0.0-beta.25
-        version: 5.0.0-beta.25(next@15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@7.0.5)(react@19.1.0)
+        version: 5.0.0-beta.25(next@15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@6.9.4)(react@19.1.0)
       nodemailer:
-        specifier: ^7.0.5
-        version: 7.0.5
+        specifier: ^6.9.4
+        version: 6.9.4
       postgres:
         specifier: ^3.4.4
         version: 3.4.7
@@ -84,6 +84,9 @@ importers:
       '@types/node':
         specifier: ^20.14.10
         version: 20.19.9
+      '@types/nodemailer':
+        specifier: ^6.4.17
+        version: 6.4.17
       '@types/react':
         specifier: ^19.0.0
         version: 19.1.8
@@ -1108,6 +1111,9 @@ packages:
   '@types/node@20.19.9':
     resolution: {integrity: sha512-cuVNgarYWZqxRJDQHEB58GEONhOK79QVR/qYx4S7kcUObQvUwvFnYxJuuHUKm2aieN9X3yZB4LZsuYNU1Qphsw==}
 
+  '@types/nodemailer@6.4.17':
+    resolution: {integrity: sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==}
+
   '@types/react-dom@19.1.6':
     resolution: {integrity: sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==}
     peerDependencies:
@@ -1712,8 +1718,8 @@ packages:
       sass:
         optional: true
 
-  nodemailer@7.0.5:
-    resolution: {integrity: sha512-nsrh2lO3j4GkLLXoeEksAMgAOqxOv6QumNRVQTJwKH4nuiww6iC2y7GyANs9kRAxCexg3+lTWM3PZ91iLlVjfg==}
+  nodemailer@6.9.4:
+    resolution: {integrity: sha512-CXjQvrQZV4+6X5wP6ZIgdehJamI63MFoYFGGPtHudWym9qaEHDNdPzaj5bfMCvxG1vhAileSWW90q7nL0N36mA==}
     engines: {node: '>=6.0.0'}
 
   oauth4webapi@3.6.0:
@@ -2014,7 +2020,7 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.12
       '@jridgewell/trace-mapping': 0.3.29
 
-  '@auth/core@0.37.2(nodemailer@7.0.5)':
+  '@auth/core@0.37.2(nodemailer@6.9.4)':
     dependencies:
       '@panva/hkdf': 1.2.1
       '@types/cookie': 0.6.0
@@ -2024,9 +2030,9 @@ snapshots:
       preact: 10.11.3
       preact-render-to-string: 5.2.3(preact@10.11.3)
     optionalDependencies:
-      nodemailer: 7.0.5
+      nodemailer: 6.9.4
 
-  '@auth/core@0.40.0(nodemailer@7.0.5)':
+  '@auth/core@0.40.0(nodemailer@6.9.4)':
     dependencies:
       '@panva/hkdf': 1.2.1
       jose: 6.0.12
@@ -2034,11 +2040,11 @@ snapshots:
       preact: 10.24.3
       preact-render-to-string: 6.5.11(preact@10.24.3)
     optionalDependencies:
-      nodemailer: 7.0.5
+      nodemailer: 6.9.4
 
-  '@auth/drizzle-adapter@1.10.0(nodemailer@7.0.5)':
+  '@auth/drizzle-adapter@1.10.0(nodemailer@6.9.4)':
     dependencies:
-      '@auth/core': 0.40.0(nodemailer@7.0.5)
+      '@auth/core': 0.40.0(nodemailer@6.9.4)
     transitivePeerDependencies:
       - '@simplewebauthn/browser'
       - '@simplewebauthn/server'
@@ -2726,6 +2732,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/nodemailer@6.4.17':
+    dependencies:
+      '@types/node': 20.19.9
+
   '@types/react-dom@19.1.6(@types/react@19.1.8)':
     dependencies:
       '@types/react': 19.1.8
@@ -3242,13 +3252,13 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-auth@5.0.0-beta.25(next@15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@7.0.5)(react@19.1.0):
+  next-auth@5.0.0-beta.25(next@15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@6.9.4)(react@19.1.0):
     dependencies:
-      '@auth/core': 0.37.2(nodemailer@7.0.5)
+      '@auth/core': 0.37.2(nodemailer@6.9.4)
       next: 15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react: 19.1.0
     optionalDependencies:
-      nodemailer: 7.0.5
+      nodemailer: 6.9.4
 
   next@15.4.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
@@ -3273,7 +3283,7 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  nodemailer@7.0.5: {}
+  nodemailer@6.9.4: {}
 
   oauth4webapi@3.6.0: {}
 
