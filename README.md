@@ -36,3 +36,10 @@ Configured test db connection, next steps:
 - [ ] Add Google OAuth login
 - [ ] Create sign in form
 - [ ] Create sign up form
+
+## Platforms
+
+We are using Netlify as our host.
+Supabase as a database provider.
+GitHub OAuth: https://github.com/settings/developers
+Google OAuth: https://console.developers.google.com/apis/credentials
