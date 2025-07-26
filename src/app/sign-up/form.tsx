@@ -39,10 +39,6 @@ export function SignUpForm({
   });
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
-    // const { isPending, error, data } = useQuery({
-    //   queryKey: ["repoData"],
-    //   queryFn: () => fetch("/api/auth/sign-in").then((res) => res.json()),
-    // });
     await fetch("/api/auth/signup", {
       method: "POST",
       headers: {
@@ -57,20 +53,20 @@ export function SignUpForm({
       <form
         id={id}
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn("space-y-8", className)}
+        className={cn("flex flex-col gap-4", className)}
       >
         <FormField
           control={form.control}
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username *</FormLabel>
+              <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input
                   type="text"
                   aria-required="true"
                   autoComplete="name"
-                  placeholder="John ..."
+                  placeholder="Username..."
                   {...field}
                 />
               </FormControl>
@@ -83,13 +79,13 @@ export function SignUpForm({
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email *</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input
-                  type="email"
+                  type="text"
                   aria-required="true"
                   autoComplete="email"
-                  placeholder="john@example.com ..."
+                  placeholder="email@example.com"
                   {...field}
                 />
               </FormControl>
@@ -102,13 +98,13 @@ export function SignUpForm({
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password *</FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input
                   type="password"
                   aria-required="true"
                   autoComplete="new-password"
-                  placeholder="Enter your password ..."
+                  placeholder="Password..."
                   {...field}
                 />
               </FormControl>
@@ -121,13 +117,13 @@ export function SignUpForm({
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password *</FormLabel>
+              <FormLabel>Confirm Password</FormLabel>
               <FormControl>
                 <Input
                   type="password"
                   aria-required="true"
                   autoComplete="new-password"
-                  placeholder="Confirm password ..."
+                  placeholder="Confirm password..."
                   {...field}
                 />
               </FormControl>

@@ -1,7 +1,8 @@
 "use client";
 
+import { KeyRoundIcon, MailIcon } from "lucide-react";
+import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { SignInForm } from "./form";
 import {
   Card,
   CardContent,
@@ -9,14 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { KeyRoundIcon, MailIcon } from "lucide-react";
-import { useState } from "react";
-import Link from "next/link";
+import { SignUpForm } from "./form";
 import { GoogleAuthForm } from "~/components/google-auth-form";
 import { GithubAuthForm } from "~/components/github-auth-form";
+import { useState } from "react";
 import { EmailAuthForm } from "~/components/email-auth-form";
 
-export function SignInDialog() {
+export function SignUpDialog() {
   const [method, setMethod] = useState<"credentials" | "email">("credentials");
 
   const switchMethodButton = (method: "credentials" | "email") => {
@@ -37,7 +37,7 @@ export function SignInDialog() {
           variant="secondary"
           onClick={() => setMethod("credentials")}
         >
-          Sign in using password <KeyRoundIcon className="size-6" />
+          Sign up using password <KeyRoundIcon className="size-6" />
         </Button>
       );
     }
@@ -45,22 +45,22 @@ export function SignInDialog() {
 
   const renderMethodForm = (method: "credentials" | "email") => {
     if (method === "credentials") {
-      return <SignInForm showSubmit={false} id="sign-in-form" />;
+      return <SignUpForm showSubmit={false} id="sign-up-form" />;
     } else {
-      return <EmailAuthForm showSubmit={false} id="sign-in-form" />;
+      return <EmailAuthForm showSubmit={false} id="sign-up-form" />;
     }
   };
 
   const renderSubmitButton = (method: "credentials" | "email") => {
     if (method === "credentials") {
       return (
-        <Button type="submit" className="w-full" form="sign-in-form">
-          Sign in <KeyRoundIcon className="size-6" />
+        <Button type="submit" className="w-full" form="sign-up-form">
+          Create account <KeyRoundIcon className="size-6" />
         </Button>
       );
     } else {
       return (
-        <Button type="submit" className="w-full" form="sign-in-form">
+        <Button type="submit" className="w-full" form="sign-up-form">
           Continue <MailIcon className="size-6" />
         </Button>
       );
@@ -90,9 +90,9 @@ export function SignInDialog() {
             variant="link"
             asChild
           >
-            <Link href="/sign-up">
-              Don't have an account yet?{" "}
-              <span className="text-foreground">Sign up!</span>
+            <Link href="/sign-in">
+              Already have an account?{" "}
+              <span className="text-foreground">Sign in!</span>
             </Link>
           </Button>
         </span>

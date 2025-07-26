@@ -47,7 +47,7 @@ export function SignInForm({
       <form
         id={id}
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn("flex flex-col gap-2", className)}
+        className={cn("flex flex-col gap-4", className)}
       >
         <FormField
           control={form.control}
@@ -76,7 +76,7 @@ export function SignInForm({
               <div className="flex items-center justify-between">
                 <FormLabel>Password</FormLabel>
                 <Button
-                  className="text-sm text-muted-foreground p-0"
+                  className="text-sm text-muted-foreground p-0 h-auto"
                   variant="link"
                   asChild
                 >
@@ -99,58 +99,6 @@ export function SignInForm({
         {showSubmit && (
           <Button type="submit" className="w-full mt-4">
             Sign in <KeyRoundIcon className="size-6" />
-          </Button>
-        )}
-      </form>
-    </Form>
-  );
-}
-
-export function EmailSignInForm({
-  id,
-  className,
-  showSubmit = true,
-}: SignInFormProps) {
-  const form = useForm<z.infer<typeof emailSignInSchema>>({
-    resolver: zodResolver(emailSignInSchema),
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const onSubmit = (values: z.infer<typeof emailSignInSchema>) => {
-    signIn("credentials", { ...values });
-  };
-
-  return (
-    <Form {...form}>
-      <form
-        id={id}
-        onSubmit={form.handleSubmit(onSubmit)}
-        className={cn("flex flex-col gap-2", className)}
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  aria-required="true"
-                  autoComplete="email"
-                  placeholder="email@example.com"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {showSubmit && (
-          <Button type="submit" className="w-full mt-4">
-            Sign in <MailIcon className="size-6" />
           </Button>
         )}
       </form>
