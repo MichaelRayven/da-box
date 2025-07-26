@@ -44,6 +44,7 @@ declare module "next-auth" {
 export const authConfig = {
   pages: {
     signIn: "/sign-in",
+    newUser: "/onboarding",
   },
   providers: [
     CredentialsProvider({
@@ -51,7 +52,7 @@ export const authConfig = {
       credentials: {
         email: {
           label: "Email",
-          type: "text",
+          type: "email",
           placeholder: "example@mail.com ...",
         },
         password: {
@@ -86,6 +87,17 @@ export const authConfig = {
         return user;
       },
     }),
+    EmailProvider({
+      server: {
+        host: env.EMAIL_SERVER_HOST,
+        port: env.EMAIL_SERVER_PORT,
+        auth: {
+          user: env.EMAIL_SERVER_USER,
+          pass: env.EMAIL_SERVER_PASSWORD,
+        },
+      },
+      from: env.EMAIL_FROM,
+    }),
     GoogleProvider({
       clientId: env.AUTH_GOOGLE_ID,
       clientSecret: env.AUTH_GOOGLE_SECRET,
@@ -94,15 +106,6 @@ export const authConfig = {
       clientId: env.AUTH_GITHUB_ID,
       clientSecret: env.AUTH_GITHUB_SECRET,
     }),
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
   ],
   adapter: DrizzleAdapter(db, {
     usersTable: users,

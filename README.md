@@ -16,8 +16,8 @@ You can check it out at: https://da-box.netlify.app/
 
 Configured test db connection, next steps:
 
-- [ ] Publically host db
-- [ ] Set env on deployment server
+- [x] Publically host db
+- [x] Set env on deployment server
 - [x] Update schema to show files and folders
 - [x] Manually insert examples
 - [x] Render them in the UI
@@ -29,17 +29,17 @@ Configured test db connection, next steps:
 - [x] Clean up the database and data fetching patterns
 - [ ] Add a homepage
 
-# TODO Auth
+# Note from 7/27/2025
 
-- [ ] Setup email server
-- [ ] Add password login
-- [ ] Add Google OAuth login
-- [ ] Create sign in form
-- [ ] Create sign up form
+- [ ] Add onboarding page (set username)
+- [x] Change sign-in page design
+- [ ] Change sign-up page design
+- [ ] Add sign-up button to sign-in page
+- [ ] Add sign-out page
 
 ## Platforms
 
 We are using Netlify as our host.
 Supabase as a database provider.
-GitHub OAuth: https://github.com/settings/developers
-Google OAuth: https://console.developers.google.com/apis/credentials
+GitHub for OAuth: https://github.com/settings/developers
+Google for OAuth: https://console.developers.google.com/apis/credentials
