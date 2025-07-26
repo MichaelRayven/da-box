@@ -77,10 +77,10 @@ export const users = createTable("users_table", (d) => ({
     .notNull()
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  name: d.varchar({ length: 255 }),
+  name: d.varchar({ length: 255 }).notNull().unique(),
   password: d.varchar({ length: 255 }),
   salt: d.varchar({ length: 255 }),
-  email: d.varchar({ length: 255 }).notNull(),
+  email: d.varchar({ length: 255 }).notNull().unique(),
   emailVerified: d
     .timestamp({
       mode: "date",

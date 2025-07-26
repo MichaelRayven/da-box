@@ -12,8 +12,8 @@ import {
   verificationTokens,
 } from "~/server/db/schema";
 import { env } from "~/env";
-import z from "zod";
 import { comparePasswords } from "./utils";
+import { signInSchema } from "~/lib/validation";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -66,34 +66,29 @@ export const authConfig = {
         },
       },
       async authorize(credentials, req) {
-        const credentialsSchema = z.object({
-          email: z.string().min(2).max(50),
-          password: z.string().min(2).max(50),
+        const { success, data } = signInSchema.safeParse(credentials);
+
+        if (!success) return null;
+
+        const { email, password } = data;
+
+        const user = await db.query.users.findFirst({
+          where: (users, { eq }) => eq(users.email, email),
         });
 
-        if (credentialsSchema.safeParse(credentials).success) {
-          const { email, password } = credentialsSchema.parse(credentials);
-          const user = await db.query.users.findFirst({
-            where: (users, { eq }) => eq(users.email, email),
-          });
+        if (!user || !user.password || !user.salt) return null;
 
-          if (!user || !user.password || !user.salt) return null;
-          console.log("credentials", credentials);
+        const passwordMatch = await comparePasswords(
+          user.password,
+          password,
+          user.salt
+        );
 
-          const passwordMatch = await comparePasswords(
-            user.password,
-            password,
-            user.salt
-          );
-
-          if (!passwordMatch) {
-            return null;
-          }
-
-          return user;
+        if (!passwordMatch) {
+          return null;
         }
 
-        return null;
+        return user;
       },
     }),
     EmailProvider({
