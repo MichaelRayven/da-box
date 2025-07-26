@@ -64,7 +64,7 @@ export function SignUpForm({
         email: variables.email,
         password: variables.password,
         redirect: true,
-        redirectTo: "/",
+        redirectTo: "/onboarding",
       });
 
       if (result?.error) {
