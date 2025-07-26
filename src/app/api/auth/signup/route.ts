@@ -13,12 +13,21 @@ export async function POST(request: Request) {
       status: 400,
     });
 
-  const existingUser = await db.query.users.findFirst({
+  let existingUser = await db.query.users.findFirst({
     where: (users, { eq }) => eq(users.email, data.email),
   });
 
   if (existingUser != null)
     return new NextResponse("Account already exists for this email", {
+      status: 409,
+    });
+
+  existingUser = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.username, data.username),
+  });
+
+  if (existingUser != null)
+    return new NextResponse("Account already exists for this username", {
       status: 409,
     });
 
