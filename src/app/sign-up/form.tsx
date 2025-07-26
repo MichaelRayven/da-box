@@ -68,7 +68,7 @@ export function SignUpForm({
                 <Input
                   type="text"
                   aria-required="true"
-                  autoComplete="username"
+                  autoComplete="name"
                   placeholder="John ..."
                   {...field}
                 />

@@ -63,7 +63,13 @@ export function SignInForm({
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input type="text" placeholder="John..." {...field} />
+                <Input
+                  type="text"
+                  aria-required="true"
+                  autoComplete="name"
+                  placeholder="John..."
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -78,6 +84,8 @@ export function SignInForm({
               <FormControl>
                 <Input
                   type="password"
+                  aria-required="true"
+                  autoComplete="password"
                   placeholder="Enter your password..."
                   {...field}
                 />
