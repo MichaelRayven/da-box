@@ -9,18 +9,18 @@ import * as schema from "./schema";
  * update.
  */
 const globalForDb = globalThis as unknown as {
-  conn: postgres.Sql | undefined;
+	conn: postgres.Sql | undefined;
 };
 
 const conn =
-  globalForDb.conn ??
-  postgres("", {
-    host: env.DATABASE_HOST,
-    pass: env.DATABASE_PASS,
-    db: env.DATABASE_DB_NAME,
-    user: env.DATABASE_USER,
-    port: env.DATABASE_PORT,
-  });
+	globalForDb.conn ??
+	postgres("", {
+		host: env.DATABASE_HOST,
+		pass: env.DATABASE_PASS,
+		db: env.DATABASE_DB_NAME,
+		user: env.DATABASE_USER,
+		port: env.DATABASE_PORT,
+	});
 if (env.NODE_ENV !== "production") globalForDb.conn = conn;
 
 export const db = drizzle(conn, { schema });
