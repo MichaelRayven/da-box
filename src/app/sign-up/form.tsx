@@ -15,13 +15,7 @@ import {
 import { cn } from "~/lib/utils";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-  email: z.string().min(2).max(50),
-  password: z.string().min(2).max(50),
-  confirmPassword: z.string().min(2).max(50),
-});
+import { signUpSchema } from "~/lib/validation";
 
 interface SignUpFormProps {
   id?: string;
@@ -34,8 +28,8 @@ export function SignUpForm({
   className,
   showSubmit = true,
 }: SignUpFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof signUpSchema>>({
+    resolver: zodResolver(signUpSchema),
     defaultValues: {
       username: "",
       email: "",
@@ -44,7 +38,7 @@ export function SignUpForm({
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof signUpSchema>) => {
     // const { isPending, error, data } = useQuery({
     //   queryKey: ["repoData"],
     //   queryFn: () => fetch("/api/auth/sign-in").then((res) => res.json()),

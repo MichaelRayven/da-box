@@ -16,11 +16,7 @@ import { cn } from "~/lib/utils";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import { signIn } from "next-auth/react";
-
-const formSchema = z.object({
-  username: z.string().min(2).max(50),
-  password: z.string().min(2).max(50),
-});
+import { signInSchema } from "~/lib/validation";
 
 interface SignInFormProps {
   id?: string;
@@ -33,15 +29,15 @@ export function SignInForm({
   className,
   showSubmit = true,
 }: SignInFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof signInSchema>) => {
     // const { isPending, error, data } = useQuery({
     //   queryKey: ["repoData"],
     //   queryFn: () => fetch("/api/auth/sign-in").then((res) => res.json()),
@@ -58,16 +54,16 @@ export function SignInForm({
       >
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input
-                  type="text"
+                  type="email"
                   aria-required="true"
-                  autoComplete="name"
-                  placeholder="John..."
+                  autoComplete="email"
+                  placeholder="email@example.com ..."
                   {...field}
                 />
               </FormControl>
@@ -86,7 +82,7 @@ export function SignInForm({
                   type="password"
                   aria-required="true"
                   autoComplete="password"
-                  placeholder="Enter your password..."
+                  placeholder="Enter your password ..."
                   {...field}
                 />
               </FormControl>
