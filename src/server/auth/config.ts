@@ -12,6 +12,8 @@ import {
   verificationTokens,
 } from "~/server/db/schema";
 import { env } from "~/env";
+import z from "zod";
+import { comparePasswords } from "./utils";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -40,6 +42,9 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  */
 export const authConfig = {
+  pages: {
+    signIn: "/sign-in",
+  },
   providers: [
     CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
@@ -49,36 +54,45 @@ export const authConfig = {
       // e.g. domain, username, password, 2FA token, etc.
       // You can pass any HTML attribute to the <input> tag through the object.
       credentials: {
-        username: {
-          label: "Username",
+        email: {
+          label: "Email",
           type: "text",
-          placeholder: "Username...",
+          placeholder: "example@mail.com ...",
         },
         password: {
           label: "Password",
           type: "password",
-          placeholder: "Password...",
+          placeholder: "Enter your password ...",
         },
       },
       async authorize(credentials, req) {
-        // You need to provide your own logic here that takes the credentials
-        // submitted and returns either a object representing a user or value
-        // that is false/null if the credentials are invalid.
-        // e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
-        // You can also use the `req` object to obtain additional parameters
-        // (i.e., the request IP address)
-        const res = await fetch("/your/endpoint", {
-          method: "POST",
-          body: JSON.stringify(credentials),
-          headers: { "Content-Type": "application/json" },
+        const credentialsSchema = z.object({
+          email: z.string().min(2).max(50),
+          password: z.string().min(2).max(50),
         });
-        const user = await res.json();
 
-        // If no error and we have user data, return it
-        if (res.ok && user) {
+        if (credentialsSchema.safeParse(credentials).success) {
+          const { email, password } = credentialsSchema.parse(credentials);
+          const user = await db.query.users.findFirst({
+            where: (users, { eq }) => eq(users.email, email),
+          });
+
+          if (!user || !user.password || !user.salt) return null;
+          console.log("credentials", credentials);
+
+          const passwordMatch = await comparePasswords(
+            user.password,
+            password,
+            user.salt
+          );
+
+          if (!passwordMatch) {
+            return null;
+          }
+
           return user;
         }
-        // Return null if user data could not be retrieved
+
         return null;
       },
     }),
