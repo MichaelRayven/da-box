@@ -114,10 +114,6 @@ export const authConfig = {
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  session: {
-    strategy: "database",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
   callbacks: {
     session: ({ session, user }) => ({
       ...session,
