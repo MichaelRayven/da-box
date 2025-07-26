@@ -78,7 +78,6 @@ export const users = createTable("users_table", (d) => ({
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   name: d.varchar({ length: 255 }),
-  username: d.varchar({ length: 255 }),
   password: d.varchar({ length: 255 }),
   salt: d.varchar({ length: 255 }),
   email: d.varchar({ length: 255 }).notNull(),
