@@ -7,7 +7,7 @@ export const usernameSchema = z
   .max(30, "Username must be at most 30 characters long")
   .regex(
     /^[a-zA-Z0-9_-]+$/,
-    "Username can only contain letters, numbers, underscores, or dashes"
+    "Username can only contain letters, numbers, underscores, or dashes",
   );
 
 // Email: valid email format
@@ -33,7 +33,7 @@ export const passwordSchema = z
   .regex(/\d/, "Password must contain at least one number")
   .regex(
     /[^A-Za-z0-9]/,
-    "Password must contain at least one special character"
+    "Password must contain at least one special character",
   );
 
 export const signUpSchema = z

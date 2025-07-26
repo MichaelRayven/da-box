@@ -1,7 +1,7 @@
 import { SignUpDialog } from "./dialog";
 export default async function SignUpPage() {
   return (
-    <section className="flex items-center justify-center md:h-screen md:-mt-32">
+    <section className="md:-mt-32 flex items-center justify-center md:h-screen">
       <SignUpDialog />
     </section>
   );

@@ -11,7 +11,7 @@ import { signOut } from "~/server/auth";
 
 export default function SignOutPage() {
   return (
-    <main className="flex items-center justify-center md:h-screen -mt-32">
+    <main className="-mt-32 flex items-center justify-center md:h-screen">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-xl">Sign out</CardTitle>
@@ -19,7 +19,7 @@ export default function SignOutPage() {
             Please confirm sign out, on success you will be redirected to home.
           </CardDescription>
         </CardHeader>
-        <CardFooter className="flex gap-2 justify-end">
+        <CardFooter className="flex justify-end gap-2">
           <Button variant="outline">
             <Link href="/">Cancel</Link>
           </Button>

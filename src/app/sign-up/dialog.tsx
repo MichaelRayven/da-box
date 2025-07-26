@@ -2,6 +2,10 @@
 
 import { KeyRoundIcon, MailIcon } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { EmailAuthForm } from "~/components/email-auth-form";
+import { GithubAuthForm } from "~/components/github-auth-form";
+import { GoogleAuthForm } from "~/components/google-auth-form";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -11,10 +15,6 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { SignUpForm } from "./form";
-import { GoogleAuthForm } from "~/components/google-auth-form";
-import { GithubAuthForm } from "~/components/github-auth-form";
-import { useState } from "react";
-import { EmailAuthForm } from "~/components/email-auth-form";
 
 export function SignUpDialog() {
   const [method, setMethod] = useState<"credentials" | "email">("credentials");
@@ -78,15 +78,15 @@ export function SignUpDialog() {
       <CardContent>{renderMethodForm(method)}</CardContent>
       <CardFooter className="flex-col gap-2">
         {renderSubmitButton(method)}
-        <span className="w-full flex items-center gap-4">
-          <hr className="flex-1 h-px" /> or <hr className="flex-1 h-px" />
+        <span className="flex w-full items-center gap-4">
+          <hr className="h-px flex-1" /> or <hr className="h-px flex-1" />
         </span>
         {switchMethodButton(method)}
         <GoogleAuthForm />
         <GithubAuthForm />
         <span className="mt-4 font-semibold">
           <Button
-            className="text-base text-muted-foreground p-0"
+            className="p-0 text-base text-muted-foreground"
             variant="link"
             asChild
           >

@@ -76,7 +76,7 @@ export function SignInForm({
               <div className="flex items-center justify-between">
                 <FormLabel>Password</FormLabel>
                 <Button
-                  className="text-sm text-muted-foreground p-0 h-auto"
+                  className="h-auto p-0 text-muted-foreground text-sm"
                   variant="link"
                   asChild
                 >
@@ -97,7 +97,7 @@ export function SignInForm({
           )}
         />
         {showSubmit && (
-          <Button type="submit" className="w-full mt-4">
+          <Button type="submit" className="mt-4 w-full">
             Sign in <KeyRoundIcon className="size-6" />
           </Button>
         )}

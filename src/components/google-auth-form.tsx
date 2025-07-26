@@ -1,13 +1,13 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { Button } from "./ui/button";
 import Image from "next/image";
+import { Button } from "./ui/button";
 
 export function GoogleAuthForm() {
   return (
     <form
-      className="w-full flex justify-center"
+      className="flex w-full justify-center"
       action={async () => {
         await signIn("google");
       }}

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -38,14 +39,20 @@ export function SignUpForm({
     },
   });
 
+  const signUpMutation = useMutation({
+    mutationFn: (values: z.infer<typeof signUpSchema>) => {
+      return fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+    },
+  });
+
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
-    await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values),
-    });
+    signUpMutation.mutate(values);
   };
 
   return (

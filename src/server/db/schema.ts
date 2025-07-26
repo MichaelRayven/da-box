@@ -40,7 +40,7 @@ export const files_table = createTable(
     index("modified_files_idx").on(t.modified),
     // index("owner_files_idx").on(t.owner),
     index("parent_files_idx").on(t.parent),
-  ]
+  ],
 );
 
 export const folders_table = createTable(
@@ -63,12 +63,12 @@ export const folders_table = createTable(
   },
   (t) => [
     foreignKey({ columns: [t.parent], foreignColumns: [t.id] }).onDelete(
-      "cascade"
+      "cascade",
     ),
     index("modified_folders_idx").on(t.modified),
     // index("owner_folders_idx").on(t.owner),
     index("parent_folders_idx").on(t.parent),
-  ]
+  ],
 );
 
 export const users = createTable("users_table", (d) => ({
@@ -116,7 +116,7 @@ export const accounts = createTable(
   (t) => [
     primaryKey({ columns: [t.provider, t.providerAccountId] }),
     index("account_user_id_idx").on(t.userId),
-  ]
+  ],
 );
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -133,7 +133,7 @@ export const sessions = createTable(
       .references(() => users.id),
     expires: d.timestamp({ mode: "date", withTimezone: true }).notNull(),
   }),
-  (t) => [index("t_user_id_idx").on(t.userId)]
+  (t) => [index("t_user_id_idx").on(t.userId)],
 );
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -147,5 +147,5 @@ export const verificationTokens = createTable(
     token: d.varchar({ length: 255 }).notNull(),
     expires: d.timestamp({ mode: "date", withTimezone: true }).notNull(),
   }),
-  (t) => [primaryKey({ columns: [t.identifier, t.token] })]
+  (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );

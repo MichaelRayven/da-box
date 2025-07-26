@@ -67,7 +67,7 @@ export function EmailAuthForm({
           )}
         />
         {showSubmit && (
-          <Button type="submit" className="w-full mt-4">
+          <Button type="submit" className="mt-4 w-full">
             Continue <MailIcon className="size-6" />
           </Button>
         )}
