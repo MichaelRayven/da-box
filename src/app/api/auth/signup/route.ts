@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { signUpSchema } from "~/lib/validation";
 import { generateSalt, hashPassword } from "~/server/auth/utils";
 import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
+import { accounts, users } from "~/server/db/schema";
 
 export async function POST(request: Request) {
   const unsafeData = await request.json();
@@ -13,23 +13,18 @@ export async function POST(request: Request) {
       status: 400,
     });
 
-  let existingUser = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.email, data.email),
+  const existingUser = await db.query.users.findFirst({
+    where: (users, { or, eq }) =>
+      or(eq(users.email, data.email), eq(users.username, data.username)),
   });
 
-  if (existingUser != null)
-    return new NextResponse("Account already exists for this email", {
+  if (existingUser) {
+    const field = existingUser.email === data.email ? "email" : "username";
+
+    return new NextResponse(`Account already exists for this ${field}`, {
       status: 409,
     });
-
-  existingUser = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.username, data.username),
-  });
-
-  if (existingUser != null)
-    return new NextResponse("Account already exists for this username", {
-      status: 409,
-    });
+  }
 
   try {
     const { username, email, password } = data;
@@ -48,6 +43,19 @@ export async function POST(request: Request) {
       .returning({ id: users.id, email: users.email });
 
     if (user == null)
+      return new NextResponse("Unable to create account", { status: 500 });
+
+    const [account] = await db
+      .insert(accounts)
+      .values({
+        provider: "credentials",
+        type: "credentials",
+        userId: user.id,
+        providerAccountId: user.id,
+      })
+      .returning();
+
+    if (account == null)
       return new NextResponse("Unable to create account", { status: 500 });
 
     return NextResponse.json(user, { status: 201 });
