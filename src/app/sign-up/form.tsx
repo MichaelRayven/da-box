@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { KeyRoundIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -39,20 +40,31 @@ export function SignUpForm({
     },
   });
 
-  const signUpMutation = useMutation({
-    mutationFn: (values: z.infer<typeof signUpSchema>) => {
-      return fetch("/api/auth/signup", {
+  const mutation = useMutation({
+    mutationFn: async (values: z.infer<typeof signUpSchema>) => {
+      const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(values),
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Signup failed");
+      }
+
+      return res.json();
+    },
+    onSuccess: () => {
+      form.reset();
     },
   });
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
-    signUpMutation.mutate(values);
+    mutation.mutate(values);
+    mutation.reset();
   };
 
   return (
@@ -74,6 +86,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="name"
                   placeholder="Username..."
+                  disabled={mutation.isPending}
                   {...field}
                 />
               </FormControl>
@@ -93,6 +106,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="email"
                   placeholder="email@example.com"
+                  disabled={mutation.isPending}
                   {...field}
                 />
               </FormControl>
@@ -112,6 +126,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="new-password"
                   placeholder="Password..."
+                  disabled={mutation.isPending}
                   {...field}
                 />
               </FormControl>
@@ -131,6 +146,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="new-password"
                   placeholder="Confirm password..."
+                  disabled={mutation.isPending}
                   {...field}
                 />
               </FormControl>
@@ -138,9 +154,18 @@ export function SignUpForm({
             </FormItem>
           )}
         />
+        {mutation.isError && (
+          <p className="text-destructive text-sm">
+            Sign up error: {(mutation.error as Error)?.message}
+          </p>
+        )}
         {showSubmit && (
-          <Button type="submit" variant="secondary">
-            Submit
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={mutation.isPending}
+          >
+            Create account <KeyRoundIcon className="size-6" />
           </Button>
         )}
       </form>

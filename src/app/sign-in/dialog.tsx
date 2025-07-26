@@ -30,25 +30,25 @@ export function SignInDialog() {
           Continue using E-mail <MailIcon className="size-6" />
         </Button>
       );
-    } else {
-      return (
-        <Button
-          className="w-full"
-          variant="secondary"
-          onClick={() => setMethod("credentials")}
-        >
-          Sign in using password <KeyRoundIcon className="size-6" />
-        </Button>
-      );
     }
+
+    return (
+      <Button
+        className="w-full"
+        variant="secondary"
+        onClick={() => setMethod("credentials")}
+      >
+        Sign in using password <KeyRoundIcon className="size-6" />
+      </Button>
+    );
   };
 
   const renderMethodForm = (method: "credentials" | "email") => {
     if (method === "credentials") {
       return <SignInForm showSubmit={false} id="sign-in-form" />;
-    } else {
-      return <EmailAuthForm showSubmit={false} id="sign-in-form" />;
     }
+
+    return <EmailAuthForm showSubmit={false} id="sign-in-form" />;
   };
 
   const renderSubmitButton = (method: "credentials" | "email") => {
@@ -58,13 +58,13 @@ export function SignInDialog() {
           Sign in <KeyRoundIcon className="size-6" />
         </Button>
       );
-    } else {
-      return (
-        <Button type="submit" className="w-full" form="sign-in-form">
-          Continue <MailIcon className="size-6" />
-        </Button>
-      );
     }
+
+    return (
+      <Button type="submit" className="w-full" form="sign-in-form">
+        Continue <MailIcon className="size-6" />
+      </Button>
+    );
   };
 
   return (
