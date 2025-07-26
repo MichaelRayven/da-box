@@ -13,7 +13,11 @@ import {
   users,
   verificationTokens,
 } from "~/server/db/schema";
-import { comparePasswords } from "./utils";
+import {
+  comparePasswords,
+  generateSessionExpiration,
+  generateSessionToken,
+} from "./utils";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -114,7 +118,31 @@ export const authConfig = {
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
+  jwt: {
+    async encode({ token }) {
+      // Use generated session token from callbacks
+      // Normal behaviour is to encrypt the json token
+      return token?.sessionId as unknown as string;
+    },
+  },
   callbacks: {
+    async jwt({ account, user, token }) {
+      // Manually generate and store user session in db
+      if (account?.provider === "credentials") {
+        const sessionToken = generateSessionToken();
+        const expires = generateSessionExpiration();
+
+        await db.insert(sessions).values({
+          userId: user.id!,
+          sessionToken,
+          expires,
+        });
+
+        // Pass the session token to the JWT encoder
+        token.sessionId = sessionToken;
+      }
+      return token;
+    },
     session: ({ session, user }) => ({
       ...session,
       user: {

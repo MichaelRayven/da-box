@@ -26,3 +26,11 @@ export async function comparePasswords(
 export function generateSalt() {
   return crypto.randomBytes(16).toString("hex").normalize();
 }
+
+export function generateSessionToken() {
+  return crypto.randomBytes(64).toString("hex").normalize();
+}
+
+export function generateSessionExpiration() {
+  return new Date(Date.now() + 60 * 60 * 24 * 30 * 1000);
+}
