@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { SignInForm } from "./form";
+import { Button } from "~/components/ui/button";
 
 export default function SignInPage() {
   return (
@@ -7,6 +8,7 @@ export default function SignInPage() {
       <div className="mx-auto flex w-full max-w-[400px] flex-col md:-mt-32">
         <Suspense>
           <SignInForm />
+          <Button>Email Sign In</Button>
         </Suspense>
       </div>
     </main>

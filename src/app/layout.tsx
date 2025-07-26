@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`}>
       <body>
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen ">
           <div className="flex">
             <Sidebar />
 
