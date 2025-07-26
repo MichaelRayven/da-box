@@ -1,12 +1,7 @@
 "use client";
 
 import { Button } from "~/components/ui/button";
-import {
-  EmailSignInForm,
-  GithubSignInForm,
-  GoogleSignInForm,
-  SignInForm,
-} from "./form";
+import { EmailSignInForm, SignInForm } from "./form";
 import {
   Card,
   CardContent,
@@ -17,6 +12,8 @@ import {
 import { KeyRoundIcon, MailIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { GoogleAuthForm } from "~/components/google-auth-form";
+import { GithubAuthForm } from "~/components/github-auth-form";
 
 export function SignInDialog() {
   const [method, setMethod] = useState<"credentials" | "email">("credentials");
@@ -84,8 +81,8 @@ export function SignInDialog() {
           <hr className="flex-1 h-px" /> or <hr className="flex-1 h-px" />
         </span>
         {switchMethodButton(method)}
-        <GoogleSignInForm />
-        <GithubSignInForm />
+        <GoogleAuthForm />
+        <GithubAuthForm />
         <span className="mt-4 font-semibold">
           <Button
             className="text-base text-muted-foreground p-0"

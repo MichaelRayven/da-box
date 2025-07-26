@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRoundIcon, LogInIcon, MailIcon } from "lucide-react";
+import { KeyRoundIcon, MailIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -17,8 +18,6 @@ import {
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 import { emailSignInSchema, signInSchema } from "~/lib/validation";
-import Image from "next/image";
-import Link from "next/link";
 
 interface SignInFormProps {
   id?: string;
@@ -156,47 +155,5 @@ export function EmailSignInForm({
         )}
       </form>
     </Form>
-  );
-}
-
-export function GoogleSignInForm() {
-  return (
-    <form
-      className="w-full flex justify-center"
-      action={async () => {
-        await signIn("google");
-      }}
-    >
-      <Button type="submit" variant="secondary" className="w-full">
-        Continue with Google
-        <Image
-          src="https://authjs.dev/img/providers/google.svg"
-          alt="Google logo"
-          width={24}
-          height={24}
-        />
-      </Button>
-    </form>
-  );
-}
-
-export function GithubSignInForm() {
-  return (
-    <form
-      className="w-full flex justify-center"
-      action={async () => {
-        await signIn("github");
-      }}
-    >
-      <Button type="submit" variant="secondary" className="w-full">
-        Continue with GitHub
-        <Image
-          src="https://authjs.dev/img/providers/github.svg"
-          alt="Github logo"
-          width={24}
-          height={24}
-        />
-      </Button>
-    </form>
   );
 }
