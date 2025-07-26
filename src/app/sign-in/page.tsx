@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { SignInForm } from "./form";
 import { Button } from "~/components/ui/button";
+import { signIn } from "~/server/auth";
+import { MailIcon } from "lucide-react";
 
 export default function SignInPage() {
   return (
@@ -8,7 +10,16 @@ export default function SignInPage() {
       <div className="mx-auto flex w-full max-w-[400px] flex-col md:-mt-32">
         <Suspense>
           <SignInForm />
-          <Button>Email Sign In</Button>
+          <form
+            action={async () => {
+              "use server";
+              await signIn("email");
+            }}
+          >
+            <Button className="self-start" type="submit">
+              <MailIcon /> Sign in with E-mail
+            </Button>
+          </form>
         </Suspense>
       </div>
     </main>
