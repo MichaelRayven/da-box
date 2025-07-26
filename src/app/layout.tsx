@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import Header from "./_components/header";
 import Sidebar from "./_components/sidebar";
 import { Providers } from "./providers";
+import { Toaster } from "~/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Da Box - Cloud Storage",
@@ -33,6 +34,7 @@ export default function RootLayout({
 
                 <div className="p-6">{children}</div>
               </main>
+              <Toaster />
             </div>
           </div>
         </Providers>

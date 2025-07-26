@@ -39,7 +39,7 @@ export function SignInForm({
   });
 
   const onSubmit = (values: z.infer<typeof signInSchema>) => {
-    signIn("credentials", { ...values });
+    signIn("credentials", { ...values, redirect: true, redirectTo: "/" });
   };
 
   return (

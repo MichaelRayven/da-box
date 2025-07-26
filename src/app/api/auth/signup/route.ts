@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { signUpSchema } from "~/lib/validation";
-import { signIn } from "~/server/auth";
 import { generateSalt, hashPassword } from "~/server/auth/utils";
 import { db } from "~/server/db";
 import { users } from "~/server/db/schema";
@@ -42,18 +41,7 @@ export async function POST(request: Request) {
     if (user == null)
       return new NextResponse("Unable to create account", { status: 500 });
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
-
-    if (res?.error) {
-      return new NextResponse("User created but login failed", { status: 500 });
-    }
-
-    // Redirect to homepage
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.json(user, { status: 201 });
   } catch (e) {
     return new NextResponse("Unable to create account", { status: 500 });
   }

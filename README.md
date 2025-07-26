@@ -33,9 +33,10 @@ Configured test db connection, next steps:
 
 - [ ] Add onboarding page (set username)
 - [x] Change sign-in page design
-- [ ] Change sign-up page design
-- [ ] Add sign-up button to sign-in page
-- [ ] Add sign-out page
+- [x] Change sign-up page design
+- [x] Add sign-up button to sign-in page
+- [x] Add sign-out page
+- [x] Add error toasts
 
 ## Platforms
 

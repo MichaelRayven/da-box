@@ -3,7 +3,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { KeyRoundIcon } from "lucide-react";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -57,14 +59,25 @@ export function SignUpForm({
 
       return res.json();
     },
-    onSuccess: () => {
-      form.reset();
+    onSuccess: async (data, variables) => {
+      const result = await signIn("credentials", {
+        email: variables.email,
+        password: variables.password,
+        redirect: true,
+        redirectTo: "/",
+      });
+
+      if (result?.error) {
+        toast.error(`Sign in failed: ${result.error}`);
+      }
+    },
+    onError: (err) => {
+      toast.error(`Sign up failed: ${(err as Error)?.message}`);
     },
   });
 
   const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     mutation.mutate(values);
-    mutation.reset();
   };
 
   return (
@@ -154,11 +167,6 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        {mutation.isError && (
-          <p className="text-destructive text-sm">
-            Sign up error: {(mutation.error as Error)?.message}
-          </p>
-        )}
         {showSubmit && (
           <Button
             type="submit"
