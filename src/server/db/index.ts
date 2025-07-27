@@ -1,5 +1,5 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool } from "@neondatabase/serverless";
 
 import { env } from "~/env";
 import * as schema from "./schema";
@@ -9,18 +9,19 @@ import * as schema from "./schema";
  * update.
  */
 const globalForDb = globalThis as unknown as {
-  conn: postgres.Sql | undefined;
+  pool: Pool | undefined;
 };
 
-const conn =
-  globalForDb.conn ??
-  postgres("", {
+export const pool =
+  globalForDb.pool ??
+  new Pool({
     host: env.DATABASE_HOST,
-    pass: env.DATABASE_PASS,
-    db: env.DATABASE_DB_NAME,
+    password: env.DATABASE_PASS,
+    database: env.DATABASE_DB_NAME,
     user: env.DATABASE_USER,
     port: env.DATABASE_PORT,
   });
-if (env.NODE_ENV !== "production") globalForDb.conn = conn;
 
-export const db = drizzle(conn, { schema });
+if (env.NODE_ENV !== "production") globalForDb.pool = pool;
+
+export const db = drizzle(pool, { schema });

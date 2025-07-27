@@ -1,12 +1,11 @@
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-import EmailProvider from "next-auth/providers/nodemailer";
+import ResendProvider from "next-auth/providers/resend";
 import { env } from "~/env";
 import { signInSchema } from "~/lib/validation";
-import { db } from "~/server/db";
+import { db, pool } from "~/server/db";
 import {
   accounts,
   sessions,
@@ -18,6 +17,7 @@ import {
   generateSessionExpiration,
   generateSessionToken,
 } from "./utils";
+import NeonAdapter from "@auth/neon-adapter";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -93,15 +93,8 @@ export const authConfig = {
         return user;
       },
     }),
-    EmailProvider({
-      server: {
-        host: env.EMAIL_SERVER_HOST,
-        port: env.EMAIL_SERVER_PORT,
-        auth: {
-          user: env.EMAIL_SERVER_USER,
-          pass: env.EMAIL_SERVER_PASSWORD,
-        },
-      },
+    ResendProvider({
+      apiKey: env.EMAIL_SERVER_PASSWORD,
       from: env.EMAIL_FROM,
     }),
     GoogleProvider({
@@ -113,12 +106,7 @@ export const authConfig = {
       clientSecret: env.AUTH_GITHUB_SECRET,
     }),
   ],
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  adapter: NeonAdapter(pool),
   jwt: {
     async encode({ token }) {
       // Use generated session token from callbacks

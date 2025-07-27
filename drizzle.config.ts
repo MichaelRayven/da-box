@@ -1,8 +1,8 @@
-import type { Config } from "drizzle-kit";
+import { defineConfig, type Config } from "drizzle-kit";
 
 import { env } from "~/env";
 
-export default {
+export default defineConfig({
   schema: "./src/server/db/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
@@ -13,4 +13,4 @@ export default {
     database: env.DATABASE_DB_NAME,
   },
   tablesFilter: ["da-box_*"],
-} satisfies Config;
+} satisfies Config);

@@ -36,8 +36,8 @@ export function EmailAuthForm({
     },
   });
 
-  const onSubmit = (values: z.infer<typeof emailSignInSchema>) => {
-    signIn("email", { ...values });
+  const onSubmit = async (values: z.infer<typeof emailSignInSchema>) => {
+    await signIn("resend", { ...values, redirect: true, redirectTo: "/" });
   };
 
   return (

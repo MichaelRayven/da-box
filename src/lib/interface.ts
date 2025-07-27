@@ -1,4 +1,4 @@
-import type { AdapterAccount } from "next-auth/adapters";
+import type { AdapterAccountType } from "next-auth/adapters";
 
 // export interface FileItem {
 //   id: string;
@@ -32,4 +32,4 @@ export interface Folder {
   owner: string;
 }
 
-export type AccountType = AdapterAccount["type"] | "credentials";
+export type AccountType = AdapterAccountType | "credentials";
