@@ -45,7 +45,7 @@ export function EmailAuthForm({
       <form
         id={id}
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn("flex flex-col gap-2", className)}
+        className={cn("flex flex-col gap-4", className)}
       >
         <FormField
           control={form.control}
@@ -67,7 +67,7 @@ export function EmailAuthForm({
           )}
         />
         {showSubmit && (
-          <Button type="submit" className="mt-4 w-full">
+          <Button type="submit" className="mt-2 w-full">
             Continue <MailIcon className="size-6" />
           </Button>
         )}

@@ -7,13 +7,7 @@ import { EmailAuthForm } from "~/components/email-auth-form";
 import { GithubAuthForm } from "~/components/github-auth-form";
 import { GoogleAuthForm } from "~/components/google-auth-form";
 import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { SignInForm } from "./form";
 
 export function SignInDialog() {
@@ -43,29 +37,8 @@ export function SignInDialog() {
     );
   };
 
-  const renderMethodForm = (method: "credentials" | "email") => {
-    if (method === "credentials") {
-      return <SignInForm showSubmit={false} id="sign-in-form" />;
-    }
-
-    return <EmailAuthForm showSubmit={false} id="sign-in-form" />;
-  };
-
-  const renderSubmitButton = (method: "credentials" | "email") => {
-    if (method === "credentials") {
-      return (
-        <Button type="submit" className="w-full" form="sign-in-form">
-          Sign in <KeyRoundIcon className="size-6" />
-        </Button>
-      );
-    }
-
-    return (
-      <Button type="submit" className="w-full" form="sign-in-form">
-        Continue <MailIcon className="size-6" />
-      </Button>
-    );
-  };
+  const renderMethodForm = (method: "credentials" | "email") =>
+    method === "credentials" ? <SignInForm /> : <EmailAuthForm />;
 
   return (
     <Card className="w-full max-w-sm">
@@ -75,28 +48,29 @@ export function SignInDialog() {
           Da Box
         </CardTitle>
       </CardHeader>
-      <CardContent>{renderMethodForm(method)}</CardContent>
-      <CardFooter className="flex-col gap-2">
-        {renderSubmitButton(method)}
-        <span className="flex w-full items-center gap-4">
+      <CardContent>
+        {renderMethodForm(method)}
+        <span className="my-2 flex w-full items-center gap-4">
           <hr className="h-px flex-1" /> or <hr className="h-px flex-1" />
         </span>
-        {switchMethodButton(method)}
-        <GoogleAuthForm />
-        <GithubAuthForm />
-        <span className="mt-4 font-semibold">
-          <Button
-            className="p-0 text-base text-muted-foreground"
-            variant="link"
-            asChild
-          >
-            <Link href="/sign-up">
-              Don't have an account yet?{" "}
-              <span className="text-foreground">Sign up!</span>
-            </Link>
-          </Button>
-        </span>
-      </CardFooter>
+        <div className="flex flex-col gap-2">
+          {switchMethodButton(method)}
+          <GoogleAuthForm />
+          <GithubAuthForm />
+          <span className="mt-4 font-semibold">
+            <Button
+              className="p-0 text-base text-muted-foreground"
+              variant="link"
+              asChild
+            >
+              <Link href="/sign-up">
+                Don't have an account yet?{" "}
+                <span className="text-foreground">Sign up!</span>
+              </Link>
+            </Button>
+          </span>
+        </div>
+      </CardContent>
     </Card>
   );
 }

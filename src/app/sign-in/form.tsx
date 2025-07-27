@@ -38,7 +38,7 @@ export function SignInForm({
     },
   });
 
-  const onSubmit = (values: z.infer<typeof signInSchema>) => {
+  const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     signIn("credentials", { ...values, redirect: true, redirectTo: "/" });
   };
 
@@ -97,7 +97,7 @@ export function SignInForm({
           )}
         />
         {showSubmit && (
-          <Button type="submit" className="mt-4 w-full">
+          <Button type="submit" className="mt-2 w-full">
             Sign in <KeyRoundIcon className="size-6" />
           </Button>
         )}
