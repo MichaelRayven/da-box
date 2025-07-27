@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRightCircleIcon } from "lucide-react";
+import { ArrowRightCircleIcon, TriangleAlertIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type z from "zod";
 import { Button } from "~/components/ui/button";
@@ -34,8 +34,10 @@ export function OnboardingForm() {
       const res = await submitOnboarding(values);
 
       toast.success(res);
-    } catch (e) {
-      toast.error((e as Error).message);
+    } catch (error) {
+      toast.error((error as Error).message, {
+        icon: <TriangleAlertIcon />,
+      });
     }
   };
 

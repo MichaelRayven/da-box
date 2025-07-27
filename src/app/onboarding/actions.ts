@@ -7,9 +7,16 @@ import { auth } from "~/server/auth";
 import mime from "mime-types";
 import { getPublicObjectUrl, s3 } from "~/server/s3";
 import { updateUserProfile } from "~/server/db/mutations";
+import sharp from "sharp";
 
 function getFileExtension(filename: string) {
   return filename.split(".").pop();
+}
+
+async function convertToJpeg(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer)
+    .jpeg({ quality: 90 }) // convert to JPEG
+    .toBuffer();
 }
 
 async function uploadAvatar(key: string, avatar: File) {
@@ -22,7 +29,7 @@ async function uploadAvatar(key: string, avatar: File) {
   const uploadCommand = new PutObjectCommand({
     Bucket: "avatar-bucket",
     Key: key,
-    Body: buffer,
+    Body: await convertToJpeg(buffer),
     ContentType: mimeType,
     ACL: "public-read",
   });
@@ -49,7 +56,7 @@ export async function submitOnboarding(
   let avatarUrl: string | undefined;
   if (avatarFile) {
     avatarUrl = await uploadAvatar(
-      `${session.user.id}/profile.jpg`,
+      `${session.user.id}/profile.jpeg`,
       avatarFile,
     );
   }
@@ -60,5 +67,5 @@ export async function submitOnboarding(
     username: data.username,
   });
 
-  return "Your profile has been setup!";
+  return "Your profile has been updated!";
 }
