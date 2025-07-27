@@ -27,7 +27,7 @@ export default function Sidebar() {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-64 border-r">
+    <aside className="fixed top-0 left-0 h-screen w-64 border-r ">
       <div className="p-4">
         <Logo className="mb-6" />
 
@@ -42,7 +42,7 @@ export default function Sidebar() {
             <DialogHeader>
               <DialogTitle>Create New Folder</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 ">
               <Label htmlFor="folder-name">Folder Name</Label>
               <Input
                 id="folder-name"
