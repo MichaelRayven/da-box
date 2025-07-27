@@ -6,9 +6,11 @@ You can check it out at: https://da-box.netlify.app/
 ## TODO:
 
 - [x] Set up local database and data model
-- [ ] Set up remote database
+- [x] Set up remote database
 - [x] Move folder open state to URL
-- [ ] Add auth
+- [x] Add auth
+- [ ] Add onboarding page (set name, username, avatar)
+- [ ] Add dashboard
 - [ ] Add file uploading
 - [ ] Date, size filtering
 
@@ -16,8 +18,8 @@ You can check it out at: https://da-box.netlify.app/
 
 Configured test db connection, next steps:
 
-- [ ] Publically host db
-- [ ] Set env on deployment server
+- [x] Publically host db
+- [x] Set env on deployment server
 - [x] Update schema to show files and folders
 - [x] Manually insert examples
 - [x] Render them in the UI
@@ -28,3 +30,10 @@ Configured test db connection, next steps:
 - [x] Change folders to link components, remove all client state
 - [x] Clean up the database and data fetching patterns
 - [ ] Add a homepage
+
+## Platforms
+
+We are using Netlify as our host.
+Supabase as a database provider.
+GitHub for OAuth: https://github.com/settings/developers
+Google for OAuth: https://console.developers.google.com/apis/credentials
