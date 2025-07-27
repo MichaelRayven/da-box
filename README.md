@@ -6,9 +6,11 @@ You can check it out at: https://da-box.netlify.app/
 ## TODO:
 
 - [x] Set up local database and data model
-- [ ] Set up remote database
+- [x] Set up remote database
 - [x] Move folder open state to URL
-- [ ] Add auth
+- [x] Add auth
+- [ ] Add onboarding page (set name, username, avatar)
+- [ ] Add dashboard
 - [ ] Add file uploading
 - [ ] Date, size filtering
 
@@ -28,17 +30,6 @@ Configured test db connection, next steps:
 - [x] Change folders to link components, remove all client state
 - [x] Clean up the database and data fetching patterns
 - [ ] Add a homepage
-
-# Note from 7/27/2025
-
-- [ ] Add onboarding page (set username)
-- [x] Change sign-in page design
-- [x] Change sign-up page design
-- [x] Add sign-up button to sign-in page
-- [x] Add sign-out page
-- [x] Add error toasts
-- [ ] Add middleware for onboarding
-- [ ] Configure serverless db for middleware
 
 ## Platforms
 
