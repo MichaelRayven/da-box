@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const nameSchema = z.string().min(1, "Name is required");
+
 // Username: 3–30 characters, alphanumeric, optional underscores or dashes
 export const usernameSchema = z
   .string()
@@ -38,6 +40,7 @@ export const passwordSchema = z
 
 export const signUpSchema = z
   .object({
+    name: nameSchema,
     username: usernameSchema,
     email: emailSchema,
     password: passwordSchema,

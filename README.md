@@ -37,6 +37,7 @@ Configured test db connection, next steps:
 - [x] Add sign-up button to sign-in page
 - [x] Add sign-out page
 - [x] Add error toasts
+- [x] Add middleware for onboarding
 
 ## Platforms
 

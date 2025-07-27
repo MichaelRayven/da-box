@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { username, email, password } = data;
+    const { name, username, email, password } = data;
 
     const salt = generateSalt();
     const hashedPassword = await hashPassword(password, salt);
@@ -35,10 +35,11 @@ export async function POST(request: Request) {
     const [user] = await db
       .insert(users)
       .values({
+        name: name,
         email: email,
         password: hashedPassword,
         salt: salt,
-        name: username,
+        username: username,
       })
       .returning({ id: users.id, email: users.email });
 

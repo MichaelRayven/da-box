@@ -35,6 +35,7 @@ export function SignUpForm({
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
+      name: "",
       username: "",
       email: "",
       password: "",
@@ -92,12 +93,32 @@ export function SignUpForm({
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
                 <Input
                   type="text"
                   aria-required="true"
                   autoComplete="name"
+                  placeholder="John Doe..."
+                  disabled={mutation.isPending}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input
+                  type="text"
+                  aria-required="true"
+                  autoComplete="username"
                   placeholder="Username..."
                   disabled={mutation.isPending}
                   {...field}
