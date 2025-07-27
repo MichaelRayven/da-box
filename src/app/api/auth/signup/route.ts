@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   const { success, data } = signUpSchema.safeParse(unsafeData);
 
   if (!success)
-    return new NextResponse("Unable to create account, incorrect data format", {
+    return new NextResponse("Unable to create account, invalid credentials", {
       status: 400,
     });
 

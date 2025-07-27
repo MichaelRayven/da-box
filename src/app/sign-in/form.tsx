@@ -62,6 +62,7 @@ export function SignInForm({
       }
     },
     onSuccess() {
+      toast.success("Signed into an account!");
       router.replace("/");
     },
     onError(error: Error) {

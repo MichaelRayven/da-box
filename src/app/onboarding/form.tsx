@@ -41,7 +41,8 @@ export function OnboardingForm() {
     mutationFn: async (values: z.infer<typeof onboardingSchema>) => {
       return await submitOnboarding(values);
     },
-    onSuccess: (res) => {
+    onSuccess: () => {
+      toast.success("Your profile has been updated!");
       router.replace("/");
     },
     onError: (error: Error) => {

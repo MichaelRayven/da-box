@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { KeyRoundIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
@@ -31,6 +32,8 @@ export function SignUpForm({
   className,
   showSubmit = true,
 }: SignUpFormProps) {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -63,8 +66,7 @@ export function SignUpForm({
       const result = await signIn("credentials", {
         email: variables.email,
         password: variables.password,
-        redirect: true,
-        redirectTo: "/onboarding",
+        redirect: false,
       });
 
       if (result?.error) {
@@ -75,6 +77,9 @@ export function SignUpForm({
 
         throw new Error(errorMessage);
       }
+
+      toast.success("Account created!");
+      router.replace("/onboarding");
     },
     onError: (error: Error) => {
       toast.error(error.message, {

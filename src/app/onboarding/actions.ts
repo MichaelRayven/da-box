@@ -61,7 +61,7 @@ export async function submitOnboarding(
     );
   }
 
-  updateUserProfile(session.user.id, {
+  await updateUserProfile(session.user.id, {
     image: avatarUrl,
     name: data.name,
     username: data.username,
