@@ -57,7 +57,7 @@ export function SignInDialog() {
           {switchMethodButton(method)}
           <GoogleAuthForm />
           <GithubAuthForm />
-          <span className="mt-4 font-semibold">
+          <span className="mt-4 text-center font-semibold">
             <Button
               className="p-0 text-base text-muted-foreground"
               variant="link"

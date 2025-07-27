@@ -45,26 +45,10 @@ export function SignUpDialog() {
 
   const renderMethodForm = (method: "credentials" | "email") => {
     if (method === "credentials") {
-      return <SignUpForm showSubmit={false} id="sign-up-form" />;
+      return <SignUpForm />;
     }
 
-    return <EmailAuthForm showSubmit={false} id="sign-up-form" />;
-  };
-
-  const renderSubmitButton = (method: "credentials" | "email") => {
-    if (method === "credentials") {
-      return (
-        <Button type="submit" className="w-full" form="sign-up-form">
-          Create account <KeyRoundIcon className="size-6" />
-        </Button>
-      );
-    }
-
-    return (
-      <Button type="submit" className="w-full" form="sign-up-form">
-        Continue <MailIcon className="size-6" />
-      </Button>
-    );
+    return <EmailAuthForm />;
   };
 
   return (
@@ -75,28 +59,29 @@ export function SignUpDialog() {
           Da Box
         </CardTitle>
       </CardHeader>
-      <CardContent>{renderMethodForm(method)}</CardContent>
-      <CardFooter className="flex-col gap-2">
-        {renderSubmitButton(method)}
-        <span className="flex w-full items-center gap-4">
+      <CardContent>
+        {renderMethodForm(method)}
+        <span className="my-2 flex w-full items-center gap-4">
           <hr className="h-px flex-1" /> or <hr className="h-px flex-1" />
         </span>
-        {switchMethodButton(method)}
-        <GoogleAuthForm />
-        <GithubAuthForm />
-        <span className="mt-4 font-semibold">
-          <Button
-            className="p-0 text-base text-muted-foreground"
-            variant="link"
-            asChild
-          >
-            <Link href="/sign-in">
-              Already have an account?{" "}
-              <span className="text-foreground">Sign in!</span>
-            </Link>
-          </Button>
-        </span>
-      </CardFooter>
+        <div className="flex flex-col gap-2">
+          {switchMethodButton(method)}
+          <GoogleAuthForm />
+          <GithubAuthForm />
+          <span className="mt-4 text-center font-semibold">
+            <Button
+              className="p-0 text-base text-muted-foreground"
+              variant="link"
+              asChild
+            >
+              <Link href="/sign-in">
+                Already have an account?{" "}
+                <span className="text-foreground">Sign in!</span>
+              </Link>
+            </Button>
+          </span>
+        </div>
+      </CardContent>
     </Card>
   );
 }

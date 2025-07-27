@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { KeyRoundIcon } from "lucide-react";
+import { KeyRoundIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ import { Button } from "~/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -69,11 +68,18 @@ export function SignUpForm({
       });
 
       if (result?.error) {
-        toast.error(`Sign in failed: ${result.error}`);
+        const errorMessage =
+          result.error === "CredentialsSignin"
+            ? "Invalid email or password."
+            : "Something went wrong. Please try again.";
+
+        throw new Error(errorMessage);
       }
     },
-    onError: (err) => {
-      toast.error(`Sign up failed: ${(err as Error)?.message}`);
+    onError: (error: Error) => {
+      toast.error(error.message, {
+        icon: <TriangleAlertIcon />,
+      });
     },
   });
 
@@ -90,7 +96,7 @@ export function SignUpForm({
       >
         <FormField
           control={form.control}
-          name="username"
+          name="name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name</FormLabel>
@@ -191,10 +197,19 @@ export function SignUpForm({
         {showSubmit && (
           <Button
             type="submit"
-            className="w-full"
+            className="mt-2 w-full"
             disabled={mutation.isPending}
           >
-            Create account <KeyRoundIcon className="size-6" />
+            {mutation.isPending ? (
+              <>
+                Creating account...
+                <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
+              </>
+            ) : (
+              <>
+                Create account <KeyRoundIcon className="size-6" />
+              </>
+            )}
           </Button>
         )}
       </form>

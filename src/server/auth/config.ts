@@ -92,9 +92,7 @@ export const authConfig = {
           user.salt,
         );
 
-        if (!passwordMatch) {
-          return null;
-        }
+        if (!passwordMatch) return null;
 
         return user;
       },
