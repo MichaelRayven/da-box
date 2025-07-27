@@ -16,6 +16,8 @@ import {
 import { Input } from "~/components/ui/input";
 import { onboardingSchema } from "~/lib/validation";
 import { AvatarUpload } from "./avatar-upload";
+import { submitOnboarding } from "./actions";
+import { toast } from "sonner";
 
 export function OnboardingForm() {
   const form = useForm<z.infer<typeof onboardingSchema>>({
@@ -27,8 +29,14 @@ export function OnboardingForm() {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof onboardingSchema>) => {
-    console.log(values);
+  const onSubmit = async (values: z.infer<typeof onboardingSchema>) => {
+    try {
+      const res = await submitOnboarding(values);
+
+      toast.success(res);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   return (

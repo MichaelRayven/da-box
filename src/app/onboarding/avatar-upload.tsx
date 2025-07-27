@@ -9,8 +9,8 @@ type AvatarUploadProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   "type" | "onChange" | "value" | "ref"
 > & {
-  value?: FileList;
-  onChange: (value: FileList) => void;
+  value?: File;
+  onChange: (value?: File) => void;
   ref?: (el: HTMLInputElement | null) => void;
 };
 
@@ -32,7 +32,7 @@ export function AvatarUpload({
       localRef.current.value = "";
     }
     setPreview(null);
-    onChange(new DataTransfer().files);
+    onChange(new DataTransfer().files?.[0]);
   };
 
   const setRefs = (el: HTMLInputElement | null) => {
@@ -50,14 +50,14 @@ export function AvatarUpload({
         onChange={(e) => {
           const fileList = e.target.files;
           if (fileList?.[0]) {
-            const { success, data } = avatarSchema.safeParse(fileList);
+            const { success, data } = avatarSchema.safeParse(fileList[0]);
             if (success) {
-              setPreview(URL.createObjectURL(data[0]));
+              setPreview(URL.createObjectURL(data));
             } else {
               setPreview(null);
             }
           }
-          onChange(fileList!);
+          onChange(fileList?.[0]);
         }}
         {...props}
       />

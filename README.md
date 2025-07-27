@@ -35,7 +35,7 @@ Configured test db connection, next steps:
 
 - [ ] Add loading state for sign in
 - [ ] Add error messages for sign in
-- [ ] Update user data during onboarding
+- [x] Update user data during onboarding
 - [ ] Protect route from unauthenticated users
 
 ## Platforms

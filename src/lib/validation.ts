@@ -39,21 +39,10 @@ export const passwordSchema = z
   );
 
 export const avatarSchema = z
-  .any()
-  .optional()
-  .refine(
-    (file) => file == null || (file instanceof FileList && file.length <= 1),
-    {
-      message: "Only one file allowed",
-    },
-  )
+  .custom<File>()
   .refine(
     (file) =>
-      file == null ||
-      (file instanceof FileList &&
-        ["image/jpeg", "image/png", "image/webp"].includes(
-          file[0]?.type ?? "",
-        )),
+      !file || ["image/jpeg", "image/png", "image/webp"].includes(file.type),
     {
       message: "Only JPG, PNG or WEBP allowed",
     },
@@ -82,7 +71,16 @@ export const emailSignInSchema = z.object({
 });
 
 export const onboardingSchema = z.object({
-  name: nameSchema,
-  username: usernameSchema,
-  avatar: avatarSchema,
+  name: nameSchema.optional(),
+  username: usernameSchema.optional(),
+  avatar: avatarSchema.optional(),
+});
+
+export const updateUserSchema = z.object({
+  username: nameSchema.optional(),
+  name: usernameSchema.optional(),
+  file: z
+    .instanceof(Buffer)
+    .optional()
+    .refine((f) => !f || f.length < 5_000_000, "File too large"), // optional 5MB limit
 });
