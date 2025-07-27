@@ -9,7 +9,7 @@ You can check it out at: https://da-box.netlify.app/
 - [x] Set up remote database
 - [x] Move folder open state to URL
 - [x] Add auth
-- [ ] Add onboarding page (set name, username, avatar)
+- [x] Add onboarding page (set name, username, avatar)
 - [ ] Add dashboard
 - [ ] Add file uploading
 - [ ] Date, size filtering
@@ -30,6 +30,11 @@ Configured test db connection, next steps:
 - [x] Change folders to link components, remove all client state
 - [x] Clean up the database and data fetching patterns
 - [ ] Add a homepage
+
+## Note from 7/27/2025
+
+- [ ] Add loading state for sign in
+- [ ] Add error messages for sign in
 
 ## Platforms
 

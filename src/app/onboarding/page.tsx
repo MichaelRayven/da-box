@@ -1,3 +1,9 @@
+import { OnboardingDialog } from "./dialog";
+
 export default function OnboardingPage() {
-  return <div>Coming soon... You won't be able to escape it (►__◄)</div>;
+  return (
+    <main className="-mt-32 flex items-center justify-center md:h-screen">
+      <OnboardingDialog />
+    </main>
+  );
 }

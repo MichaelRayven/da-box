@@ -38,6 +38,27 @@ export const passwordSchema = z
     "Password must contain at least one special character",
   );
 
+export const avatarSchema = z
+  .any()
+  .optional()
+  .refine(
+    (file) => file == null || (file instanceof FileList && file.length <= 1),
+    {
+      message: "Only one file allowed",
+    },
+  )
+  .refine(
+    (file) =>
+      file == null ||
+      (file instanceof FileList &&
+        ["image/jpeg", "image/png", "image/webp"].includes(
+          file[0]?.type ?? "",
+        )),
+    {
+      message: "Only JPG, PNG or WEBP allowed",
+    },
+  );
+
 export const signUpSchema = z
   .object({
     name: nameSchema,
@@ -58,4 +79,10 @@ export const signInSchema = z.object({
 
 export const emailSignInSchema = z.object({
   email: emailSchema,
+});
+
+export const onboardingSchema = z.object({
+  name: nameSchema,
+  username: usernameSchema,
+  avatar: avatarSchema,
 });

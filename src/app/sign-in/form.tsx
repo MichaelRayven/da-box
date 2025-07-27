@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRoundIcon, MailIcon } from "lucide-react";
+import { KeyRoundIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -17,7 +17,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
-import { emailSignInSchema, signInSchema } from "~/lib/validation";
+import { signInSchema } from "~/lib/validation";
 
 interface SignInFormProps {
   id?: string;
