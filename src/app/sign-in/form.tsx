@@ -71,7 +71,7 @@ export function SignInForm({
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof signInSchema>) => {
+  const onSubmit = (values: z.infer<typeof signInSchema>) => {
     mutation.mutate(values);
   };
 
