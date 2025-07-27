@@ -2,10 +2,10 @@ import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Toaster } from "~/components/ui/sonner";
 import Header from "./_components/header";
 import Sidebar from "./_components/sidebar";
 import { Providers } from "./providers";
-import { Toaster } from "~/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Da Box - Cloud Storage",

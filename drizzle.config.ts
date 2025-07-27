@@ -1,4 +1,4 @@
-import { defineConfig, type Config } from "drizzle-kit";
+import { type Config, defineConfig } from "drizzle-kit";
 
 import { env } from "~/env";
 

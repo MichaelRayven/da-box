@@ -1,12 +1,12 @@
-import { relations, type SQL, sql } from "drizzle-orm";
+import { type SQL, relations, sql } from "drizzle-orm";
 import { uniqueIndex } from "drizzle-orm/gel-core";
 import {
+  type AnyPgColumn,
   foreignKey,
   index,
   pgTable,
   pgTableCreator,
   primaryKey,
-  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import type { AccountType } from "~/lib/interface";
 

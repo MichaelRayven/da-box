@@ -1,3 +1,4 @@
+import NeonAdapter from "@auth/neon-adapter";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
@@ -6,18 +7,12 @@ import ResendProvider from "next-auth/providers/resend";
 import { env } from "~/env";
 import { signInSchema } from "~/lib/validation";
 import { db, pool } from "~/server/db";
-import {
-  accounts,
-  sessions,
-  users,
-  verificationTokens,
-} from "~/server/db/schema";
+import { sessions } from "~/server/db/schema";
 import {
   comparePasswords,
   generateSessionExpiration,
   generateSessionToken,
 } from "./utils";
-import NeonAdapter from "@auth/neon-adapter";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -51,6 +46,17 @@ export const authConfig = {
     signIn: "/sign-in",
     signOut: "/sign-out",
     newUser: "/onboarding",
+  },
+  cookies: {
+    sessionToken: {
+      name: "session-token",
+      options: {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+      },
+    },
   },
   providers: [
     CredentialsProvider({
