@@ -29,14 +29,16 @@ export const files = createTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     name: d.text("name").notNull(),
-    size: d.integer().notNull(),
-    url: d.text("url").notNull(),
+    size: d.integer("size").notNull(),
+    key: d.text("key").notNull().unique(),
+    type: d.text("type").notNull(),
+    hidden: d.boolean("hidden").notNull(), // Used to hide file during uploading
     parentId: d
-      .text()
+      .text("parentId")
       .notNull()
       .references(() => folders.id, { onDelete: "cascade" }),
     ownerId: d
-      .text()
+      .text("ownerId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
@@ -55,11 +57,13 @@ export const filesRelations = relations(files, ({ one }) => ({
   owner: one(users, {
     fields: [files.ownerId],
     references: [users.id],
+    relationName: "user_files",
   }),
 
   parent: one(folders, {
     fields: [files.parentId],
     references: [folders.id],
+    relationName: "folder_files", // 👈 must match the one in foldersRelations
   }),
 }));
 
@@ -71,8 +75,8 @@ export const folders = createTable(
         .text("id")
         .primaryKey()
         .$defaultFn(() => crypto.randomUUID()),
-      name: d.varchar({ length: 256 }).notNull(),
-      parentId: d.text(),
+      name: d.text("name").notNull(),
+      parentId: d.text("parentId"),
       ownerId: d
         .text()
         .notNull()
@@ -99,14 +103,22 @@ export const foldersRelations = relations(folders, ({ one, many }) => ({
   owner: one(users, {
     fields: [folders.ownerId],
     references: [users.id],
+    relationName: "user_folders",
   }),
 
   parent: one(folders, {
     fields: [folders.parentId],
     references: [folders.id],
+    relationName: "folder_children",
   }),
 
-  children: many(folders),
+  children: many(files, {
+    relationName: "folder_files", // 👈 must match parent relationName
+  }),
+
+  folders: many(folders, {
+    relationName: "folder_children",
+  }),
 }));
 
 export const users = createTable(
@@ -134,8 +146,12 @@ export const users = createTable(
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
-  files: many(files),
-  folders: many(folders),
+  files: many(files, {
+    relationName: "user_files",
+  }),
+  folders: many(folders, {
+    relationName: "user_folders",
+  }),
 }));
 
 export const accounts = createTable(

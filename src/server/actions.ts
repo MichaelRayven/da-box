@@ -9,6 +9,7 @@ import { getFolderById } from "./db/queries";
 
 export async function createFolder(name: string, parentId: string) {
   const session = await auth();
+  console.log(session);
 
   if (!session?.user.id) {
     return { success: false, error: "Unauthorized" };

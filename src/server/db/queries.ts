@@ -46,7 +46,9 @@ export function getFiles(folderId: string) {
   return db
     .select()
     .from(filesSchema)
-    .where(eq(filesSchema.parentId, folderId));
+    .where(
+      and(eq(filesSchema.parentId, folderId), eq(filesSchema.hidden, false)),
+    );
 }
 
 export function getFolders(folderId: string) {

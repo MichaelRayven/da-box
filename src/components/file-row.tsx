@@ -7,7 +7,10 @@ export function FileRow({ file }: { file: typeof files.$inferSelect }) {
   return (
     <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
       <TableCell className="p-0 text-white hover:text-blue-400">
-        <Link href={file.url} className="flex items-center space-x-3 p-2">
+        <Link
+          href={`/drive/files/${file.id}`}
+          className="flex items-center space-x-3 p-2"
+        >
           <FileText className="size-6" />
           <span>{file.name}</span>
         </Link>

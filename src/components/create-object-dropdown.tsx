@@ -15,10 +15,12 @@ import {
 } from "./ui/dropdown-menu";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { Button } from "./ui/button";
+import { useUploadFile } from "~/hook/useUploadFile";
 
 export function CreateObjectDropdown() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
+  const uploader = useUploadFile();
 
   // Handler for Create File
   function handleCreateFileClick() {
@@ -29,10 +31,8 @@ export function CreateObjectDropdown() {
     const file = event.target.files?.[0];
     if (!file) return;
     console.log("Selected file:", file);
-    // Add your upload logic here
 
-    // Clear input so same file can be selected again if needed
-    event.target.value = "";
+    uploader.upload(file);
   }
 
   return (

@@ -1,5 +1,6 @@
 import type { CompletedPart } from "@aws-sdk/client-s3";
 import { useMutation } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 interface InitiateResponse {
   uploadId: string;
@@ -8,8 +9,36 @@ interface InitiateResponse {
 
 const PART_SIZE = 5 * 1024 * 1024; // 5MB
 
-export function useUploadFile() {
-  return useMutation({
+interface UseUploadFileOptions {
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  onSuccess?: (data: any, variables: File, context: unknown) => void;
+  onError?: (error: unknown, variables: File, context: unknown) => void;
+  onUpload?: (variables: File) => void;
+  onPartUpload?: (partNumber: number, totalParts: number) => void;
+  onFinished?: (
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    data: any,
+    error: unknown,
+    variables: File,
+    context: unknown,
+  ) => void;
+}
+
+export function useUploadFile({
+  onSuccess,
+  onPartUpload,
+  onUpload,
+  onFinished,
+  onError,
+}: UseUploadFileOptions = {}) {
+  const { folderId } = useParams();
+  const parentId = folderId as string | undefined;
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    onSuccess: onSuccess,
+    onError: onError,
+    onMutate: onUpload,
+    onSettled: onFinished,
     mutationFn: async (file: File) => {
       // Step 1: Initiate
       const { uploadId, key }: InitiateResponse = await fetch(
@@ -17,7 +46,12 @@ export function useUploadFile() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: file.name, type: file.type }),
+          body: JSON.stringify({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            parentId,
+          }),
         },
       ).then((res) => res.json());
 
@@ -27,6 +61,7 @@ export function useUploadFile() {
       // Step 2: Upload parts to S3
       for (let i = 0; i < partCount; i++) {
         const partNumber = i + 1;
+        onPartUpload?.(partNumber, partCount);
         const start = i * PART_SIZE;
         const end = Math.min(start + PART_SIZE, file.size);
         const partBlob = file.slice(start, end);
@@ -50,12 +85,19 @@ export function useUploadFile() {
       }
 
       // Step 3: Complete upload
-      await fetch("/api/upload/multipart/complete", {
+      const { success } = await fetch("/api/upload/multipart/complete", {
         method: "POST",
-        body: JSON.stringify({ uploadId, key, parts }),
-      });
+        body: JSON.stringify({ uploadId, parentId, key, parts }),
+      }).then((res) => res.json());
 
-      return { success: true, key };
+      if (!success) throw new Error(`Failed to upload file: ${file.name}`);
+
+      return key;
     },
   });
+  return {
+    upload: mutate,
+    uploadAsync: mutateAsync,
+    ...mutation,
+  };
 }

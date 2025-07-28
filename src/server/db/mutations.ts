@@ -1,11 +1,7 @@
 import "server-only";
 
 import { db } from "~/server/db";
-import {
-  files as filesSchema,
-  folders as foldersSchema,
-  users,
-} from "./schema";
+import { folders as foldersSchema, users } from "./schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { nameSchema, usernameSchema } from "~/lib/validation";
