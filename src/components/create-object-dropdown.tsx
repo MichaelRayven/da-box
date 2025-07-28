@@ -1,7 +1,12 @@
 "use client";
 
 import React, { useRef } from "react";
-import { PlusIcon, ChevronDownIcon } from "lucide-react";
+import {
+  PlusIcon,
+  ChevronDownIcon,
+  FolderPlusIcon,
+  FilePlusIcon,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,12 +44,18 @@ export function CreateObjectDropdown() {
             New
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-64">
-          <DropdownMenuItem onSelect={handleCreateFileClick}>
-            Create File
+        <DropdownMenuContent className="w-56 mt-2" align="start">
+          <DropdownMenuItem
+            onSelect={() => setFolderDialogOpen(true)}
+            className="cursor-pointer"
+          >
+            <FolderPlusIcon /> New Folder
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => setFolderDialogOpen(true)}>
-            Create Folder
+          <DropdownMenuItem
+            onSelect={handleCreateFileClick}
+            className="cursor-pointer"
+          >
+            <FilePlusIcon /> Upload File
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

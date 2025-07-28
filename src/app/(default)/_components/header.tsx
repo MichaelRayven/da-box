@@ -56,7 +56,7 @@ export default async function Header() {
                 </Avatar>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuContent align="end" className="w-64 mt-2">
                 <DropdownMenuLabel className="flex flex-col gap-0.5">
                   <span className="font-medium text-base">
                     {session.user.name}
