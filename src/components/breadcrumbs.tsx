@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { Button } from "~/components/ui/button";
+import { Fragment } from "react";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "~/components/ui/breadcrumb";
 import type { folders } from "~/server/db/schema";
 
 interface BreadcrumbProps {
@@ -12,26 +19,24 @@ export default function Breadcrumbs({
   className,
 }: BreadcrumbProps) {
   return (
-    <div className={className}>
-      <Button
-        variant="ghost"
-        asChild
-        className="text-gray-300 hover:bg-gray-800"
-      >
-        <Link href="/drive">My Drive</Link>
-      </Button>
-      {breadcrumbs.map((folder) => (
-        <div key={folder.id} className="flex items-center">
-          <span className="mx-2 text-gray-500">{">"}</span>
-          <Button
-            variant="ghost"
-            asChild
-            className="text-gray-300 hover:bg-gray-800"
-          >
-            <Link href={`/drive/folders/${folder.id}`}>{folder.name}</Link>
-          </Button>
-        </div>
-      ))}
-    </div>
+    <Breadcrumb className={className}>
+      <BreadcrumbList>
+        {breadcrumbs.map((folder, index) => (
+          <Fragment key={folder.id}>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link
+                  href={`/drive/folders/${folder.id}`}
+                  className="rounded-md px-4 py-2 transition-colors hover:bg-foreground/5"
+                >
+                  {folder.name}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+          </Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
