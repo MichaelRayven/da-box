@@ -11,16 +11,16 @@ export async function createFolder(name: string, parentId: string) {
   const session = await auth();
 
   if (!session?.user.id) {
-    return { error: "Unauthorized" };
+    return { success: false, error: "Unauthorized" };
   }
 
   const parent = await getFolderById(parentId);
 
   if (parent?.ownerId !== session.user.id) {
-    return { error: "Forbidden" };
+    return { success: false, error: "Forbidden" };
   }
 
-  const folder = db
+  const folder = await db
     .insert(foldersSchema)
     .values({
       name: name,

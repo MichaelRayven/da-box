@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
+import { LoaderIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
 import { CreateFolderForm } from "./create-folder-form";
 import { Button } from "./ui/button";
 import {
@@ -12,10 +12,11 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import type { DialogProps } from "@radix-ui/react-dialog";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { createFolder } from "~/server/actions";
+import { toast } from "sonner";
 
 interface CreateFolderDialogProps extends DialogProps {
   trigger?: ReactNode;
@@ -37,7 +38,19 @@ export function CreateFolderDialog({
       const parent = folderId as string | undefined;
       if (!parent) return null;
 
-      createFolder(name, parent);
+      const res = await createFolder(name, parent);
+      if (!res.success) {
+        throw new Error(res.error);
+      }
+    },
+    onSuccess: (_, name) => {
+      toast.success(`Created folder: ${name}`);
+      props?.onOpenChange?.(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message, {
+        icon: <TriangleAlertIcon />,
+      });
     },
   });
 
@@ -50,12 +63,22 @@ export function CreateFolderDialog({
           <DialogTitle>Create New Folder</DialogTitle>
         </DialogHeader>
         <CreateFolderForm
+          onSubmit={(values) => mutation.mutate(values.name)}
           submitButton={() => (
             <div className="flex justify-end space-x-2">
               <Button variant="outline" asChild>
                 <DialogClose>Cancel</DialogClose>
               </Button>
-              <Button type="submit">Create</Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? (
+                  <>
+                    Creating...
+                    <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
+                  </>
+                ) : (
+                  <>Create</>
+                )}
+              </Button>
             </div>
           )}
         />
