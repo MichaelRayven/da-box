@@ -10,7 +10,7 @@ export default function DriveContents(props: {
   parents?: (typeof folders_table.$inferSelect)[];
 }) {
   return (
-    <div>
+    <div className="flex-1 p-6">
       <div className="mb-6 flex items-center justify-between">
         <Breadcrumbs
           breadcrumbs={props.parents}

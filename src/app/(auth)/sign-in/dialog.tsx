@@ -7,16 +7,10 @@ import { EmailAuthForm } from "~/components/email-auth-form";
 import { GithubAuthForm } from "~/components/github-auth-form";
 import { GoogleAuthForm } from "~/components/google-auth-form";
 import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { SignUpForm } from "./form";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { SignInForm } from "./form";
 
-export function SignUpDialog() {
+export function SignInDialog() {
   const [method, setMethod] = useState<"credentials" | "email">("credentials");
 
   const switchMethodButton = (method: "credentials" | "email") => {
@@ -38,21 +32,16 @@ export function SignUpDialog() {
         variant="secondary"
         onClick={() => setMethod("credentials")}
       >
-        Sign up using password <KeyRoundIcon className="size-6" />
+        Sign in using password <KeyRoundIcon className="size-6" />
       </Button>
     );
   };
 
-  const renderMethodForm = (method: "credentials" | "email") => {
-    if (method === "credentials") {
-      return <SignUpForm />;
-    }
-
-    return <EmailAuthForm />;
-  };
+  const renderMethodForm = (method: "credentials" | "email") =>
+    method === "credentials" ? <SignInForm /> : <EmailAuthForm />;
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-center text-3xl">
           Welcome to <br />
@@ -74,9 +63,9 @@ export function SignUpDialog() {
               variant="link"
               asChild
             >
-              <Link href="/sign-in">
-                Already have an account?{" "}
-                <span className="text-foreground">Sign in!</span>
+              <Link href="/sign-up">
+                Don't have an account yet?{" "}
+                <span className="text-foreground">Sign up!</span>
               </Link>
             </Button>
           </span>

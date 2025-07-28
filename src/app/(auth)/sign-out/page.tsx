@@ -11,8 +11,8 @@ import { signOut } from "~/server/auth";
 
 export default function SignOutPage() {
   return (
-    <main className="-mt-32 flex items-center justify-center md:h-screen">
-      <Card className="w-full max-w-sm">
+    <main className="-mt-32 flex w-full items-center justify-center md:h-screen">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-xl">Sign out</CardTitle>
           <CardDescription>
