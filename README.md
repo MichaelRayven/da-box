@@ -47,6 +47,7 @@ Configured test db connection, next steps:
 - [ ] Update file and folder schema
 - [ ] Add custom verification page
 - [ ] Add file upload
+- [ ] Add multipart upload
 
 ## Platforms
 

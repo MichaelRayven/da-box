@@ -20,6 +20,7 @@
   "dependencies": {
     "@auth/neon-adapter": "^1.10.0",
     "@aws-sdk/client-s3": "^3.850.0",
+    "@aws-sdk/s3-request-presigner": "^3.850.0",
     "@hookform/resolvers": "^5.1.1",
     "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-avatar": "^1.1.10",
