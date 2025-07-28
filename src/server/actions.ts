@@ -20,7 +20,16 @@ export async function createFolder(name: string, parentId: string) {
     return { success: false, error: "Forbidden" };
   }
 
-  const folder = await db
+  const exists = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.parentId, parentId),
+      eq(foldersSchema.name, name),
+    ),
+  });
+
+  if (exists) return { success: false, error: "This folder already exists" };
+
+  const folderId = await db
     .insert(foldersSchema)
     .values({
       name: name,
@@ -29,7 +38,7 @@ export async function createFolder(name: string, parentId: string) {
     })
     .returning({ id: foldersSchema.id });
 
-  return { success: true };
+  return { success: true, data: folderId };
 }
 
 // export async function deleteFile(fileId: number) {
