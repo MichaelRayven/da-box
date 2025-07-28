@@ -61,7 +61,7 @@ export function CreateObjectDropdown() {
       <CreateFolderDialog
         open={folderDialogOpen}
         onOpenChange={setFolderDialogOpen}
-        showTrigger={false}
+        trigger={false}
       />
     </>
   );

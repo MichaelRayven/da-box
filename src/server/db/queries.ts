@@ -7,9 +7,9 @@ import {
   folders as foldersSchema,
 } from "~/server/db/schema";
 
-export async function getParentsForFolder(folderId: number) {
+export async function getParentsForFolder(folderId: string) {
   const parents = [];
-  let currentId: number | null = folderId;
+  let currentId: string | null = folderId;
 
   while (currentId !== null) {
     const folder = await getFolderById(currentId);
@@ -25,14 +25,14 @@ export async function getParentsForFolder(folderId: number) {
   return parents;
 }
 
-async function getFolderById(folderId: number) {
+export async function getFolderById(folderId: string) {
   const folder = await db.query.folders.findFirst({
     where: eq(foldersSchema.id, folderId),
   });
   return folder;
 }
 
-async function getRootFolderForUser(userId: string) {
+export async function getRootFolderForUser(userId: string) {
   const folder = await db.query.folders.findFirst({
     where: and(
       eq(foldersSchema.ownerId, userId),
@@ -42,14 +42,14 @@ async function getRootFolderForUser(userId: string) {
   return folder;
 }
 
-export function getFiles(folderId: number) {
+export function getFiles(folderId: string) {
   return db
     .select()
     .from(filesSchema)
     .where(eq(filesSchema.parentId, folderId));
 }
 
-export function getFolders(folderId: number) {
+export function getFolders(folderId: string) {
   return db
     .select()
     .from(foldersSchema)

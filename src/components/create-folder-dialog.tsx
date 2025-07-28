@@ -12,25 +12,38 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import type { DialogProps } from "@radix-ui/react-dialog";
+import type { ReactNode } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { createFolder } from "~/server/actions";
 
 interface CreateFolderDialogProps extends DialogProps {
-  showTrigger?: boolean;
+  trigger?: ReactNode;
 }
 
 export function CreateFolderDialog({
-  showTrigger = true,
+  trigger = (
+    <Button>
+      <PlusIcon className="mr-2 size-4" />
+      New
+    </Button>
+  ),
   ...props
 }: CreateFolderDialogProps) {
+  const { folderId } = useParams();
+
+  const mutation = useMutation({
+    mutationFn: async (name: string) => {
+      const parent = folderId as string | undefined;
+      if (!parent) return null;
+
+      createFolder(name, parent);
+    },
+  });
+
   return (
     <Dialog {...props}>
-      {showTrigger && (
-        <DialogTrigger asChild>
-          <Button className="mb-4 w-full">
-            <PlusIcon className="mr-2 size-4" />
-            New
-          </Button>
-        </DialogTrigger>
-      )}
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>

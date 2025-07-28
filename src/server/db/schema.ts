@@ -24,12 +24,15 @@ export function lower(text: AnyPgColumn): SQL {
 export const files = createTable(
   "files_table",
   (d) => ({
-    id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+    id: d
+      .text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     name: d.text("name").notNull(),
     size: d.integer().notNull(),
     url: d.text("url").notNull(),
     parentId: d
-      .integer()
+      .text()
       .notNull()
       .references(() => folders.id, { onDelete: "cascade" }),
     ownerId: d
@@ -64,9 +67,12 @@ export const folders = createTable(
   "folders_table",
   (d) => {
     return {
-      id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
+      id: d
+        .text("id")
+        .primaryKey()
+        .$defaultFn(() => crypto.randomUUID()),
       name: d.varchar({ length: 256 }).notNull(),
-      parentId: d.integer(),
+      parentId: d.text(),
       ownerId: d
         .text()
         .notNull()

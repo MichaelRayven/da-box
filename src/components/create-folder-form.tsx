@@ -19,11 +19,13 @@ import { PlusIcon } from "lucide-react";
 
 interface CreateFolderFormProps {
   className?: string;
+  onSubmit?: (values: z.infer<typeof fileNameSchema>) => void;
   submitButton?: (isPending?: boolean) => ReactNode;
 }
 
 export function CreateFolderForm({
   className,
+  onSubmit = () => {},
   submitButton = () => (
     <Button type="submit" className="mt-2 w-full">
       Create <PlusIcon className="size-6" />
@@ -36,10 +38,6 @@ export function CreateFolderForm({
       name: "",
     },
   });
-
-  const onSubmit = async (values: z.infer<typeof fileNameSchema>) => {
-    console.log(values);
-  };
 
   return (
     <Form {...form}>
