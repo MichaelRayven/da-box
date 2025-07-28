@@ -1,12 +1,19 @@
-import { getFiles, getFolders } from "~/server/db/queries";
-import DriveContents from "../_components/drive-contents";
+import { getRootFolderForUser } from "~/server/db/queries";
+import { auth } from "~/server/auth";
+import { redirect } from "next/navigation";
+import { onboardUser } from "~/server/db/mutations";
 
 export default async function GoogleDriveClone() {
-  const filesPromise = getFiles(1);
+  const session = await auth();
 
-  const foldersPromise = getFolders(1);
+  if (!session?.user.id) return redirect("/sign-in");
 
-  const [folders, files] = await Promise.all([foldersPromise, filesPromise]);
+  const root = await getRootFolderForUser(session.user.id);
 
-  return <DriveContents folders={folders} files={files} />;
+  if (!root) {
+    const rootFolderId = await onboardUser(session.user.id);
+    return redirect(`/drive/folders/${rootFolderId}`);
+  }
+
+  return redirect(`/drive/folders/${root.id}`);
 }
