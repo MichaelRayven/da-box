@@ -22,6 +22,17 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { cn } from "~/lib/utils";
 
+function Logo({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center space-x-2", className)}>
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-green-500">
+        <HardDrive className="h-5 w-5 text-white" />
+      </div>
+      <h1 className="font-semibold text-xl">Drive</h1>
+    </div>
+  );
+}
+
 export default function Sidebar() {
   const [newFolderName, setNewFolderName] = useState("");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
@@ -34,7 +45,7 @@ export default function Sidebar() {
         <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
           <DialogTrigger asChild>
             <Button className="mb-4 w-full">
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 size-4" />
               New
             </Button>
           </DialogTrigger>
@@ -67,41 +78,27 @@ export default function Sidebar() {
 
         <nav className="space-y-2">
           <Button variant="ghost" className="w-full justify-start">
-            <Home className="mr-3 h-4 w-4" />
+            <Home className="mr-3 size-4" />
             My Drive
           </Button>
           <Button variant="ghost" className="w-full justify-start">
-            <Users className="mr-3 h-4 w-4" />
+            <Users className="mr-3 size-4" />
             Shared with me
           </Button>
           <Button variant="ghost" className="w-full justify-start">
-            <Clock className="mr-3 h-4 w-4" />
+            <Clock className="mr-3 size-4" />
             Recent
           </Button>
           <Button variant="ghost" className="w-full justify-start">
-            <Star className="mr-3 h-4 w-4" />
+            <Star className="mr-3 size-4" />
             Starred
           </Button>
           <Button variant="ghost" className="w-full justify-start">
-            <Trash2 className="mr-3 h-4 w-4" />
+            <Trash2 className="mr-3 size-4" />
             Trash
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            <HardDrive className="mr-3 h-4 w-4" />
-            Storage
           </Button>
         </nav>
       </div>
     </aside>
-  );
-}
-function Logo({ className }: { className?: string }) {
-  return (
-    <div className={cn("flex items-center space-x-2", className)}>
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-green-500">
-        <HardDrive className="h-5 w-5 text-white" />
-      </div>
-      <h1 className="font-semibold text-xl">Drive</h1>
-    </div>
   );
 }

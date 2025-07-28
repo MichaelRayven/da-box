@@ -33,10 +33,10 @@ export const files_table = pgTable(
       .integer()
       .notNull()
       .references(() => folders_table.id),
-    // owner: d
-    //   .varchar({ length: 255 })
-    //   .notNull()
-    //   .references(() => users.id),
+    owner: d
+      .uuid()
+      .notNull()
+      .references(() => users.id),
     modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
     createdAt: d
       .timestamp({ withTimezone: true })
@@ -45,7 +45,7 @@ export const files_table = pgTable(
   }),
   (t) => [
     index("modified_files_idx").on(t.modified),
-    // index("owner_files_idx").on(t.owner),
+    index("owner_files_idx").on(t.owner),
     index("parent_files_idx").on(t.parent),
   ],
 );
@@ -57,10 +57,10 @@ export const folders_table = pgTable(
       id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
       name: d.varchar({ length: 256 }).notNull(),
       parent: d.integer(),
-      // owner: d
-      //   .varchar({ length: 255 })
-      //   .notNull()
-      //   .references(() => users.id),
+      owner: d
+        .uuid()
+        .notNull()
+        .references(() => users.id),
       modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
       createdAt: d
         .timestamp({ withTimezone: true })
@@ -73,7 +73,7 @@ export const folders_table = pgTable(
       "cascade",
     ),
     index("modified_folders_idx").on(t.modified),
-    // index("owner_folders_idx").on(t.owner),
+    index("owner_folders_idx").on(t.owner),
     index("parent_folders_idx").on(t.parent),
   ],
 );

@@ -14,9 +14,7 @@ function getFileExtension(filename: string) {
 }
 
 async function convertToJpeg(buffer: Buffer): Promise<Buffer> {
-  return sharp(buffer)
-    .jpeg({ quality: 90 }) // convert to JPEG
-    .toBuffer();
+  return sharp(buffer).jpeg({ quality: 90 }).toBuffer();
 }
 
 async function uploadAvatar(key: string, avatar: File) {

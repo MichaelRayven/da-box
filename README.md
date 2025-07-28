@@ -13,6 +13,9 @@ You can check it out at: https://da-box.netlify.app/
 - [ ] Add dashboard
 - [ ] Add file uploading
 - [ ] Date, size filtering
+- [ ] Renaming and deletion
+- [ ] Access control
+- [ ] File view page
 
 ## Note from 7/21/2025
 
@@ -23,7 +26,7 @@ Configured test db connection, next steps:
 - [x] Update schema to show files and folders
 - [x] Manually insert examples
 - [x] Render them in the UI
-- [ ] QA and deploy 👍!
+- [x] QA and deploy 👍!
 
 ## Note from 7/22/2025
 
@@ -33,10 +36,17 @@ Configured test db connection, next steps:
 
 ## Note from 7/27/2025
 
-- [ ] Add loading state for sign in
-- [ ] Add error messages for sign in
+- [x] Add loading state for sign in
+- [x] Add error messages for sign in
 - [x] Update user data during onboarding
-- [ ] Protect route from unauthenticated users
+
+## Note from 7/28/20265
+
+- [ ] Autofill existing data in onboarding
+- [ ] Protect onboarding route from unauthenticated users
+- [ ] Update file and folder schema
+- [ ] Add custom verification page
+- [ ] Add file upload
 
 ## Platforms
 
