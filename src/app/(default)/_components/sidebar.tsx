@@ -2,6 +2,7 @@
 
 import { Clock, HardDrive, Home, Star, Trash2, Users } from "lucide-react";
 import { CreateFolderDialog } from "~/components/create-folder-dialog";
+import { CreateObjectDropdown } from "~/components/create-object-dropdown";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
@@ -22,7 +23,7 @@ export default function Sidebar() {
       <div className="p-4">
         <Logo className="mb-6" />
 
-        <CreateFolderDialog />
+        <CreateObjectDropdown />
 
         <nav className="space-y-2">
           <Button variant="ghost" className="w-full justify-start">
