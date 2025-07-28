@@ -32,6 +32,13 @@ export async function getFolderById(folderId: string) {
   return folder;
 }
 
+export async function getFileById(fileId: string) {
+  const file = await db.query.files.findFirst({
+    where: eq(filesSchema.id, fileId),
+  });
+  return file;
+}
+
 export async function getRootFolderForUser(userId: string) {
   const folder = await db.query.folders.findFirst({
     where: and(

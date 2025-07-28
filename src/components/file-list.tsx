@@ -15,13 +15,15 @@ export default function FileList(props: {
 }) {
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800">
-      <Table>
+      <Table className="w-full">
         <TableHeader>
           <TableRow className="border-gray-700 hover:bg-gray-800">
-            <TableHead className="text-gray-300">Name</TableHead>
-            <TableHead className="text-gray-300">Owner</TableHead>
-            <TableHead className="text-gray-300">Last modified</TableHead>
-            <TableHead className="text-gray-300">File size</TableHead>
+            <TableHead className="w-1/2 min-w-[200px] text-gray-300">
+              Name
+            </TableHead>
+            <TableHead className="w-1/6 text-gray-300">Owner</TableHead>
+            <TableHead className="w-1/6 text-gray-300">Last modified</TableHead>
+            <TableHead className="w-1/6 text-gray-300">File size</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

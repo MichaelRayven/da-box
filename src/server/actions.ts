@@ -2,14 +2,32 @@
 
 import { and, eq } from "drizzle-orm";
 import { db } from "./db";
-import { cookies } from "next/headers";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { auth } from "./auth";
-import { getFolderById } from "./db/queries";
+import { getFileById, getFolderById } from "./db/queries";
+import { getPrivateObjectUrl } from "./s3";
+import { env } from "~/env";
+
+export async function getFileUrl(fileId: string) {
+  const session = await auth();
+
+  if (!session?.user.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const file = await getFileById(fileId);
+
+  if (file?.ownerId !== session.user.id) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const url = await getPrivateObjectUrl(env.S3_FILE_BUCKET_NAME, file.key);
+
+  return { success: true, data: url };
+}
 
 export async function createFolder(name: string, parentId: string) {
   const session = await auth();
-  console.log(session);
 
   if (!session?.user.id) {
     return { success: false, error: "Unauthorized" };
