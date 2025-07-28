@@ -9,7 +9,17 @@ import {
 } from "~/components/ui/card";
 import { OnboardingForm } from "./form";
 
-export function OnboardingDialog() {
+interface OnboardingDialogProps {
+  defaultName?: string;
+  defaultUsername?: string;
+  defaultAvatar?: string;
+}
+
+export function OnboardingDialog({
+  defaultName = "",
+  defaultUsername = "",
+  defaultAvatar,
+}: OnboardingDialogProps) {
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
@@ -21,7 +31,11 @@ export function OnboardingDialog() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <OnboardingForm />
+        <OnboardingForm
+          defaultName={defaultName}
+          defaultUsername={defaultUsername}
+          defaultAvatar={defaultAvatar}
+        />
       </CardContent>
     </Card>
   );

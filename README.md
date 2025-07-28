@@ -42,7 +42,8 @@ Configured test db connection, next steps:
 
 ## Note from 7/28/20265
 
-- [ ] Autofill existing data in onboarding
+- [x] Autofill existing data in onboarding
+- [ ] Autofill avatar in onboarding
 - [ ] Protect onboarding route from unauthenticated users
 - [ ] Update file and folder schema
 - [ ] Add custom verification page

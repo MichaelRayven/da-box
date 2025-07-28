@@ -25,14 +25,24 @@ import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
-export function OnboardingForm() {
+interface OnboardingFormProps {
+  defaultName?: string;
+  defaultUsername?: string;
+  defaultAvatar?: string;
+}
+
+export function OnboardingForm({
+  defaultName = "",
+  defaultUsername = "",
+  defaultAvatar,
+}: OnboardingFormProps) {
   const router = useRouter();
 
   const form = useForm<z.infer<typeof onboardingSchema>>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      name: "",
-      username: "",
+      name: defaultName,
+      username: defaultUsername,
       avatar: undefined,
     },
   });

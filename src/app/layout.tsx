@@ -23,9 +23,7 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable}`}>
       <body>
         <Providers>
-          <div className="flex min-h-screen w-full bg-background text-foreground">
-            {children}
-          </div>
+          <div className="bg-background text-foreground">{children}</div>
           <Toaster />
         </Providers>
       </body>
