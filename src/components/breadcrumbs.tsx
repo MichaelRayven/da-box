@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import type { folders_table } from "~/server/db/schema";
+import type { folders } from "~/server/db/schema";
 
 interface BreadcrumbProps {
   className?: string;
-  breadcrumbs?: (typeof folders_table.$inferSelect)[];
+  breadcrumbs?: (typeof folders.$inferSelect)[];
 }
 
 export default function Breadcrumbs({

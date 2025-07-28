@@ -2,12 +2,12 @@ import { FolderPlus, Grid3X3, List, Upload } from "lucide-react";
 import Breadcrumbs from "~/components/breadcrumbs";
 import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
-import type { files_table, folders_table } from "~/server/db/schema";
+import type { files, folders } from "~/server/db/schema";
 
 export default function DriveContents(props: {
-  folders: (typeof folders_table.$inferSelect)[];
-  files: (typeof files_table.$inferSelect)[];
-  parents?: (typeof folders_table.$inferSelect)[];
+  folders: (typeof folders.$inferSelect)[];
+  files: (typeof files.$inferSelect)[];
+  parents?: (typeof folders.$inferSelect)[];
 }) {
   return (
     <div className="flex-1 p-6">

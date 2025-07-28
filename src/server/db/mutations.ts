@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "~/server/db";
-import { files_table, folders_table, users } from "./schema";
+import { files, folders, users } from "./schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { nameSchema, usernameSchema } from "~/lib/validation";
@@ -34,7 +34,7 @@ export async function updateUserProfile(
 
     if (
       error.cause.code === "23505" &&
-      error.cause.constraint === "username_key"
+      error.cause.constraint === "username_unique_index"
     ) {
       throw new Error("This username is already taken.");
     }
@@ -44,26 +44,26 @@ export async function updateUserProfile(
   }
 }
 
-export function createFolder(name: string, owner: string, parent: number) {
-  return db.insert(folders_table).values({
+export function createFolder(name: string, ownerId: string, parentId?: number) {
+  return db.insert(folders).values({
     name,
-    owner,
-    parent,
+    parentId,
+    ownerId,
   });
 }
 
 export function createFile(
   name: string,
   key: string,
-  owner: string,
-  parent: number,
   size: number,
+  ownerId: string,
+  parentId: number,
 ) {
-  return db.insert(files_table).values({
+  return db.insert(files).values({
     name,
     key,
-    owner,
-    parent,
     size,
+    ownerId,
+    parentId,
   });
 }

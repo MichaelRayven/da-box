@@ -6,12 +6,12 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import type { files_table, folders_table } from "~/server/db/schema";
+import type { files, folders } from "~/server/db/schema";
 import { FileRow, FolderRow } from "./file-row";
 
 export default function FileList(props: {
-  files: (typeof files_table.$inferSelect)[];
-  folders: (typeof folders_table.$inferSelect)[];
+  files: (typeof files.$inferSelect)[];
+  folders: (typeof folders.$inferSelect)[];
 }) {
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800">

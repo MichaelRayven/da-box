@@ -2,18 +2,15 @@ import "server-only";
 
 import { eq } from "drizzle-orm";
 import { db } from "~/server/db";
-import { files_table, folders_table } from "~/server/db/schema";
+import { files, folders } from "~/server/db/schema";
 
 export async function getParentFolders(folderId: number) {
   const parents = [];
   let currentId: number | null = folderId;
 
   while (currentId !== null) {
-    const folder: typeof folders_table.$inferSelect | undefined = (
-      await db
-        .select()
-        .from(folders_table)
-        .where(eq(folders_table.id, currentId))
+    const folder: typeof folders.$inferSelect | undefined = (
+      await db.select().from(folders).where(eq(folders.id, currentId))
     )[0];
 
     if (!folder) {
@@ -27,12 +24,9 @@ export async function getParentFolders(folderId: number) {
 }
 
 export function getFiles(folderId: number) {
-  return db.select().from(files_table).where(eq(files_table.parent, folderId));
+  return db.select().from(files).where(eq(files.parent, folderId));
 }
 
 export function getFolders(folderId: number) {
-  return db
-    .select()
-    .from(folders_table)
-    .where(eq(folders_table.parent, folderId));
+  return db.select().from(folders).where(eq(folders.parent, folderId));
 }

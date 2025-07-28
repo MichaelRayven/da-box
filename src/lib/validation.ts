@@ -84,3 +84,19 @@ export const updateUserSchema = z.object({
     .optional()
     .refine((f) => !f || f.length < 5_000_000, "File too large"), // optional 5MB limit
 });
+
+export const fileNameSchema = z.object({
+  name: z
+    .string()
+    .max(255, "Filename is too long")
+    .refine(
+      (name) =>
+        !name.includes("/") && !name.includes("\\") && !name.includes("\0"),
+      {
+        message: "Filename cannot contain slashes or null bytes",
+      },
+    )
+    .refine((name) => /^[^<>:"|?*]+$/.test(name), {
+      message: 'Filename contains invalid characters (<>:"|?*)',
+    }),
+});
