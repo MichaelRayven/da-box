@@ -1,7 +1,11 @@
 import "server-only";
 
 import { db } from "~/server/db";
-import { files, folders, users } from "./schema";
+import {
+  files as filesSchema,
+  folders as foldersSchema,
+  users,
+} from "./schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { nameSchema, usernameSchema } from "~/lib/validation";
@@ -39,31 +43,39 @@ export async function updateUserProfile(
       throw new Error("This username is already taken.");
     }
 
-    // Otherwise, rethrow the original error
     throw new Error("Something went wrong while updating your profile.");
   }
 }
 
-export function createFolder(name: string, ownerId: string, parentId?: number) {
-  return db.insert(folders).values({
-    name,
-    parentId,
-    ownerId,
-  });
-}
+export async function onboardUser(userId: string) {
+  const rootFolder = await db
+    .insert(foldersSchema)
+    .values({
+      name: "Root",
+      parentId: null,
+      ownerId: userId,
+    })
+    .returning({ id: foldersSchema.id });
 
-export function createFile(
-  name: string,
-  key: string,
-  size: number,
-  ownerId: string,
-  parentId: number,
-) {
-  return db.insert(files).values({
-    name,
-    key,
-    size,
-    ownerId,
-    parentId,
-  });
+  const rootFolderId = rootFolder[0]!.id;
+
+  await db.insert(foldersSchema).values([
+    {
+      name: "Trash",
+      parentId: rootFolderId,
+      ownerId: userId,
+    },
+    {
+      name: "Shared",
+      parentId: rootFolderId,
+      ownerId: userId,
+    },
+    {
+      name: "Starred",
+      parentId: rootFolderId,
+      ownerId: userId,
+    },
+  ]);
+
+  return rootFolderId;
 }

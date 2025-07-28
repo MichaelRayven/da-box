@@ -25,15 +25,15 @@ export const files = createTable(
   "files_table",
   (d) => ({
     id: d.integer().primaryKey().generatedByDefaultAsIdentity(),
-    name: d.varchar({ length: 256 }).notNull(),
+    name: d.text("name").notNull(),
     size: d.integer().notNull(),
-    key: d.varchar({ length: 256 }).notNull(),
+    url: d.text("url").notNull(),
     parentId: d
       .integer()
       .notNull()
       .references(() => folders.id, { onDelete: "cascade" }),
     ownerId: d
-      .uuid()
+      .text()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
@@ -68,7 +68,7 @@ export const folders = createTable(
       name: d.varchar({ length: 256 }).notNull(),
       parentId: d.integer(),
       ownerId: d
-        .uuid()
+        .text()
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
       modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
