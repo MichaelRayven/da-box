@@ -44,7 +44,7 @@ export function CreateObjectDropdown() {
             New
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 mt-2" align="start">
+        <DropdownMenuContent className="mt-2 w-56" align="start">
           <DropdownMenuItem
             onSelect={() => setFolderDialogOpen(true)}
             className="cursor-pointer"

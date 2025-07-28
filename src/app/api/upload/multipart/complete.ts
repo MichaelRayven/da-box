@@ -9,6 +9,7 @@ export async function POST(req: Request) {
   if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
   const { key, uploadId, parts } = await req.json();
+
   const userId = session.user.id;
   if (!key.startsWith(`${userId}/`)) {
     return new NextResponse("Forbidden", { status: 403 });

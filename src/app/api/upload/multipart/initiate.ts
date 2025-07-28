@@ -8,15 +8,15 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
-  const { fileName, fileType } = await req.json();
+  const { filename, type } = await req.json();
   const userId = session.user.id;
-  const ext = fileName?.split(".").pop() ?? "bin";
+  const ext = filename?.split(".").pop() ?? "bin";
   const key = `${userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
   const command = new CreateMultipartUploadCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
     Key: key,
-    ContentType: fileType,
+    ContentType: type,
   });
 
   const res = await s3.send(command);
