@@ -1,7 +1,7 @@
 import "server-only";
 
 import { db } from "~/server/db";
-import { users } from "./schema";
+import { files_table, folders_table, users } from "./schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { nameSchema, usernameSchema } from "~/lib/validation";
@@ -42,4 +42,28 @@ export async function updateUserProfile(
     // Otherwise, rethrow the original error
     throw new Error("Something went wrong while updating your profile.");
   }
+}
+
+export function createFolder(name: string, owner: string, parent: number) {
+  return db.insert(folders_table).values({
+    name,
+    owner,
+    parent,
+  });
+}
+
+export function createFile(
+  name: string,
+  key: string,
+  owner: string,
+  parent: number,
+  size: number,
+) {
+  return db.insert(files_table).values({
+    name,
+    key,
+    owner,
+    parent,
+    size,
+  });
 }
