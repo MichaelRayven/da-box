@@ -44,13 +44,13 @@ export default async function Header() {
           {session?.user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Avatar className="size-8 cursor-pointer">
+                <Avatar className="flex size-8 cursor-pointer ">
                   <AvatarImage
                     className="aspect-square size-full rounded-full object-cover"
                     src={session.user.image ?? "/placeholder-user.jpg"}
                     alt={session.user.name ?? "User"}
                   />
-                  <AvatarFallback>
+                  <AvatarFallback className="flex flex-1 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     {session.user.name?.[0]?.toUpperCase() ?? "?"}
                   </AvatarFallback>
                 </Avatar>
