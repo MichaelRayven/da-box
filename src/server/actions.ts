@@ -9,9 +9,11 @@ import { getPrivateObjectUrl, s3 } from "./s3";
 import { env } from "~/env";
 import type { ActionResponse } from "~/lib/interface";
 import {
+  CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
   PutObjectCommand,
   UploadPartCommand,
+  type CompletedPart,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -181,6 +183,41 @@ export async function getUploadPartUrl(
 
   const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
   return { success: true, data: { url } };
+}
+
+export async function completePartialUpload(
+  key: string,
+  uploadId: string,
+  parts: CompletedPart[],
+): Promise<ActionResponse<{ id: string }>> {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const userId = session.user.id;
+  if (!key.startsWith(`${userId}/`)) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const command = new CompleteMultipartUploadCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: key,
+    UploadId: uploadId,
+    MultipartUpload: { Parts: parts },
+  });
+
+  await s3.send(command);
+
+  const [updatedFile] = await db
+    .update(filesSchema)
+    .set({
+      hidden: false,
+    })
+    .where(eq(filesSchema.key, key))
+    .returning({ id: filesSchema.id });
+
+  if (!updatedFile) return { success: false, error: "Something went wrong" };
+
+  return { success: true, data: { id: updatedFile.id } };
 }
 
 // export async function deleteFile(fileId: number) {
