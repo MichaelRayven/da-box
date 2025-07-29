@@ -16,7 +16,7 @@ export default function SignOutPage() {
         <CardHeader>
           <CardTitle className="text-xl">Sign out</CardTitle>
           <CardDescription>
-            Please confirm sign out, on success you will be redirected to home.
+            Please confirm sign out, you will be redirected to the home page
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex justify-end gap-2">

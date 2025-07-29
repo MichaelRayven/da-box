@@ -50,8 +50,6 @@ export function SignInForm({
         redirect: false,
       });
 
-      console.log(result);
-
       if (result?.error) {
         const errorMessage =
           result.error === "CredentialsSignin"

@@ -53,7 +53,7 @@ export function OnboardingForm({
     },
     onSuccess: () => {
       toast.success("Your profile has been updated!");
-      router.replace("/");
+      router.replace("/drive");
     },
     onError: (error: Error) => {
       toast.error(error.message, {

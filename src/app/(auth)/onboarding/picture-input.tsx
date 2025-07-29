@@ -10,7 +10,7 @@ type AvatarUploadProps = Omit<
   "type" | "onChange" | "value" | "ref"
 > & {
   value?: File | string;
-  onChange: (value?: File) => void;
+  onChange: (value: File | null) => void;
   ref?: (el: HTMLInputElement | null) => void;
 };
 
@@ -37,7 +37,7 @@ export function PictureInput({
       localRef.current.value = "";
     }
 
-    onChange(new DataTransfer().files?.[0]);
+    onChange(null);
   };
 
   const setRefs = (el: HTMLInputElement | null) => {
@@ -75,7 +75,7 @@ export function PictureInput({
         ref={setRefs}
         onChange={(e) => {
           const fileList = e.target.files;
-          onChange(fileList?.[0]);
+          onChange(fileList?.[0] ?? null);
         }}
         disabled={disabled}
         {...props}

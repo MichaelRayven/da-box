@@ -21,9 +21,7 @@ export function OnboardingDialog({
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
-        <CardTitle className="text-center text-3xl">
-          Setup your profile!
-        </CardTitle>
+        <CardTitle className="text-3xl">Setup your profile!</CardTitle>
         <CardDescription className="mt-2">
           Last step! Let's configure your profile name and username.
         </CardDescription>
