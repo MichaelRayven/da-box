@@ -2,14 +2,14 @@
 
 import { useEffect } from "react";
 import { useDriveStore } from "~/lib/store/drive";
-import type { File, Folder } from "~/lib/interface";
+import type { FileType, FolderType } from "~/lib/interface";
 
 export default function DriveStoreHydrator({
   files,
   folders,
 }: {
-  files: File[];
-  folders: Folder[];
+  files: FileType[];
+  folders: FolderType[];
 }) {
   const initialize = useDriveStore((s) => s.initialize);
 

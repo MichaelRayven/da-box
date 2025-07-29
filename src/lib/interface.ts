@@ -13,7 +13,7 @@ import type { AdapterAccountType } from "next-auth/adapters";
 //   url?: string;
 // }
 
-export type File = {
+export type FileType = {
   id: string;
   name: string;
   size: number;
@@ -26,7 +26,7 @@ export type File = {
   createdAt: Date | null;
 };
 
-export type Folder = {
+export type FolderType = {
   id: string;
   name: string;
   parentId: string | null;

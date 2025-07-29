@@ -1,12 +1,7 @@
 "use client";
 
-import React, { useRef } from "react";
-import {
-  PlusIcon,
-  ChevronDownIcon,
-  FolderPlusIcon,
-  FilePlusIcon,
-} from "lucide-react";
+import React from "react";
+import { PlusIcon, FolderPlusIcon, FilePlusIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,25 +10,12 @@ import {
 } from "./ui/dropdown-menu";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { Button } from "./ui/button";
-import { useUploadFile } from "~/hook/useUploadFile";
+import { UploadFileDialog } from "./upload-file-dialog";
 
 export function CreateObjectDropdown() {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
-  const uploader = useUploadFile();
-
-  // Handler for Create File
-  function handleCreateFileClick() {
-    fileInputRef.current?.click();
-  }
-
-  function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    console.log("Selected file:", file);
-
-    uploader.upload(file);
-  }
+  const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false);
+  // const uploader = useUploadFile();
 
   return (
     <>
@@ -52,7 +34,7 @@ export function CreateObjectDropdown() {
             <FolderPlusIcon /> New Folder
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={handleCreateFileClick}
+            onSelect={() => setUploadDialogOpen(true)}
             className="cursor-pointer"
           >
             <FilePlusIcon /> Upload File
@@ -61,11 +43,10 @@ export function CreateObjectDropdown() {
       </DropdownMenu>
 
       {/* Hidden file input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={onFileChange}
+      <UploadFileDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        trigger={false}
       />
 
       {/* Folder creation dialog */}

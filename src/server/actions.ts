@@ -15,7 +15,12 @@ import mime from "mime-types";
 import { cookies } from "next/headers";
 import type z from "zod";
 import { env } from "~/env";
-import type { ActionResponse, Folder, PostgresError } from "~/lib/interface";
+import type {
+  ActionResponse,
+  FileType,
+  FolderType,
+  PostgresError,
+} from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
@@ -53,7 +58,7 @@ export async function getFileViewingUrl(fileId: string) {
 export async function createFolder(
   name: string,
   parentId: string,
-): Promise<ActionResponse<{ folder: Folder }>> {
+): Promise<ActionResponse<{ folder: FolderType }>> {
   const session = await auth();
 
   if (!session?.userId) {
@@ -70,7 +75,7 @@ export async function createFolder(
   if (!parent) return { success: false, error: "Forbidden" };
 
   try {
-    const folder = await db
+    const [folder] = await db
       .insert(foldersSchema)
       .values({
         name: name,
@@ -79,9 +84,9 @@ export async function createFolder(
       })
       .returning();
 
-    if (!folder[0]) return { success: false, error: "Something went wrong" };
+    if (!folder) return { success: false, error: "Something went wrong" };
 
-    return { success: true, data: { folder: folder[0] } };
+    return { success: true, data: { folder } };
   } catch (err) {
     if (isUniqueConstraintViolation(err)) {
       return { success: false, error: "Folder with this name already exists" };
@@ -96,7 +101,7 @@ export async function getFileUploadUrl(
   type: string,
   parentId: string,
   size: number,
-): Promise<ActionResponse<{ key: string; url: string }>> {
+): Promise<ActionResponse<{ file: FileType; url: string }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Unauthorized" };
 
@@ -113,32 +118,37 @@ export async function getFileUploadUrl(
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
   try {
-    await db.insert(filesSchema).values({
-      name,
-      key,
-      ownerId: session.userId,
-      parentId,
-      size,
-      type,
-      hidden: false,
+    const [file] = await db
+      .insert(filesSchema)
+      .values({
+        name,
+        key,
+        ownerId: session.userId,
+        parentId,
+        size,
+        type,
+        hidden: false,
+      })
+      .returning();
+
+    if (!file) return { success: false, error: "Something went wrong" };
+
+    const command = new PutObjectCommand({
+      Bucket: env.S3_FILE_BUCKET_NAME,
+      Key: key,
+      ContentType: type,
     });
+
+    const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+
+    return { success: true, data: { file, url } };
   } catch (err) {
     if (isUniqueConstraintViolation(err)) {
       return { success: false, error: "File with this name already exists" };
     }
-
-    return { success: false, error: "Something went wrong" };
   }
 
-  const command = new PutObjectCommand({
-    Bucket: env.S3_FILE_BUCKET_NAME,
-    Key: key,
-    ContentType: type,
-  });
-
-  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
-
-  return { success: true, data: { key, url } };
+  return { success: false, error: "Something went wrong" };
 }
 
 export async function startPartialFileUpload(
@@ -162,8 +172,10 @@ export async function startPartialFileUpload(
   const ext = mime.extension(type);
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
+  let file: FileType | undefined;
+
   try {
-    await db.insert(filesSchema).values({
+    [file] = await db.insert(filesSchema).values({
       name: name,
       key: key,
       ownerId: session.userId,
@@ -172,12 +184,34 @@ export async function startPartialFileUpload(
       type: type,
       hidden: true,
     });
+
+    if (!file) return { success: false, error: "Something went wrong" };
   } catch (err) {
     if (isUniqueConstraintViolation(err)) {
-      return { success: false, error: "File with this name already exists" };
-    }
+      file = await db.query.files.findFirst({
+        where: and(
+          eq(filesSchema.name, name),
+          eq(filesSchema.parentId, parentId),
+        ),
+      });
 
-    return { success: false, error: "Something went wrong" };
+      if (file?.hidden) {
+        await db
+          .update(filesSchema)
+          .set({
+            name: name,
+            key: key,
+            ownerId: session.userId,
+            parentId: parentId,
+            size: size,
+            type: type,
+            hidden: true,
+          })
+          .where(eq(filesSchema.id, file.id));
+      } else {
+        return { success: false, error: "File with this name already exists" };
+      }
+    }
   }
 
   const command = new CreateMultipartUploadCommand({
@@ -190,7 +224,7 @@ export async function startPartialFileUpload(
 
   if (!UploadId) return { success: false, error: "Something went wrong" };
 
-  return { success: true, data: { uploadId: UploadId, key: key } };
+  return { success: true, data: { uploadId: UploadId, key } };
 }
 
 export async function getUploadFilePartUrl(
@@ -221,7 +255,7 @@ export async function completePartialFileUpload(
   key: string,
   uploadId: string,
   parts: CompletedPart[],
-): Promise<ActionResponse<{ id: string }>> {
+): Promise<ActionResponse<{ file: FileType }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Unauthorized" };
 
@@ -238,17 +272,22 @@ export async function completePartialFileUpload(
 
   await s3.send(command);
 
-  const [updatedFile] = await db
-    .update(filesSchema)
-    .set({
-      hidden: false,
-    })
-    .where(eq(filesSchema.key, key))
-    .returning({ id: filesSchema.id });
+  try {
+    const [updatedFile] = await db
+      .update(filesSchema)
+      .set({
+        hidden: false,
+      })
+      .where(eq(filesSchema.key, key))
+      .returning();
 
-  if (!updatedFile) return { success: false, error: "Something went wrong" };
+    if (!updatedFile) return { success: false, error: "Something went wrong" };
 
-  return { success: true, data: { id: updatedFile.id } };
+    return { success: true, data: { file: updatedFile } };
+  } catch (e) {
+    console.error(e);
+  }
+  return { success: false, error: "Something went wrong" };
 }
 
 export async function deleteFile(

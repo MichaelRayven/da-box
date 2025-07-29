@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import type { DialogProps } from "@radix-ui/react-dialog";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { createFolder } from "~/server/actions";
@@ -38,7 +38,7 @@ export function CreateFolderDialog({
   const mutation = useMutation({
     mutationFn: async (name: string) => {
       const parent = folderId as string | undefined;
-      if (!parent) throw new Error("Could't find current folder");
+      if (!parent) throw new Error("No parent folder selected");
 
       const response = await createFolder(name, parent);
       if (!response.success) {

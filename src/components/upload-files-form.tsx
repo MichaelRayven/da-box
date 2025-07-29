@@ -113,7 +113,7 @@ export function UploadFilesForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn("flex w-64 flex-col gap-4", className)}
+        className={cn("flex flex-col gap-4", className)}
       >
         <FormField
           control={form.control}
@@ -121,7 +121,12 @@ export function UploadFilesForm({
           render={({ fieldState }) => (
             <FormItem>
               <FormLabel>
-                <Dropzone onDrop={handleDrop} hasError={!!fieldState.error} />
+                <Dropzone
+                  className="w-full py-16"
+                  onDrop={handleDrop}
+                  disabled={isPending}
+                  hasError={!!fieldState.error}
+                />
               </FormLabel>
               <FormControl>
                 <Input
@@ -139,7 +144,7 @@ export function UploadFilesForm({
         />
 
         {files.length > 0 && (
-          <ScrollArea className="max-h-40 w-full rounded-md border p-2">
+          <ScrollArea className="max-h-64 w-full rounded-md border p-2">
             <h3 className="mb-2 font-medium text-muted-foreground text-sm">
               Selected Files:
             </h3>

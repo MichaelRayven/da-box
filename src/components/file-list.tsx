@@ -10,14 +10,14 @@ import {
 } from "~/components/ui/table";
 import { FileRow, FolderRow } from "./file-row";
 import { useDriveStore } from "~/lib/store/drive";
-import type { File, Folder } from "~/lib/interface";
+import type { FileType, FolderType } from "~/lib/interface";
 
 export default function FileList({
   folders: initialFolders,
   files: initialFiles,
 }: {
-  files?: File[];
-  folders?: Folder[];
+  files?: FileType[];
+  folders?: FolderType[];
 }) {
   // Transition from SSR to local state
   const storeFiles = useDriveStore((s) => s.files);

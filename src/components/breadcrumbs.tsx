@@ -7,12 +7,12 @@ import {
   BreadcrumbLink,
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
-import type { Folder } from "~/lib/interface";
+import type { FolderType } from "~/lib/interface";
 import type { folders } from "~/server/db/schema";
 
 interface BreadcrumbProps {
   className?: string;
-  breadcrumbs?: Folder[];
+  breadcrumbs?: FolderType[];
 }
 
 export default function Breadcrumbs({

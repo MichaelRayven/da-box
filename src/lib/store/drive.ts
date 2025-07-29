@@ -1,16 +1,16 @@
 import { create } from "zustand";
-import type { Folder, File } from "../interface";
+import type { FolderType, FileType } from "../interface";
 
 type DriveState = {
-  files: File[];
-  folders: Folder[];
+  files: FileType[];
+  folders: FolderType[];
 
-  initialize: (files: File[], folders: Folder[]) => void;
-  addFile: (file: File) => void;
+  initialize: (files: FileType[], folders: FolderType[]) => void;
+  addFile: (file: FileType) => void;
   renameFile: (id: string, newName: string) => void;
   removeFile: (id: string) => void;
 
-  addFolder: (folder: Folder) => void;
+  addFolder: (folder: FolderType) => void;
   renameFolder: (id: string, newName: string) => void;
   removeFolder: (id: string) => void;
 };

@@ -1,100 +1,145 @@
 import type { CompletedPart } from "@aws-sdk/client-s3";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-
-interface InitiateResponse {
-  uploadId: string;
-  key: string;
-}
-
-const PART_SIZE = 5 * 1024 * 1024; // 5MB
+import type { FileType } from "~/lib/interface";
+import {
+  completePartialFileUpload,
+  getFileUploadUrl,
+  getUploadFilePartUrl,
+  startPartialFileUpload,
+} from "~/server/actions";
 
 interface UseUploadFileOptions {
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  onSuccess?: (data: any, variables: File, context: unknown) => void;
-  onError?: (error: unknown, variables: File, context: unknown) => void;
-  onUpload?: (variables: File) => void;
-  onPartUpload?: (partNumber: number, totalParts: number) => void;
+  onSuccess?: (data: FileType[], variables: File[], context: unknown) => void;
+  onError?: (error: unknown, variables: File[], context: unknown) => void;
+  onUpload?: (variables: File[]) => void;
+  onFileUpload?: (variables: File) => void;
+  onFileUploaded?: (file: FileType) => void;
+  onPartUpload?: (file: File, partNumber: number, totalParts: number) => void;
   onFinished?: (
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     data: any,
     error: unknown,
-    variables: File,
+    variables: File[],
     context: unknown,
   ) => void;
 }
 
+const PART_SIZE = 5 * 1024 * 1024; // 5MB
+
 export function useUploadFile({
   onSuccess,
-  onPartUpload,
+  onError,
   onUpload,
   onFinished,
-  onError,
+  onFileUpload,
+  onFileUploaded,
+  onPartUpload,
 }: UseUploadFileOptions = {}) {
   const { folderId } = useParams();
   const parentId = folderId as string | undefined;
 
-  const { mutate, mutateAsync, ...mutation } = useMutation({
-    onSuccess: onSuccess,
-    onError: onError,
-    onMutate: onUpload,
-    onSettled: onFinished,
-    mutationFn: async (file: File) => {
-      // Step 1: Initiate
-      const { uploadId, key }: InitiateResponse = await fetch(
-        "/api/upload/multipart/initiate",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            parentId,
-          }),
-        },
-      ).then((res) => res.json());
+  const uploadSmallFile = async (file: File, parentId: string) => {
+    const res = await getFileUploadUrl(
+      file.name,
+      file.type,
+      parentId,
+      file.size,
+    );
+    if (!res.success) throw new Error(res.error);
 
-      const partCount = Math.ceil(file.size / PART_SIZE);
-      const parts: CompletedPart[] = [];
+    const putRes = await fetch(res.data.url, {
+      method: "PUT",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
 
-      // Step 2: Upload parts to S3
-      for (let i = 0; i < partCount; i++) {
-        const partNumber = i + 1;
-        onPartUpload?.(partNumber, partCount);
-        const start = i * PART_SIZE;
-        const end = Math.min(start + PART_SIZE, file.size);
-        const partBlob = file.slice(start, end);
+    if (!putRes.ok) throw new Error("Upload failed");
 
-        const { url } = await fetch("/api/upload/multipart/url", {
-          method: "POST",
-          body: JSON.stringify({ uploadId, key, partNumber }),
-        }).then((res) => res.json());
+    return res.data.file;
+  };
 
-        const uploadRes = await fetch(url, {
-          method: "PUT",
-          body: partBlob,
-        });
+  const uploadLargeFile = async (
+    file: File,
+    parentId: string,
+    onPartUpload?: (file: File, partNumber: number, totalParts: number) => void,
+  ) => {
+    const start = await startPartialFileUpload(file.name, file.size, parentId);
+    if (!start.success) throw new Error(start.error);
 
-        const ETag = uploadRes.headers.get("ETag");
-        if (!uploadRes.ok || !ETag) {
-          throw new Error(`Failed to upload part ${partNumber}`);
-        }
+    const totalParts = Math.ceil(file.size / PART_SIZE);
+    const parts: CompletedPart[] = [];
 
-        parts.push({ ETag: ETag.replace(/"/g, ""), PartNumber: partNumber });
+    for (let i = 0; i < totalParts; i++) {
+      const partNumber = i + 1;
+      onPartUpload?.(file, partNumber, totalParts);
+
+      const startByte = i * PART_SIZE;
+      const endByte = Math.min(startByte + PART_SIZE, file.size);
+      const blob = file.slice(startByte, endByte);
+
+      const presigned = await getUploadFilePartUrl(
+        start.data.key,
+        start.data.uploadId,
+        partNumber,
+      );
+      if (!presigned.success) throw new Error(presigned.error);
+
+      const uploadRes = await fetch(presigned.data.url, {
+        method: "PUT",
+        body: blob,
+      });
+
+      const eTag = uploadRes.headers.get("ETag")?.replace(/"/g, "");
+      if (!uploadRes.ok || !eTag) {
+        throw new Error(`Failed to upload part ${partNumber}`);
       }
 
-      // Step 3: Complete upload
-      const { success } = await fetch("/api/upload/multipart/complete", {
-        method: "POST",
-        body: JSON.stringify({ uploadId, parentId, key, parts }),
-      }).then((res) => res.json());
+      parts.push({ PartNumber: partNumber, ETag: eTag });
+    }
 
-      if (!success) throw new Error(`Failed to upload file: ${file.name}`);
+    const complete = await completePartialFileUpload(
+      start.data.key,
+      start.data.uploadId,
+      parts,
+    );
+    if (!complete.success) throw new Error(complete.error);
 
-      return key;
-    },
+    return complete.data.file;
+  };
+
+  async function uploadFiles(files: File[]): Promise<FileType[]> {
+    if (!parentId) throw new Error("No parent folder selected");
+
+    const uploaded: FileType[] = [];
+
+    for (const file of files) {
+      onFileUpload?.(file);
+
+      const uploadedFile =
+        file.size < 10 * 1024 * 1024
+          ? await uploadSmallFile(file, parentId)
+          : await uploadLargeFile(file, parentId, onPartUpload);
+
+      uploaded.push(uploadedFile);
+      onFileUploaded?.(uploadedFile);
+    }
+
+    return uploaded;
+  }
+
+  const { mutate, mutateAsync, ...mutation } = useMutation<
+    FileType[],
+    unknown,
+    File[]
+  >({
+    mutationFn: uploadFiles,
+    onMutate: onUpload,
+    onSuccess,
+    onError,
+    onSettled: onFinished,
   });
+
   return {
     upload: mutate,
     uploadAsync: mutateAsync,

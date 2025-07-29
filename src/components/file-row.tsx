@@ -1,9 +1,10 @@
 import { FileTextIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
 import { TableCell, TableRow } from "~/components/ui/table";
-import type { File, Folder } from "~/lib/interface";
+import type { FileType, FolderType } from "~/lib/interface";
+import { formatFileSize } from "~/lib/utils";
 
-export function FileRow({ file }: { file: File }) {
+export function FileRow({ file }: { file: FileType }) {
   return (
     <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
       <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
@@ -19,12 +20,14 @@ export function FileRow({ file }: { file: File }) {
       <TableCell className="w-1/6 text-gray-300">
         {file.modified?.toDateString()}
       </TableCell>
-      <TableCell className="w-1/6 text-gray-300">{file.size || "—"}</TableCell>
+      <TableCell className="w-1/6 text-gray-300">
+        {formatFileSize(file.size) || "—"}
+      </TableCell>
     </TableRow>
   );
 }
 
-export function FolderRow({ folder }: { folder: Folder }) {
+export function FolderRow({ folder }: { folder: FolderType }) {
   return (
     <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
       <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
