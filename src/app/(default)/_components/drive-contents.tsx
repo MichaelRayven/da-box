@@ -1,7 +1,9 @@
 import { FolderPlus, Grid3X3, List, Upload } from "lucide-react";
 import Breadcrumbs from "~/components/breadcrumbs";
+import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
+import { UploadFilesForm } from "~/components/upload-files-form";
 import type { files, folders } from "~/server/db/schema";
 
 export default function DriveContents(props: {
@@ -16,6 +18,7 @@ export default function DriveContents(props: {
           breadcrumbs={props.parents}
           className="flex items-center space-x-2"
         />
+        <UploadFilesForm />
 
         <div className="flex items-center space-x-2">
           <Button
@@ -26,14 +29,19 @@ export default function DriveContents(props: {
             <Upload className="mr-2 h-4 w-4" />
             Upload
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-600 bg-transparent text-gray-300 hover:bg-gray-800"
-          >
-            <FolderPlus className="mr-2 h-4 w-4" />
-            New Folder
-          </Button>
+          <CreateFolderDialog
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-gray-600 bg-transparent text-gray-300 hover:bg-gray-800"
+              >
+                <FolderPlus className="mr-2 h-4 w-4" />
+                New Folder
+              </Button>
+            }
+          />
+
           <div className="flex rounded border border-gray-600">
             <Button
               variant="ghost"

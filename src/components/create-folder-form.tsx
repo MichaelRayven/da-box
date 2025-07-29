@@ -52,7 +52,12 @@ export function CreateFolderForm({
             <FormItem>
               <FormLabel>Folder Name</FormLabel>
               <FormControl>
-                <Input type="text" aria-required="true" {...field} />
+                <Input
+                  type="text"
+                  aria-required="true"
+                  placeholder="Folder name"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
