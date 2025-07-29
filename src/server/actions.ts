@@ -17,7 +17,7 @@ import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
 import type { ActionResponse } from "~/lib/interface";
-import { updateProfileSchema } from "~/lib/validation";
+import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
 import { updateUser } from "./db/mutations";
@@ -57,11 +57,14 @@ export async function createFolder(name: string, parentId: string) {
     return { success: false, error: "Unauthorized" };
   }
 
-  const parent = await getFolderById(parentId);
+  const parent = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.id, parentId),
+      eq(foldersSchema.ownerId, session.userId),
+    ),
+  });
 
-  if (parent?.ownerId !== session.userId) {
-    return { success: false, error: "Forbidden" };
-  }
+  if (!parent) return { success: false, error: "Forbidden" };
 
   const exists = await db.query.folders.findFirst({
     where: and(
@@ -93,10 +96,14 @@ export async function getFileUploadUrl(
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-  const parent = await getFolderById(parentId);
-  if (parent?.ownerId !== session.userId) {
-    return { success: false, error: "Forbidden" };
-  }
+  const parent = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.id, parentId),
+      eq(foldersSchema.ownerId, session.userId),
+    ),
+  });
+
+  if (!parent) return { success: false, error: "Forbidden" };
 
   const exists = await db.query.files.findFirst({
     where: and(eq(filesSchema.parentId, parentId), eq(filesSchema.name, name)),
@@ -136,11 +143,14 @@ export async function startPartialFileUpload(
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-  const parent = await getFolderById(parentId);
+  const parent = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.id, parentId),
+      eq(foldersSchema.ownerId, session.userId),
+    ),
+  });
 
-  if (parent?.ownerId !== session.userId) {
-    return { success: false, error: "Forbidden" };
-  }
+  if (!parent) return { success: false, error: "Forbidden" };
 
   const exists = await db.query.files.findFirst({
     where: and(eq(filesSchema.parentId, parentId), eq(filesSchema.name, name)),
@@ -388,4 +398,87 @@ export async function deleteFolder(
   await db.delete(foldersSchema).where(eq(foldersSchema.id, folderId));
 
   return { success: true, data: { folderId } };
+}
+
+export async function renameFolder(
+  folderId: string,
+  newName: string,
+): Promise<ActionResponse<{ folderId: string; name: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
+
+  const { success, data, error } = fileNameSchema.safeParse({ name: newName });
+  if (!success) {
+    return { success: false, error: error.message };
+  }
+
+  const folder = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.id, folderId),
+      eq(foldersSchema.ownerId, session.userId),
+    ),
+  });
+
+  if (!folder) return { success: false, error: "Folder not found" };
+
+  // Cannot rename Root, Trash, Shared or Starred
+  if (!folder.parentId) return { success: false, error: "Forbidden" };
+
+  const duplicate = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.parentId, folder.parentId),
+      eq(foldersSchema.name, data.name),
+    ),
+  });
+
+  if (duplicate) {
+    return { success: false, error: "A folder with that name already exists" };
+  }
+
+  await db
+    .update(foldersSchema)
+    .set({ name: data.name })
+    .where(eq(foldersSchema.id, folderId));
+
+  return { success: true, data: { folderId, name: data.name } };
+}
+
+export async function renameFile(
+  fileId: string,
+  newName: string,
+): Promise<ActionResponse<{ fileId: string; name: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
+
+  const { success, data, error } = fileNameSchema.safeParse({ name: newName });
+  if (!success) {
+    return { success: false, error: error.message };
+  }
+
+  const file = await db.query.files.findFirst({
+    where: and(
+      eq(filesSchema.id, fileId),
+      eq(filesSchema.ownerId, session.userId),
+    ),
+  });
+
+  if (!file) return { success: false, error: "File not found" };
+
+  const duplicate = await db.query.files.findFirst({
+    where: and(
+      eq(filesSchema.parentId, file.parentId),
+      eq(filesSchema.name, data.name),
+    ),
+  });
+
+  if (duplicate) {
+    return { success: false, error: "A file with that name already exists" };
+  }
+
+  await db
+    .update(filesSchema)
+    .set({ name: data.name })
+    .where(eq(filesSchema.id, fileId));
+
+  return { success: true, data: { fileId, name: data.name } };
 }
