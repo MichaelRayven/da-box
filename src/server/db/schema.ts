@@ -6,6 +6,7 @@ import {
   index,
   pgTableCreator,
   primaryKey,
+  unique,
 } from "drizzle-orm/pg-core";
 import type { AccountType } from "~/lib/interface";
 
@@ -50,6 +51,7 @@ export const files = createTable(
   (table) => [
     index("owner_files_idx").on(table.ownerId),
     index("parent_files_idx").on(table.parentId),
+    unique("unique_file_per_parent").on(table.parentId, table.name),
   ],
 );
 
@@ -96,6 +98,7 @@ export const folders = createTable(
     }).onDelete("cascade"),
     index("owner_folders_idx").on(table.ownerId),
     index("parent_folders_idx").on(table.parentId),
+    unique("unique_folder_per_parent").on(table.parentId, table.name),
   ],
 );
 
