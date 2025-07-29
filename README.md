@@ -40,15 +40,26 @@ Configured test db connection, next steps:
 - [x] Add error messages for sign in
 - [x] Update user data during onboarding
 
-## Note from 7/28/20265
+## Note from 7/28/2025
 
 - [x] Autofill existing data in onboarding
-- [ ] Autofill avatar in onboarding
-- [ ] Protect onboarding route from unauthenticated users
+- [x] Autofill avatar in onboarding
+- [x] Protect onboarding route from unauthenticated users
 - [ ] Update file and folder schema
 - [ ] Add custom verification page
-- [ ] Add file upload
-- [ ] Add multipart upload
+- [x] Add file upload
+- [x] Add multipart upload
+
+## Note from 7/30/2025
+
+- [ ] Add context menu
+- [ ] Add sign in page error messages
+- [ ] Add sign in page toasts
+- [ ] Add sign up page error messages
+- [ ] Add sign up page toasts
+- [ ] Add email auth page error messages
+- [ ] Add email auth page toasts
+
 
 ## Platforms
 
