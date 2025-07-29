@@ -11,6 +11,7 @@ import type { ActionResponse } from "~/lib/interface";
 import {
   CreateMultipartUploadCommand,
   PutObjectCommand,
+  UploadPartCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -106,9 +107,7 @@ export async function getUploadUrl(
     ContentType: type,
   });
 
-  const url = await getSignedUrl(s3, command, {
-    expiresIn: 60 * 10, // 10 minutes
-  });
+  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
 
   return { success: true, data: { key, url } };
 }
@@ -134,14 +133,13 @@ export async function startPartialUpload(
 
   if (exists) return { success: false, error: "File already exists" };
 
-  const userId = session.user.id;
   const ext = name?.split(".").pop() ?? "bin";
-  const key = `${userId}/uploads/${crypto.randomUUID()}.${ext}`;
+  const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
   await db.insert(filesSchema).values({
     name: name,
     key: key,
-    ownerId: userId,
+    ownerId: session.userId,
     parentId: parentId,
     size: size,
     type: type,
@@ -159,6 +157,30 @@ export async function startPartialUpload(
   if (!UploadId) return { success: false, error: "Something went wrong" };
 
   return { success: true, data: { uploadId: UploadId, key: key } };
+}
+
+export async function getUploadPartUrl(
+  key: string,
+  uploadId: string,
+  partNumber: number,
+): Promise<ActionResponse<{ url: string }>> {
+  const session = await auth();
+
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  if (!key.startsWith(`${session.userId}/`)) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const command = new UploadPartCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: key,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+  });
+
+  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+  return { success: true, data: { url } };
 }
 
 // export async function deleteFile(fileId: number) {
