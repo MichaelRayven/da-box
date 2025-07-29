@@ -5,19 +5,22 @@ import { db } from "./db";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { auth } from "./auth";
 import { getFileById, getFolderById } from "./db/queries";
-import { getPrivateObjectUrl, s3 } from "./s3";
 import { env } from "~/env";
 import type { ActionResponse } from "~/lib/interface";
 import {
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   UploadPartCommand,
   type CompletedPart,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3 } from "./s3";
+import { cookies } from "next/headers";
 
-export async function getFileUrl(fileId: string) {
+export async function getFileViewingUrl(fileId: string) {
   const session = await auth();
 
   if (!session?.user.id) {
@@ -30,7 +33,13 @@ export async function getFileUrl(fileId: string) {
     return { success: false, error: "Forbidden" };
   }
 
-  const url = await getPrivateObjectUrl(env.S3_FILE_BUCKET_NAME, file.key);
+  const command = new GetObjectCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: file.key,
+    ResponseContentDisposition: `attachment; filename="${file.name}"`,
+  });
+
+  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
 
   return { success: true, data: url };
 }
@@ -69,7 +78,7 @@ export async function createFolder(name: string, parentId: string) {
   return { success: true, data: folderId };
 }
 
-export async function getUploadUrl(
+export async function getFileUploadUrl(
   name: string,
   type: string,
   parentId: string,
@@ -114,18 +123,18 @@ export async function getUploadUrl(
   return { success: true, data: { key, url } };
 }
 
-export async function startPartialUpload(
+export async function startPartialFileUpload(
   name: string,
   type: string,
   parentId: string,
   size: number,
 ): Promise<ActionResponse<{ uploadId: string; key: string }>> {
   const session = await auth();
-  if (!session) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
   const parent = await getFolderById(parentId);
 
-  if (parent?.ownerId !== session.user.id) {
+  if (parent?.ownerId !== session.userId) {
     return { success: false, error: "Forbidden" };
   }
 
@@ -161,14 +170,14 @@ export async function startPartialUpload(
   return { success: true, data: { uploadId: UploadId, key: key } };
 }
 
-export async function getUploadPartUrl(
+export async function getUploadFilePartUrl(
   key: string,
   uploadId: string,
   partNumber: number,
 ): Promise<ActionResponse<{ url: string }>> {
   const session = await auth();
 
-  if (!session) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
   if (!key.startsWith(`${session.userId}/`)) {
     return { success: false, error: "Forbidden" };
@@ -185,16 +194,15 @@ export async function getUploadPartUrl(
   return { success: true, data: { url } };
 }
 
-export async function completePartialUpload(
+export async function completePartialFileUpload(
   key: string,
   uploadId: string,
   parts: CompletedPart[],
 ): Promise<ActionResponse<{ id: string }>> {
   const session = await auth();
-  if (!session) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-  const userId = session.user.id;
-  if (!key.startsWith(`${userId}/`)) {
+  if (!key.startsWith(`${session.userId}/`)) {
     return { success: false, error: "Forbidden" };
   }
 
@@ -220,38 +228,42 @@ export async function completePartialUpload(
   return { success: true, data: { id: updatedFile.id } };
 }
 
-// export async function deleteFile(fileId: number) {
-//   const session = await auth();
-//   if (!session?.user.id) {
-//     return { error: "Unauthorized" };
-//   }
+export async function deleteFile(
+  fileId: string,
+): Promise<ActionResponse<{ fileId: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-//   const file = await db.query.files.findFirst({
-//     where: and(
-//       eq(filesSchema.id, fileId),
-//       eq(filesSchema.ownerId, session.user.id),
-//     ),
-//   });
+  const file = await db.query.files.findFirst({
+    where: and(
+      eq(filesSchema.id, fileId),
+      eq(filesSchema.ownerId, session.userId),
+    ),
+  });
 
-//   if (!file) {
-//     return { error: "File not found" };
-//   }
+  if (!file) {
+    return { success: false, error: "File not found" };
+  }
 
-//   const utapiResult = await utApi.deleteFiles([
-//     file.url.replace("https://utfs.io/f/", ""),
-//   ]);
+  try {
+    // 1. Delete from S3
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: env.S3_FILE_BUCKET_NAME,
+        Key: file.key,
+      }),
+    );
 
-//   console.log(utapiResult);
+    // 2. Delete from DB
+    await db.delete(filesSchema).where(eq(filesSchema.id, fileId));
 
-//   const dbDeleteResult = await db
-//     .delete(filesSchema)
-//     .where(eq(filesSchema.id, fileId));
+    // 3. Force revalidation cookie
+    const c = await cookies();
+    c.set("force-refresh", JSON.stringify(Math.random()));
 
-//   console.log(dbDeleteResult);
-
-//   const c = await cookies();
-
-//   c.set("force-refresh", JSON.stringify(Math.random()));
-
-//   return { success: true };
-// }
+    return { success: true, data: { fileId } };
+  } catch (err) {
+    console.error("File deletion error:", err);
+    return { success: false, error: "Failed to delete file" };
+  }
+}

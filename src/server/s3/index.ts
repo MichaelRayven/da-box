@@ -13,9 +13,7 @@ export async function getPrivateObjectUrl(bucket: string, key: string) {
     Key: key,
   });
 
-  const url = await getSignedUrl(s3, command, {
-    expiresIn: 3600, // expires in 5 minutes
-  });
+  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
 
   return url;
 }
