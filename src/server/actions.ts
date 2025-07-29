@@ -13,7 +13,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { and, eq } from "drizzle-orm";
 import mime from "mime-types";
 import { cookies } from "next/headers";
-import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
 import type { ActionResponse } from "~/lib/interface";
@@ -21,10 +20,10 @@ import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
 import { updateUser } from "./db/mutations";
-import { getAllSubfolders, getFileById, getFolderById } from "./db/queries";
+import { getAllSubfolders, getFileById } from "./db/queries";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { s3 } from "./s3";
-import { convertToJpeg, getPublicObjectUrl } from "~/lib/utils";
+import sharp from "sharp";
 
 export async function getFileViewingUrl(fileId: string) {
   const session = await auth();
@@ -281,6 +280,16 @@ export async function deleteFile(
     console.error("File deletion error:", err);
     return { success: false, error: "Failed to delete file" };
   }
+}
+
+function getPublicObjectUrl(bucket: string, key: string) {
+  const base = env.S3_ENDPOINT.slice(0, env.S3_ENDPOINT.lastIndexOf("/"));
+  return `${base}/object/public/${bucket}/${key}`;
+}
+
+// Accepts: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF
+function convertToJpeg(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer).jpeg({ quality: 90 }).toBuffer();
 }
 
 export async function uploadAvatar(
