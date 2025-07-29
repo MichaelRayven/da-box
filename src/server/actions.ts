@@ -8,7 +8,11 @@ import { getFileById, getFolderById } from "./db/queries";
 import { getPrivateObjectUrl, s3 } from "./s3";
 import { env } from "~/env";
 import type { ActionResponse } from "~/lib/interface";
-import { CreateMultipartUploadCommand } from "@aws-sdk/client-s3";
+import {
+  CreateMultipartUploadCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function getFileUrl(fileId: string) {
   const session = await auth();
@@ -60,6 +64,53 @@ export async function createFolder(name: string, parentId: string) {
     .returning({ id: foldersSchema.id });
 
   return { success: true, data: folderId };
+}
+
+export async function getUploadUrl(
+  name: string,
+  type: string,
+  parentId: string,
+  size: number,
+): Promise<ActionResponse<{ key: string; url: string }>> {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const parent = await getFolderById(parentId);
+  if (parent?.ownerId !== session.user.id) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const exists = await db.query.files.findFirst({
+    where: and(eq(filesSchema.parentId, parentId), eq(filesSchema.name, name)),
+  });
+
+  if (exists) return { success: false, error: "File already exists" };
+
+  const userId = session.user.id;
+  const ext = name?.split(".").pop() ?? "bin";
+  const key = `${userId}/uploads/${crypto.randomUUID()}.${ext}`;
+
+  await db.insert(filesSchema).values({
+    name,
+    key,
+    ownerId: userId,
+    parentId,
+    size,
+    type,
+    hidden: false,
+  });
+
+  const command = new PutObjectCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: key,
+    ContentType: type,
+  });
+
+  const url = await getSignedUrl(s3, command, {
+    expiresIn: 60 * 10, // 10 minutes
+  });
+
+  return { success: true, data: { key, url } };
 }
 
 export async function startPartialUpload(
