@@ -5,17 +5,7 @@ import { folders as foldersSchema, users } from "./schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
 import { nameSchema, usernameSchema } from "~/lib/validation";
-
-interface PostgresError extends Error {
-  cause: {
-    code?: string;
-    constraint?: string;
-    detail?: string;
-    table?: string;
-    column?: string;
-    schema?: string;
-  };
-}
+import type { PostgresError } from "~/lib/interface";
 
 const updateUserSchema = z.object({
   username: nameSchema.optional(),

@@ -15,7 +15,7 @@ import mime from "mime-types";
 import { cookies } from "next/headers";
 import type z from "zod";
 import { env } from "~/env";
-import type { ActionResponse, Folder } from "~/lib/interface";
+import type { ActionResponse, Folder, PostgresError } from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
@@ -24,6 +24,7 @@ import { getAllSubfolders, getFileById } from "./db/queries";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { s3 } from "./s3";
 import sharp from "sharp";
+import { isUniqueConstraintViolation } from "~/lib/utils";
 
 export async function getFileViewingUrl(fileId: string) {
   const session = await auth();
@@ -68,27 +69,26 @@ export async function createFolder(
 
   if (!parent) return { success: false, error: "Forbidden" };
 
-  const exists = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.parentId, parentId),
-      eq(foldersSchema.name, name),
-    ),
-  });
+  try {
+    const folder = await db
+      .insert(foldersSchema)
+      .values({
+        name: name,
+        ownerId: session.userId,
+        parentId: parentId,
+      })
+      .returning();
 
-  if (exists) return { success: false, error: "This folder already exists" };
+    if (!folder[0]) return { success: false, error: "Something went wrong" };
 
-  const folder = await db
-    .insert(foldersSchema)
-    .values({
-      name: name,
-      ownerId: session.userId,
-      parentId: parentId,
-    })
-    .returning();
+    return { success: true, data: { folder: folder[0] } };
+  } catch (err) {
+    if (isUniqueConstraintViolation(err)) {
+      return { success: false, error: "Folder with this name already exists" };
+    }
 
-  if (!folder[0]) return { success: false, error: "Something went wrong" };
-
-  return { success: true, data: { folder: folder[0] } };
+    return { success: false, error: "Something went wrong" };
+  }
 }
 
 export async function getFileUploadUrl(
@@ -109,24 +109,26 @@ export async function getFileUploadUrl(
 
   if (!parent) return { success: false, error: "Forbidden" };
 
-  const exists = await db.query.files.findFirst({
-    where: and(eq(filesSchema.parentId, parentId), eq(filesSchema.name, name)),
-  });
-
-  if (exists) return { success: false, error: "File already exists" };
-
   const ext = name?.split(".").pop() ?? "bin";
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
-  await db.insert(filesSchema).values({
-    name,
-    key,
-    ownerId: session.userId,
-    parentId,
-    size,
-    type,
-    hidden: false,
-  });
+  try {
+    await db.insert(filesSchema).values({
+      name,
+      key,
+      ownerId: session.userId,
+      parentId,
+      size,
+      type,
+      hidden: false,
+    });
+  } catch (err) {
+    if (isUniqueConstraintViolation(err)) {
+      return { success: false, error: "File with this name already exists" };
+    }
+
+    return { success: false, error: "Something went wrong" };
+  }
 
   const command = new PutObjectCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
@@ -156,25 +158,27 @@ export async function startPartialFileUpload(
 
   if (!parent) return { success: false, error: "Forbidden" };
 
-  const exists = await db.query.files.findFirst({
-    where: and(eq(filesSchema.parentId, parentId), eq(filesSchema.name, name)),
-  });
-
-  if (exists) return { success: false, error: "File already exists" };
-
   const type = mime.contentType(name) || "application/octet-stream";
   const ext = mime.extension(type);
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
-  await db.insert(filesSchema).values({
-    name: name,
-    key: key,
-    ownerId: session.userId,
-    parentId: parentId,
-    size: size,
-    type: type,
-    hidden: true,
-  });
+  try {
+    await db.insert(filesSchema).values({
+      name: name,
+      key: key,
+      ownerId: session.userId,
+      parentId: parentId,
+      size: size,
+      type: type,
+      hidden: true,
+    });
+  } catch (err) {
+    if (isUniqueConstraintViolation(err)) {
+      return { success: false, error: "File with this name already exists" };
+    }
+
+    return { success: false, error: "Something went wrong" };
+  }
 
   const command = new CreateMultipartUploadCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
@@ -438,21 +442,18 @@ export async function renameFolder(
   // Cannot rename Root, Trash, Shared or Starred
   if (!folder.parentId) return { success: false, error: "Forbidden" };
 
-  const duplicate = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.parentId, folder.parentId),
-      eq(foldersSchema.name, data.name),
-    ),
-  });
+  try {
+    await db
+      .update(foldersSchema)
+      .set({ name: data.name })
+      .where(eq(foldersSchema.id, folderId));
+  } catch (err) {
+    if (isUniqueConstraintViolation(err)) {
+      return { success: false, error: "Folder with this name already exists" };
+    }
 
-  if (duplicate) {
-    return { success: false, error: "A folder with that name already exists" };
+    return { success: false, error: "Something went wrong" };
   }
-
-  await db
-    .update(foldersSchema)
-    .set({ name: data.name })
-    .where(eq(foldersSchema.id, folderId));
 
   return { success: true, data: { folderId, name: data.name } };
 }
@@ -478,21 +479,18 @@ export async function renameFile(
 
   if (!file) return { success: false, error: "File not found" };
 
-  const duplicate = await db.query.files.findFirst({
-    where: and(
-      eq(filesSchema.parentId, file.parentId),
-      eq(filesSchema.name, data.name),
-    ),
-  });
+  try {
+    await db
+      .update(filesSchema)
+      .set({ name: data.name })
+      .where(eq(filesSchema.id, fileId));
+  } catch (err) {
+    if (isUniqueConstraintViolation(err)) {
+      return { success: false, error: "File with this name already exists" };
+    }
 
-  if (duplicate) {
-    return { success: false, error: "A file with that name already exists" };
+    return { success: false, error: "Something went wrong" };
   }
-
-  await db
-    .update(filesSchema)
-    .set({ name: data.name })
-    .where(eq(filesSchema.id, fileId));
 
   return { success: true, data: { fileId, name: data.name } };
 }

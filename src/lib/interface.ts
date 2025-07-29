@@ -46,3 +46,14 @@ export type ActionResponse<T> =
       success: false;
       error: string;
     };
+
+export interface PostgresError extends Error {
+  cause: {
+    code?: string;
+    constraint?: string;
+    detail?: string;
+    table?: string;
+    column?: string;
+    schema?: string;
+  };
+}

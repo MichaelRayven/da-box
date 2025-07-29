@@ -69,13 +69,15 @@ export function CreateFolderDialog({
         </DialogHeader>
         <CreateFolderForm
           onSubmit={(values) => mutation.mutate(values.name)}
-          submitButton={() => (
+          isPending={mutation.isPending}
+          error={mutation.error?.message}
+          submitButton={(isPending) => (
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" asChild>
+              <Button disabled={isPending} variant="outline" asChild>
                 <DialogClose>Cancel</DialogClose>
               </Button>
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending ? (
+              <Button type="submit" disabled={isPending}>
+                {isPending ? (
                   <>
                     Creating...
                     <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />

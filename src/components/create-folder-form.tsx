@@ -19,14 +19,18 @@ import { PlusIcon } from "lucide-react";
 
 interface CreateFolderFormProps {
   className?: string;
+  error?: string;
+  isPending?: boolean;
   onSubmit?: (values: z.infer<typeof fileNameSchema>) => void;
   submitButton?: (isPending?: boolean) => ReactNode;
 }
 
 export function CreateFolderForm({
   className,
+  error,
+  isPending,
   onSubmit = () => {},
-  submitButton = () => (
+  submitButton = (isPending) => (
     <Button type="submit" className="mt-2 w-full">
       Create <PlusIcon className="size-6" />
     </Button>
@@ -38,6 +42,8 @@ export function CreateFolderForm({
       name: "",
     },
   });
+
+  if (error) form.setError("name", { message: error }, { shouldFocus: true });
 
   return (
     <Form {...form}>
@@ -56,6 +62,7 @@ export function CreateFolderForm({
                   type="text"
                   aria-required="true"
                   placeholder="Folder name"
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -63,7 +70,7 @@ export function CreateFolderForm({
             </FormItem>
           )}
         />
-        {submitButton()}
+        {submitButton(isPending)}
       </form>
     </Form>
   );
