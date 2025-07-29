@@ -5,6 +5,7 @@ import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
 import type { FileType, FolderType } from "~/lib/interface";
 import DriveStoreHydrator from "./drive-store-hydrator";
+import { UploadFileDialog } from "~/components/upload-file-dialog";
 
 export default function DriveContents(props: {
   parents?: FolderType[];
@@ -25,14 +26,18 @@ export default function DriveContents(props: {
         />
 
         <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-gray-600 bg-transparent text-gray-300 hover:bg-gray-800"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Upload
-          </Button>
+          <UploadFileDialog
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-gray-600 bg-transparent text-gray-300 hover:bg-gray-800"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload
+              </Button>
+            }
+          />
           <CreateFolderDialog
             trigger={
               <Button

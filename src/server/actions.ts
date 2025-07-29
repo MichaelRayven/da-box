@@ -47,7 +47,6 @@ export async function getFileViewingUrl(fileId: string) {
   const command = new GetObjectCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
     Key: file.key,
-    ResponseContentDisposition: `attachment; filename="${file.name}"`,
   });
 
   const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
