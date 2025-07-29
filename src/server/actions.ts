@@ -21,9 +21,10 @@ import { updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
 import { updateUser } from "./db/mutations";
-import { getFileById, getFolderById } from "./db/queries";
+import { getAllSubfolders, getFileById, getFolderById } from "./db/queries";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { s3 } from "./s3";
+import { convertToJpeg, getPublicObjectUrl } from "~/lib/utils";
 
 export async function getFileViewingUrl(fileId: string) {
   const session = await auth();
@@ -272,16 +273,6 @@ export async function deleteFile(
   }
 }
 
-export function getPublicObjectUrl(bucket: string, key: string) {
-  const base = env.S3_ENDPOINT.slice(0, env.S3_ENDPOINT.lastIndexOf("/"));
-  return `${base}/object/public/${bucket}/${key}`;
-}
-
-// Accepts: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF
-async function convertToJpeg(buffer: Buffer): Promise<Buffer> {
-  return sharp(buffer).jpeg({ quality: 90 }).toBuffer();
-}
-
 export async function uploadAvatar(
   avatar: File,
 ): Promise<ActionResponse<{ url: string }>> {
@@ -313,7 +304,7 @@ export async function uploadAvatar(
 
 export async function updateUserProfile(
   unsafeData: z.infer<typeof updateProfileSchema>,
-): Promise<ActionResponse<string>> {
+): Promise<ActionResponse<{ message: string }>> {
   const session = await auth();
   if (!session?.userId) {
     return { success: false, error: "Unauthorized" };
@@ -348,6 +339,53 @@ export async function updateUserProfile(
 
   return {
     success: true,
-    data: "Your profile has been updated!",
+    data: { message: "Your profile has been updated!" },
   };
+}
+
+export async function deleteFolder(
+  folderId: string,
+): Promise<ActionResponse<{ folderId: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
+
+  const rootFolder = await db.query.folders.findFirst({
+    where: and(
+      eq(foldersSchema.id, folderId),
+      eq(foldersSchema.ownerId, session.userId),
+    ),
+    with: {
+      files: true,
+    },
+  });
+
+  if (!rootFolder) {
+    return { success: false, error: "Folder not found" };
+  }
+
+  const allFolders = await getAllSubfolders(folderId);
+
+  const allFiles = [
+    ...rootFolder.files,
+    ...allFolders.flatMap((folder) => folder.files),
+  ];
+
+  for (const file of allFiles) {
+    try {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: env.S3_FILE_BUCKET_NAME,
+          Key: file.key,
+        }),
+      );
+    } catch (err) {
+      console.error(`Failed to delete S3 file: ${file.key}`, err);
+      return { success: false, error: "Failed to delete file" };
+    }
+  }
+
+  // Delete root folder (all descendants are cascade deleted)
+  await db.delete(foldersSchema).where(eq(foldersSchema.id, folderId));
+
+  return { success: true, data: { folderId } };
 }

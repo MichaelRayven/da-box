@@ -64,3 +64,31 @@ export function getFolders(folderId: string) {
     .from(foldersSchema)
     .where(eq(foldersSchema.parentId, folderId));
 }
+
+type FolderWithFiles = typeof foldersSchema.$inferSelect & {
+  files: (typeof filesSchema.$inferSelect)[];
+};
+export async function getAllSubfolders(folderId: string) {
+  const allFolders: FolderWithFiles[] = [];
+  const queue: string[] = [folderId];
+
+  while (queue.length > 0) {
+    const currentId = queue.pop()!;
+
+    // Get all direct subfolders of the current folder
+    const childFolders = await db.query.folders.findMany({
+      where: eq(foldersSchema.parentId, currentId),
+      with: {
+        files: true,
+      },
+    });
+
+    allFolders.push(...childFolders);
+
+    for (const folder of childFolders) {
+      queue.push(folder.id); // Recurse into children
+    }
+  }
+
+  return allFolders;
+}

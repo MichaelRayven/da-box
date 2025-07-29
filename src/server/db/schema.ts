@@ -112,7 +112,7 @@ export const foldersRelations = relations(folders, ({ one, many }) => ({
     relationName: "folder_children",
   }),
 
-  children: many(files, {
+  files: many(files, {
     relationName: "folder_files", // 👈 must match parent relationName
   }),
 
