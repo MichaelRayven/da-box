@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock, HardDrive, Home, Star, Trash2, Users } from "lucide-react";
+import Link from "next/link";
 import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import { CreateObjectDropdown } from "~/components/create-object-dropdown";
 import { Button } from "~/components/ui/button";
@@ -26,26 +27,30 @@ export default function Sidebar() {
         <CreateObjectDropdown />
 
         <nav className="space-y-2">
-          <Button variant="ghost" className="w-full justify-start">
-            <Home className="mr-3 size-4" />
-            My Drive
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            <Users className="mr-3 size-4" />
-            Shared with me
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            <Clock className="mr-3 size-4" />
-            Recent
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            <Star className="mr-3 size-4" />
-            Starred
-          </Button>
-          <Button variant="ghost" className="w-full justify-start">
-            <Trash2 className="mr-3 size-4" />
-            Trash
-          </Button>
+          <Link href="/drive">
+            <Button variant="ghost" className="w-full justify-start">
+              <Home className="mr-3 size-4" />
+              My Drive
+            </Button>
+          </Link>
+          <Link href="/drive/shared">
+            <Button variant="ghost" className="w-full justify-start">
+              <Users className="mr-3 size-4" />
+              Shared with me
+            </Button>
+          </Link>
+          <Link href="/drive/starred">
+            <Button variant="ghost" className="w-full justify-start">
+              <Star className="mr-3 size-4" />
+              Starred
+            </Button>
+          </Link>
+          <Link href="/drive/trash">
+            <Button variant="ghost" className="w-full justify-start">
+              <Trash2 className="mr-3 size-4" />
+              Trash
+            </Button>
+          </Link>
         </nav>
       </div>
     </aside>

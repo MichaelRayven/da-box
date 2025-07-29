@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { DialogProps } from "@radix-ui/react-dialog";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useDriveStore } from "~/lib/store/drive";
 import { useUploadFile } from "~/hook/useUploadFile";
 
@@ -36,8 +36,17 @@ export function UploadFileDialog({
   ...props
 }: UploadFileDialogProps) {
   const addFile = useDriveStore((s) => s.addFile);
+  const [open, setOpen] = useState(props.open);
+
+  const onOpenChange = (open: boolean) => {
+    props?.onOpenChange?.(false);
+    setOpen(open);
+  };
 
   const { uploadAsync, isPending } = useUploadFile({
+    onUpload() {
+      onOpenChange(false);
+    },
     onFileUploaded(file) {
       addFile(file);
     },
@@ -45,9 +54,6 @@ export function UploadFileDialog({
       toast.error((err as Error).message, {
         icon: <TriangleAlertIcon />,
       });
-    },
-    onFinished: () => {
-      props?.onOpenChange?.(false);
     },
   });
 
@@ -62,7 +68,7 @@ export function UploadFileDialog({
   };
 
   return (
-    <Dialog {...props}>
+    <Dialog {...props} open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent>

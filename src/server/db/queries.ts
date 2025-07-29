@@ -22,6 +22,8 @@ export async function getParentsForFolder(folderId: string) {
     currentId = folder.parentId;
   }
 
+  parents.shift();
+
   return parents;
 }
 
@@ -45,6 +47,9 @@ export async function getRootFolderForUser(userId: string) {
       eq(foldersSchema.ownerId, userId),
       isNull(foldersSchema.parentId),
     ),
+    with: {
+      folders: true,
+    },
   });
   return folder;
 }

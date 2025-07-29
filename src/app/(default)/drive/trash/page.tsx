@@ -3,7 +3,7 @@ import { auth } from "~/server/auth";
 import { redirect } from "next/navigation";
 import { onboardUser } from "~/server/db/mutations";
 
-export default async function GoogleDriveClone() {
+export default async function TrashFolderPage() {
   const session = await auth();
 
   if (!session?.user.id) return redirect("/sign-in");
@@ -15,7 +15,7 @@ export default async function GoogleDriveClone() {
     return redirect(`/drive/folders/${rootFolderId}`);
   }
 
-  const folder = root.folders.find((f) => f.name === "My Drive")!;
+  const folder = root.folders.find((f) => f.name === "Trash")!;
 
   return redirect(`/drive/folders/${folder.id}`);
 }

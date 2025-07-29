@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import type { DialogProps } from "@radix-ui/react-dialog";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { createFolder } from "~/server/actions";
@@ -35,6 +35,12 @@ export function CreateFolderDialog({
   const addFolder = useDriveStore((s) => s.addFolder);
   const { folderId } = useParams();
 
+  const [open, setOpen] = useState(props.open);
+  const onOpenChange = (open: boolean) => {
+    props?.onOpenChange?.(false);
+    setOpen(open);
+  };
+
   const mutation = useMutation({
     mutationFn: async (name: string) => {
       const parent = folderId as string | undefined;
@@ -50,7 +56,7 @@ export function CreateFolderDialog({
     onSuccess: (data, name) => {
       addFolder(data);
       toast.success(`Created folder "${name}"`);
-      props?.onOpenChange?.(false);
+      onOpenChange(false);
     },
     onError: (error: Error) => {
       toast.error(error.message, {
@@ -60,7 +66,7 @@ export function CreateFolderDialog({
   });
 
   return (
-    <Dialog {...props}>
+    <Dialog {...props} open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent>
@@ -68,7 +74,7 @@ export function CreateFolderDialog({
           <DialogTitle>Create New Folder</DialogTitle>
         </DialogHeader>
         <CreateFolderForm
-          onSubmit={(values) => mutation.mutate(values.name)}
+          onSubmit={(values) => mutation.mutateAsync(values.name)}
           isPending={mutation.isPending}
           error={mutation.error?.message}
           submitButton={(isPending) => (

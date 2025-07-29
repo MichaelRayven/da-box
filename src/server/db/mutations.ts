@@ -37,7 +37,7 @@ export async function onboardUser(userId: string) {
   const rootFolder = await db
     .insert(foldersSchema)
     .values({
-      name: "My Drive",
+      name: "root",
       parentId: null,
       ownerId: userId,
     })
@@ -47,18 +47,23 @@ export async function onboardUser(userId: string) {
 
   await db.insert(foldersSchema).values([
     {
+      name: "My Drive",
+      parentId: rootFolderId,
+      ownerId: userId,
+    },
+    {
       name: "Trash",
-      parentId: null,
+      parentId: rootFolderId,
       ownerId: userId,
     },
     {
       name: "Shared",
-      parentId: null,
+      parentId: rootFolderId,
       ownerId: userId,
     },
     {
       name: "Starred",
-      parentId: null,
+      parentId: rootFolderId,
       ownerId: userId,
     },
   ]);

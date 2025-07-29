@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import DriveContents from "~/app/(default)/_components/drive-contents";
 import { auth } from "~/server/auth";
 import { getFiles, getFolders, getParentsForFolder } from "~/server/db/queries";
@@ -15,11 +15,16 @@ export default async function GoogleDriveClone({
   if (!session?.user.id) return redirect("/sign-in");
 
   // Execute in parallel
-  const [folders, files, parents] = await Promise.all([
-    getFolders(folderId),
-    getFiles(folderId),
-    getParentsForFolder(folderId),
-  ]);
+  try {
+    const [folders, files, parents] = await Promise.all([
+      getFolders(folderId),
+      getFiles(folderId),
+      getParentsForFolder(folderId),
+    ]);
 
-  return <DriveContents parents={parents} files={files} folders={folders} />;
+    return <DriveContents parents={parents} files={files} folders={folders} />;
+  } catch (e) {
+    console.error(e);
+    return notFound();
+  }
 }
