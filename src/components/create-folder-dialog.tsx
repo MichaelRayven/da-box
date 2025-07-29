@@ -17,6 +17,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { createFolder } from "~/server/actions";
 import { toast } from "sonner";
+import { useDriveStore } from "~/lib/store/drive";
 
 interface CreateFolderDialogProps extends DialogProps {
   trigger?: ReactNode;
@@ -31,20 +32,24 @@ export function CreateFolderDialog({
   ),
   ...props
 }: CreateFolderDialogProps) {
+  const addFolder = useDriveStore((s) => s.addFolder);
   const { folderId } = useParams();
 
   const mutation = useMutation({
     mutationFn: async (name: string) => {
       const parent = folderId as string | undefined;
-      if (!parent) return null;
+      if (!parent) throw new Error("Could't find current folder");
 
-      const res = await createFolder(name, parent);
-      if (!res.success) {
-        throw new Error(res.error);
+      const response = await createFolder(name, parent);
+      if (!response.success) {
+        throw new Error(response.error);
       }
+
+      return response.data.folder;
     },
-    onSuccess: (_, name) => {
-      toast.success(`Created folder: ${name}`);
+    onSuccess: (data, name) => {
+      addFolder(data);
+      toast.success(`Created folder "${name}"`);
       props?.onOpenChange?.(false);
     },
     onError: (error: Error) => {

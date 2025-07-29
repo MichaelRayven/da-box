@@ -13,24 +13,27 @@ import type { AdapterAccountType } from "next-auth/adapters";
 //   url?: string;
 // }
 
-export interface File {
+export type File = {
   id: string;
   name: string;
-  type: "file";
-  size: string;
-  url: string;
-  parent: string;
-  modified: string;
-  owner: string;
-}
+  size: number;
+  key: string;
+  type: string;
+  hidden: boolean;
+  parentId: string;
+  ownerId: string;
+  modified: Date | null;
+  createdAt: Date | null;
+};
 
-export interface Folder {
+export type Folder = {
   id: string;
   name: string;
-  type: "folder";
-  parent: string | null;
-  owner: string;
-}
+  parentId: string | null;
+  ownerId: string;
+  modified: Date | null;
+  createdAt: Date | null;
+};
 
 export type AccountType = AdapterAccountType | "credentials";
 

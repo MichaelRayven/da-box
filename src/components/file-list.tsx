@@ -1,4 +1,6 @@
-import { Folder } from "lucide-react";
+"use client";
+
+import { FolderIcon } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -6,13 +8,24 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import type { files, folders } from "~/server/db/schema";
 import { FileRow, FolderRow } from "./file-row";
+import { useDriveStore } from "~/lib/store/drive";
+import type { File, Folder } from "~/lib/interface";
 
-export default function FileList(props: {
-  files: (typeof files.$inferSelect)[];
-  folders: (typeof folders.$inferSelect)[];
+export default function FileList({
+  folders: initialFolders,
+  files: initialFiles,
+}: {
+  files?: File[];
+  folders?: Folder[];
 }) {
+  // Transition from SSR to local state
+  const storeFiles = useDriveStore((s) => s.files);
+  const storeFolders = useDriveStore((s) => s.folders);
+
+  const files = storeFiles.length > 0 ? storeFiles : initialFiles ?? [];
+  const folders = storeFolders.length > 0 ? storeFolders : initialFolders ?? [];
+
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800">
       <Table className="w-full">
@@ -27,17 +40,17 @@ export default function FileList(props: {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {props.folders.map((item) => (
+          {folders.map((item) => (
             <FolderRow folder={item} key={item.id} />
           ))}
-          {props.files.map((item) => (
+          {files.map((item) => (
             <FileRow file={item} key={item.id} />
           ))}
         </TableBody>
       </Table>
-      {props.files.length === 0 && props.folders.length === 0 && (
+      {files.length === 0 && folders.length === 0 && (
         <div className="py-12 text-center">
-          <Folder className="mx-auto mb-4 h-12 w-12 text-gray-500" />
+          <FolderIcon className="mx-auto mb-4 h-12 w-12 text-gray-500" />
           <h3 className="mb-2 font-medium text-gray-300 text-lg">
             This folder is empty
           </h3>

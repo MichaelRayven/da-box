@@ -3,12 +3,13 @@ import Breadcrumbs from "~/components/breadcrumbs";
 import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
-import type { files, folders } from "~/server/db/schema";
+import type { File, Folder } from "~/lib/interface";
+import DriveStoreHydrator from "./drive-store-hydrator";
 
 export default function DriveContents(props: {
-  folders: (typeof folders.$inferSelect)[];
-  files: (typeof files.$inferSelect)[];
-  parents?: (typeof folders.$inferSelect)[];
+  parents?: Folder[];
+  files?: File[];
+  folders?: Folder[];
 }) {
   return (
     <div className="flex-1 p-6">
@@ -16,6 +17,11 @@ export default function DriveContents(props: {
         <Breadcrumbs
           breadcrumbs={props.parents}
           className="flex items-center space-x-2"
+        />
+
+        <DriveStoreHydrator
+          files={props.files ?? []}
+          folders={props.folders ?? []}
         />
 
         <div className="flex items-center space-x-2">

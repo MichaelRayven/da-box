@@ -21,5 +21,5 @@ export default async function GoogleDriveClone({
     getParentsForFolder(folderId),
   ]);
 
-  return <DriveContents folders={folders} files={files} parents={parents} />;
+  return <DriveContents parents={parents} files={files} folders={folders} />;
 }

@@ -15,7 +15,7 @@ import mime from "mime-types";
 import { cookies } from "next/headers";
 import type z from "zod";
 import { env } from "~/env";
-import type { ActionResponse } from "~/lib/interface";
+import type { ActionResponse, Folder } from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
@@ -49,7 +49,10 @@ export async function getFileViewingUrl(fileId: string) {
   return { success: true, data: url };
 }
 
-export async function createFolder(name: string, parentId: string) {
+export async function createFolder(
+  name: string,
+  parentId: string,
+): Promise<ActionResponse<{ folder: Folder }>> {
   const session = await auth();
 
   if (!session?.userId) {
@@ -74,16 +77,18 @@ export async function createFolder(name: string, parentId: string) {
 
   if (exists) return { success: false, error: "This folder already exists" };
 
-  const folderId = await db
+  const folder = await db
     .insert(foldersSchema)
     .values({
       name: name,
       ownerId: session.userId,
       parentId: parentId,
     })
-    .returning({ id: foldersSchema.id });
+    .returning();
 
-  return { success: true, data: folderId };
+  if (!folder[0]) return { success: false, error: "Something went wrong" };
+
+  return { success: true, data: { folder: folder[0] } };
 }
 
 export async function getFileUploadUrl(
