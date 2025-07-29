@@ -473,12 +473,16 @@ export async function renameFolder(
       eq(foldersSchema.id, folderId),
       eq(foldersSchema.ownerId, session.userId),
     ),
+    with: {
+      parent: true,
+    },
   });
 
   if (!folder) return { success: false, error: "Folder not found" };
 
   // Cannot rename Root, Trash, Shared or Starred
-  if (!folder.parentId) return { success: false, error: "Forbidden" };
+  if (!folder.parentId || !folder.parent?.parentId)
+    return { success: false, error: "Forbidden" };
 
   try {
     await db
