@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Card,
   CardContent,
@@ -34,7 +32,7 @@ export function OnboardingDialog({
         <OnboardingForm
           defaultName={defaultName}
           defaultUsername={defaultUsername}
-          defaultAvatar={defaultAvatar}
+          defaultProfilePicture={defaultAvatar}
         />
       </CardContent>
     </Card>

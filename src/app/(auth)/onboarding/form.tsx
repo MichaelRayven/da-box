@@ -18,38 +18,38 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { onboardingSchema } from "~/lib/validation";
-import { AvatarUpload } from "./avatar-upload";
-import { submitOnboarding } from "./actions";
+import { PictureInput } from "./picture-input";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { updateProfileSchema } from "~/lib/validation";
+import { updateUserProfile } from "~/server/actions";
 
 interface OnboardingFormProps {
   defaultName?: string;
   defaultUsername?: string;
-  defaultAvatar?: string;
+  defaultProfilePicture?: string;
 }
 
 export function OnboardingForm({
   defaultName = "",
   defaultUsername = "",
-  defaultAvatar,
+  defaultProfilePicture,
 }: OnboardingFormProps) {
   const router = useRouter();
 
-  const form = useForm<z.infer<typeof onboardingSchema>>({
-    resolver: zodResolver(onboardingSchema),
+  const form = useForm<z.infer<typeof updateProfileSchema>>({
+    resolver: zodResolver(updateProfileSchema),
     defaultValues: {
       name: defaultName,
       username: defaultUsername,
-      avatar: undefined,
+      avatar: defaultProfilePicture,
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: z.infer<typeof onboardingSchema>) => {
-      return await submitOnboarding(values);
+    mutationFn: async (values: z.infer<typeof updateProfileSchema>) => {
+      return await updateUserProfile(values);
     },
     onSuccess: () => {
       toast.success("Your profile has been updated!");
@@ -62,7 +62,7 @@ export function OnboardingForm({
     },
   });
 
-  const onSubmit = (values: z.infer<typeof onboardingSchema>) => {
+  const onSubmit = (values: z.infer<typeof updateProfileSchema>) => {
     mutation.mutate(values);
   };
 
@@ -77,9 +77,9 @@ export function OnboardingForm({
           name="avatar"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Avatar</FormLabel>
+              <FormLabel>Profile Picture</FormLabel>
               <FormControl>
-                <AvatarUpload {...field} disabled={mutation.isPending} />
+                <PictureInput {...field} disabled={mutation.isPending} />
               </FormControl>
               <FormMessage />
             </FormItem>

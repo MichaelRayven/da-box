@@ -2,36 +2,41 @@
 
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import { useRef, useState } from "react";
-import { avatarSchema } from "~/lib/validation";
+import { useRef } from "react";
+import { Dropzone } from "~/components/dropzone";
 
 type AvatarUploadProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
   "type" | "onChange" | "value" | "ref"
 > & {
-  value?: File;
+  value?: File | string;
   onChange: (value?: File) => void;
   ref?: (el: HTMLInputElement | null) => void;
 };
 
-export function AvatarUpload({
+export function PictureInput({
   value,
   onChange,
+  disabled,
   ref,
   ...props
 }: AvatarUploadProps) {
   const localRef = useRef<HTMLInputElement | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
 
   const handleClick = () => {
     localRef.current?.click();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    const fileArray = Array.from(e.dataTransfer.files);
+    onChange(fileArray[0]!);
   };
 
   const handleReset = () => {
     if (localRef.current) {
       localRef.current.value = "";
     }
-    setPreview(null);
+
     onChange(new DataTransfer().files?.[0]);
   };
 
@@ -40,41 +45,21 @@ export function AvatarUpload({
     ref?.(el);
   };
 
+  const preview = value instanceof File ? URL.createObjectURL(value) : value;
+
   return (
     <div className="flex flex-col items-center gap-2">
-      <Input
-        type="file"
-        accept="image/*"
-        className="hidden"
-        ref={setRefs}
-        onChange={(e) => {
-          const fileList = e.target.files;
-          if (fileList?.[0]) {
-            const { success, data } = avatarSchema.safeParse(fileList[0]);
-            if (success) {
-              setPreview(URL.createObjectURL(data));
-            } else {
-              setPreview(null);
-            }
-          }
-          onChange(fileList?.[0]);
-        }}
-        {...props}
-      />
-
-      <button
-        type="button"
+      <Dropzone
         onClick={handleClick}
-        aria-invalid={props["aria-invalid"]}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleClick();
-        }}
-        className="group flex size-48 items-center justify-center overflow-hidden rounded-full border hover:ring-3 hover:ring-ring focus:outline-none aria-invalid:border-destructive aria-invalid:ring-destructive/20"
+        onDrop={handleDrop}
+        disabled={disabled}
+        className="flex size-48 items-center justify-center overflow-hidden rounded-full p-0"
       >
         {preview ? (
           <img
             src={preview}
-            alt="Avatar preview"
+            // biome-ignore lint/a11y/noRedundantAlt: <explanation>
+            alt="Profile picture preview"
             className="h-full w-full object-cover transition-opacity group-hover:opacity-75"
           />
         ) : (
@@ -82,10 +67,28 @@ export function AvatarUpload({
             Click to upload
           </span>
         )}
-      </button>
+      </Dropzone>
+      <Input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        ref={setRefs}
+        onChange={(e) => {
+          const fileList = e.target.files;
+          onChange(fileList?.[0]);
+        }}
+        disabled={disabled}
+        {...props}
+      />
 
       {preview && (
-        <Button variant="outline" size="sm" onClick={handleReset} type="button">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleReset}
+          type="button"
+          disabled={disabled}
+        >
           Reset
         </Button>
       )}

@@ -3,7 +3,6 @@ import Breadcrumbs from "~/components/breadcrumbs";
 import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
-import { UploadFilesForm } from "~/components/upload-files-form";
 import type { files, folders } from "~/server/db/schema";
 
 export default function DriveContents(props: {
@@ -18,7 +17,6 @@ export default function DriveContents(props: {
           breadcrumbs={props.parents}
           className="flex items-center space-x-2"
         />
-        <UploadFilesForm />
 
         <div className="flex items-center space-x-2">
           <Button
