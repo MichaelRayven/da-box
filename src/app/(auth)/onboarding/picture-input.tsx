@@ -1,9 +1,9 @@
 "use client";
 
-import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
 import { useRef } from "react";
 import { Dropzone } from "~/components/dropzone";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 
 type AvatarUploadProps = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,

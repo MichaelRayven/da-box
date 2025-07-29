@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useDriveStore } from "~/lib/store/drive";
 import type { FileType, FolderType } from "~/lib/interface";
+import { useDriveStore } from "~/lib/store/drive";
 
 export default function DriveStoreHydrator({
   files,

@@ -1,7 +1,7 @@
-import { getRootFolderForUser } from "~/server/db/queries";
-import { auth } from "~/server/auth";
 import { redirect } from "next/navigation";
+import { auth } from "~/server/auth";
 import { onboardUser } from "~/server/db/mutations";
+import { getRootFolderForUser } from "~/server/db/queries";
 
 export default async function StarredFolderPage() {
   const session = await auth();

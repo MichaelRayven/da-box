@@ -3,9 +3,9 @@ import Breadcrumbs from "~/components/breadcrumbs";
 import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
+import { UploadFileDialog } from "~/components/upload-file-dialog";
 import type { FileType, FolderType } from "~/lib/interface";
 import DriveStoreHydrator from "./drive-store-hydrator";
-import { UploadFileDialog } from "~/components/upload-file-dialog";
 
 export default function DriveContents(props: {
   parents?: FolderType[];

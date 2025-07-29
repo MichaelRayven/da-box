@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import type z from "zod";
 import { fileNameSchema } from "~/lib/validation";
@@ -14,8 +16,6 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import type { ReactNode } from "react";
-import { PlusIcon } from "lucide-react";
 
 interface CreateFolderFormProps {
   className?: string;

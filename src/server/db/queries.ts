@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, isNull, and } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   files as filesSchema,

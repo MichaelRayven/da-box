@@ -6,19 +6,19 @@ import {
   SettingsIcon,
   UserIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { auth, signOut } from "~/server/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { Input } from "~/components/ui/input";
+import { auth, signOut } from "~/server/auth";
 import SignInButton from "./sign-in-button";
-import Link from "next/link";
 
 export default async function Header() {
   const session = await auth();
@@ -56,7 +56,7 @@ export default async function Header() {
                 </Avatar>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end" className="w-64 mt-2">
+              <DropdownMenuContent align="end" className="mt-2 w-64">
                 <DropdownMenuLabel className="flex flex-col gap-0.5">
                   <span className="font-medium text-base">
                     {session.user.name}

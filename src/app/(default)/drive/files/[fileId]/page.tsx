@@ -1,6 +1,6 @@
-import { auth } from "~/server/auth";
 import { notFound, redirect } from "next/navigation";
 import { getFileViewingUrl } from "~/server/actions";
+import { auth } from "~/server/auth";
 
 export default async function FilePage({
   params,

@@ -1,11 +1,11 @@
 import "server-only";
 
-import { db } from "~/server/db";
-import { folders as foldersSchema, users } from "./schema";
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { nameSchema, usernameSchema } from "~/lib/validation";
 import type { PostgresError } from "~/lib/interface";
+import { nameSchema, usernameSchema } from "~/lib/validation";
+import { db } from "~/server/db";
+import { folders as foldersSchema, users } from "./schema";
 
 const updateUserSchema = z.object({
   username: nameSchema.optional(),

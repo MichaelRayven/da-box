@@ -4,8 +4,8 @@ import { env } from "~/env";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 import { getFolderById } from "~/server/db/queries";
-import { s3 } from "~/server/s3";
 import { files as filesSchema } from "~/server/db/schema";
+import { s3 } from "~/server/s3";
 
 export async function POST(req: Request) {
   const { name, type, size, parentId } = await req.json();

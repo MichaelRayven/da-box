@@ -1,12 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import {
   ArrowRightCircleIcon,
   LoaderIcon,
   TriangleAlertIcon,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import type z from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,12 +21,9 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
-import { PictureInput } from "./picture-input";
-import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { updateProfileSchema } from "~/lib/validation";
 import { updateUserProfile } from "~/server/actions";
+import { PictureInput } from "./picture-input";
 
 interface OnboardingFormProps {
   defaultName?: string;

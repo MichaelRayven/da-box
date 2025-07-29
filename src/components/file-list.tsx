@@ -8,9 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { FileRow, FolderRow } from "./file-row";
-import { useDriveStore } from "~/lib/store/drive";
 import type { FileType, FolderType } from "~/lib/interface";
+import { useDriveStore } from "~/lib/store/drive";
+import { FileRow, FolderRow } from "./file-row";
 
 export default function FileList({
   folders: initialFolders,
@@ -23,8 +23,9 @@ export default function FileList({
   const storeFiles = useDriveStore((s) => s.files);
   const storeFolders = useDriveStore((s) => s.folders);
 
-  const files = storeFiles.length > 0 ? storeFiles : initialFiles ?? [];
-  const folders = storeFolders.length > 0 ? storeFolders : initialFolders ?? [];
+  const files = storeFiles.length > 0 ? storeFiles : (initialFiles ?? []);
+  const folders =
+    storeFolders.length > 0 ? storeFolders : (initialFolders ?? []);
 
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800">

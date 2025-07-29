@@ -1,10 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LoaderIcon, PlusIcon, UploadIcon, XIcon } from "lucide-react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
+import { cn, formatFileSize } from "~/lib/utils";
 import { fileNameSchema } from "~/lib/validation";
+import { Dropzone } from "./dropzone";
 import { Button } from "./ui/button";
+import { Card } from "./ui/card";
 import {
   Form,
   FormControl,
@@ -14,12 +19,7 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { useCallback, useRef, useState, type ReactNode } from "react";
-import { LoaderIcon, PlusIcon, UploadIcon, XIcon } from "lucide-react";
-import { cn, formatFileSize } from "~/lib/utils";
-import { Card } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
-import { Dropzone } from "./dropzone";
 
 const fileUploadSchema = z.object({
   files: z.array(z.instanceof(File)).min(1, "Please upload at least one file"),
@@ -64,7 +64,7 @@ export function UploadFilesForm({
   const schemaWithSize = fileUploadSchema.superRefine((data, ctx) => {
     if (maxSizeMB) {
       const tooLarge = data.files.filter(
-        (f) => f.size > maxSizeMB * 1024 * 1024
+        (f) => f.size > maxSizeMB * 1024 * 1024,
       );
       if (tooLarge.length > 0) {
         ctx.addIssue({
@@ -101,7 +101,7 @@ export function UploadFilesForm({
         shouldValidate: true,
       });
     },
-    [form, multiple]
+    [form, multiple],
   );
 
   const removeFile = (index: number) => {

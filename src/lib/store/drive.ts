@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { FolderType, FileType } from "../interface";
+import type { FileType, FolderType } from "../interface";
 
 type DriveState = {
   files: FileType[];

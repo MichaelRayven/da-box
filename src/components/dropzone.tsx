@@ -57,7 +57,7 @@ export function Dropzone({
         !hasError &&
           !isDragging &&
           "cursor-pointer border-border hover:border-primary",
-        className
+        className,
       )}
       onDrop={handleDrop}
       onDragOver={handleDragOver}

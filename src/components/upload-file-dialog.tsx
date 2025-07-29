@@ -1,5 +1,17 @@
 "use client";
 
+import type { DialogProps } from "@radix-ui/react-dialog";
+import {
+  CheckCircleIcon,
+  LoaderIcon,
+  TriangleAlertIcon,
+  UploadIcon,
+} from "lucide-react";
+import { type ReactNode, useState } from "react";
+import { toast } from "sonner";
+import { useUploadFile } from "~/hook/useUploadFile";
+import { useDriveStore } from "~/lib/store/drive";
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogClose,
@@ -8,19 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
 import { UploadFilesForm } from "./upload-files-form";
-import {
-  UploadIcon,
-  LoaderIcon,
-  TriangleAlertIcon,
-  CheckCircleIcon,
-} from "lucide-react";
-import { toast } from "sonner";
-import type { DialogProps } from "@radix-ui/react-dialog";
-import { useState, type ReactNode } from "react";
-import { useDriveStore } from "~/lib/store/drive";
-import { useUploadFile } from "~/hook/useUploadFile";
 
 interface UploadFileDialogProps extends DialogProps {
   trigger?: ReactNode;

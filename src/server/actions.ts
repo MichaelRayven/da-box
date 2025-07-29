@@ -2,17 +2,18 @@
 
 import {
   CompleteMultipartUploadCommand,
+  type CompletedPart,
   CreateMultipartUploadCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   UploadPartCommand,
-  type CompletedPart,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { and, eq } from "drizzle-orm";
 import mime from "mime-types";
 import { cookies } from "next/headers";
+import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
 import type {
@@ -21,6 +22,7 @@ import type {
   FolderType,
   PostgresError,
 } from "~/lib/interface";
+import { isUniqueConstraintViolation } from "~/lib/utils";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
@@ -28,8 +30,6 @@ import { updateUser } from "./db/mutations";
 import { getAllSubfolders, getFileById } from "./db/queries";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { s3 } from "./s3";
-import sharp from "sharp";
-import { isUniqueConstraintViolation } from "~/lib/utils";
 
 export async function getFileViewingUrl(fileId: string) {
   const session = await auth();
