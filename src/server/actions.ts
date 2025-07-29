@@ -1,12 +1,5 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
-import { db } from "./db";
-import { files as filesSchema, folders as foldersSchema } from "./db/schema";
-import { auth } from "./auth";
-import { getFileById, getFolderById } from "./db/queries";
-import { env } from "~/env";
-import type { ActionResponse } from "~/lib/interface";
 import {
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
@@ -17,19 +10,31 @@ import {
   type CompletedPart,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3 } from "./s3";
+import { and, eq } from "drizzle-orm";
+import mime from "mime-types";
 import { cookies } from "next/headers";
+import sharp from "sharp";
+import type z from "zod";
+import { env } from "~/env";
+import type { ActionResponse } from "~/lib/interface";
+import { updateProfileSchema } from "~/lib/validation";
+import { auth } from "./auth";
+import { db } from "./db";
+import { updateUser } from "./db/mutations";
+import { getFileById, getFolderById } from "./db/queries";
+import { files as filesSchema, folders as foldersSchema } from "./db/schema";
+import { s3 } from "./s3";
 
 export async function getFileViewingUrl(fileId: string) {
   const session = await auth();
 
-  if (!session?.user.id) {
+  if (!session?.userId) {
     return { success: false, error: "Unauthorized" };
   }
 
   const file = await getFileById(fileId);
 
-  if (file?.ownerId !== session.user.id) {
+  if (file?.ownerId !== session.userId) {
     return { success: false, error: "Forbidden" };
   }
 
@@ -47,13 +52,13 @@ export async function getFileViewingUrl(fileId: string) {
 export async function createFolder(name: string, parentId: string) {
   const session = await auth();
 
-  if (!session?.user.id) {
+  if (!session?.userId) {
     return { success: false, error: "Unauthorized" };
   }
 
   const parent = await getFolderById(parentId);
 
-  if (parent?.ownerId !== session.user.id) {
+  if (parent?.ownerId !== session.userId) {
     return { success: false, error: "Forbidden" };
   }
 
@@ -70,7 +75,7 @@ export async function createFolder(name: string, parentId: string) {
     .insert(foldersSchema)
     .values({
       name: name,
-      ownerId: session.user.id,
+      ownerId: session.userId,
       parentId: parentId,
     })
     .returning({ id: foldersSchema.id });
@@ -85,10 +90,10 @@ export async function getFileUploadUrl(
   size: number,
 ): Promise<ActionResponse<{ key: string; url: string }>> {
   const session = await auth();
-  if (!session) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
   const parent = await getFolderById(parentId);
-  if (parent?.ownerId !== session.user.id) {
+  if (parent?.ownerId !== session.userId) {
     return { success: false, error: "Forbidden" };
   }
 
@@ -98,14 +103,13 @@ export async function getFileUploadUrl(
 
   if (exists) return { success: false, error: "File already exists" };
 
-  const userId = session.user.id;
   const ext = name?.split(".").pop() ?? "bin";
-  const key = `${userId}/uploads/${crypto.randomUUID()}.${ext}`;
+  const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
   await db.insert(filesSchema).values({
     name,
     key,
-    ownerId: userId,
+    ownerId: session.userId,
     parentId,
     size,
     type,
@@ -125,9 +129,8 @@ export async function getFileUploadUrl(
 
 export async function startPartialFileUpload(
   name: string,
-  type: string,
-  parentId: string,
   size: number,
+  parentId: string,
 ): Promise<ActionResponse<{ uploadId: string; key: string }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: "Unauthorized" };
@@ -144,7 +147,8 @@ export async function startPartialFileUpload(
 
   if (exists) return { success: false, error: "File already exists" };
 
-  const ext = name?.split(".").pop() ?? "bin";
+  const type = mime.contentType(name) || "application/octet-stream";
+  const ext = mime.extension(type);
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
   await db.insert(filesSchema).values({
@@ -266,4 +270,84 @@ export async function deleteFile(
     console.error("File deletion error:", err);
     return { success: false, error: "Failed to delete file" };
   }
+}
+
+export function getPublicObjectUrl(bucket: string, key: string) {
+  const base = env.S3_ENDPOINT.slice(0, env.S3_ENDPOINT.lastIndexOf("/"));
+  return `${base}/object/public/${bucket}/${key}`;
+}
+
+// Accepts: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF
+async function convertToJpeg(buffer: Buffer): Promise<Buffer> {
+  return sharp(buffer).jpeg({ quality: 90 }).toBuffer();
+}
+
+export async function uploadAvatar(
+  avatar: File,
+): Promise<ActionResponse<{ url: string }>> {
+  const session = await auth();
+
+  if (!session?.userId) return { success: false, error: "Unauthorized" };
+
+  if (avatar.size > 5 * 1024 * 1024)
+    return { success: false, error: "This file is too large" };
+
+  const buffer = Buffer.from(await avatar.arrayBuffer());
+  const key = `${session.userId}/profile.jpeg`;
+
+  const uploadCommand = new PutObjectCommand({
+    Bucket: env.S3_AVATAR_BUCKET_NAME,
+    Key: key,
+    Body: await convertToJpeg(buffer),
+    ContentType: "image/jpeg",
+    ACL: "public-read",
+  });
+
+  await s3.send(uploadCommand);
+
+  return {
+    success: true,
+    data: { url: getPublicObjectUrl(env.S3_AVATAR_BUCKET_NAME, key) },
+  };
+}
+
+export async function updateUserProfile(
+  unsafeData: z.infer<typeof updateProfileSchema>,
+): Promise<ActionResponse<string>> {
+  const session = await auth();
+  if (!session?.userId) {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  const { data, error, success } = updateProfileSchema.safeParse(unsafeData);
+  if (!success) {
+    return { success: false, error: error.message };
+  }
+
+  const { name, username, avatar } = data;
+  let avatarUrl: string | undefined;
+
+  if (avatar instanceof File) {
+    try {
+      const res = await uploadAvatar(avatar);
+      if (res.success) {
+        avatarUrl = res.data.url;
+      }
+    } catch (err) {
+      return { success: false, error: "Failed to upload avatar." };
+    }
+  } else if (typeof avatar === "string") {
+    avatarUrl = avatar;
+  }
+
+  await updateUser(session.userId, {
+    name,
+    username,
+    image: avatarUrl,
+  });
+
+  return {
+    success: true,
+    data: "Your profile has been updated!",
+  };
 }

@@ -17,15 +17,15 @@ interface PostgresError extends Error {
   };
 }
 
-const updateUserProfileSchema = z.object({
+const updateUserSchema = z.object({
   username: nameSchema.optional(),
   name: usernameSchema.optional(),
   image: z.string().url().optional(),
 });
 
-export async function updateUserProfile(
+export async function updateUser(
   id: string,
-  data: z.infer<typeof updateUserProfileSchema>,
+  data: z.infer<typeof updateUserSchema>,
 ) {
   try {
     await db.update(users).set(data).where(eq(users.id, id));

@@ -38,15 +38,28 @@ export const passwordSchema = z
     "Password must contain at least one special character",
   );
 
-export const avatarSchema = z
-  .custom<File>()
-  .refine(
-    (file) =>
-      !file || ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-    {
-      message: "Only JPG, PNG or WEBP allowed",
-    },
-  );
+export const avatarSchema = z.union([
+  z
+    .custom<File>()
+    .refine((file) => {
+      if (!file) return true;
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/avif",
+        "image/gif",
+        "image/svg+xml",
+        "image/tiff",
+      ];
+      return validTypes.includes(file.type);
+    }, "Unsupported image format")
+    .refine(
+      (file) => !file || file.size <= 5 * 1024 * 1024,
+      "Max file size is 5MB",
+    ),
+  z.string().url(),
+]);
 
 export const signUpSchema = z
   .object({
@@ -70,19 +83,10 @@ export const emailSignInSchema = z.object({
   email: emailSchema,
 });
 
-export const onboardingSchema = z.object({
+export const updateProfileSchema = z.object({
   name: nameSchema.optional(),
   username: usernameSchema.optional(),
   avatar: avatarSchema.optional(),
-});
-
-export const updateUserSchema = z.object({
-  username: nameSchema.optional(),
-  name: usernameSchema.optional(),
-  file: z
-    .instanceof(Buffer)
-    .optional()
-    .refine((f) => !f || f.length < 5_000_000, "File too large"), // optional 5MB limit
 });
 
 export const fileNameSchema = z.object({
