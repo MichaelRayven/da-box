@@ -33,3 +33,13 @@ export interface Folder {
 }
 
 export type AccountType = AdapterAccountType | "credentials";
+
+export type ActionResponse<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: string;
+    };

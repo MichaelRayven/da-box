@@ -5,8 +5,10 @@ import { db } from "./db";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { auth } from "./auth";
 import { getFileById, getFolderById } from "./db/queries";
-import { getPrivateObjectUrl } from "./s3";
+import { getPrivateObjectUrl, s3 } from "./s3";
 import { env } from "~/env";
+import type { ActionResponse } from "~/lib/interface";
+import { CreateMultipartUploadCommand } from "@aws-sdk/client-s3";
 
 export async function getFileUrl(fileId: string) {
   const session = await auth();
@@ -58,6 +60,54 @@ export async function createFolder(name: string, parentId: string) {
     .returning({ id: foldersSchema.id });
 
   return { success: true, data: folderId };
+}
+
+export async function startPartialUpload(
+  name: string,
+  type: string,
+  parentId: string,
+  size: number,
+): Promise<ActionResponse<{ uploadId: string; key: string }>> {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+
+  const parent = await getFolderById(parentId);
+
+  if (parent?.ownerId !== session.user.id) {
+    return { success: false, error: "Forbidden" };
+  }
+
+  const exists = await db.query.files.findFirst({
+    where: and(eq(filesSchema.parentId, parentId), eq(filesSchema.name, name)),
+  });
+
+  if (exists) return { success: false, error: "File already exists" };
+
+  const userId = session.user.id;
+  const ext = name?.split(".").pop() ?? "bin";
+  const key = `${userId}/uploads/${crypto.randomUUID()}.${ext}`;
+
+  await db.insert(filesSchema).values({
+    name: name,
+    key: key,
+    ownerId: userId,
+    parentId: parentId,
+    size: size,
+    type: type,
+    hidden: true,
+  });
+
+  const command = new CreateMultipartUploadCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: key,
+    ContentType: type,
+  });
+
+  const { UploadId } = await s3.send(command);
+
+  if (!UploadId) return { success: false, error: "Something went wrong" };
+
+  return { success: true, data: { uploadId: UploadId, key: key } };
 }
 
 // export async function deleteFile(fileId: number) {
