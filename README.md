@@ -59,6 +59,9 @@ Configured test db connection, next steps:
 - [ ] Add sign up page toasts
 - [ ] Add email auth page error messages
 - [ ] Add email auth page toasts
+- [ ] Add trash support
+- [ ] Add share form
+- [ ] Add share dialog
 
 
 ## Platforms
