@@ -29,7 +29,7 @@ interface UploadFileDialogProps extends DialogProps {
 
 export function UploadFileDialog({
   trigger = (
-    <Button>
+    <Button variant="outline">
       <UploadIcon className="mr-2 size-4" />
       Upload
     </Button>
@@ -50,8 +50,8 @@ export function UploadFileDialog({
     onFileUploaded(file) {
       addFile(file);
     },
-    onError: (err) => {
-      toast.error((err as Error).message, {
+    onError: (error: Error) => {
+      toast.error(error.message, {
         icon: <TriangleAlertIcon />,
       });
     },
@@ -71,7 +71,7 @@ export function UploadFileDialog({
     <Dialog {...props} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="gap-6">
         <DialogHeader>
           <DialogTitle>Upload Files</DialogTitle>
         </DialogHeader>

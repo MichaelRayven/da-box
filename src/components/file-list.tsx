@@ -11,6 +11,10 @@ import {
 import type { FileType, FolderType } from "~/lib/interface";
 import { useDriveStore } from "~/lib/store/drive";
 import { FileRow, FolderRow } from "./file-row";
+import { RenameDialog } from "./rename-dialog";
+import { ShareDialog } from "./share-dialog";
+import { useContextMenuStore } from "~/lib/store/context-menu";
+import { DeleteDialog } from "./delete-dialog";
 
 export default function FileList({
   folders: initialFolders,
@@ -23,9 +27,17 @@ export default function FileList({
   const storeFiles = useDriveStore((s) => s.files);
   const storeFolders = useDriveStore((s) => s.folders);
 
-  const files = storeFiles.length > 0 ? storeFiles : (initialFiles ?? []);
-  const folders =
-    storeFolders.length > 0 ? storeFolders : (initialFolders ?? []);
+  const files = storeFiles.length > 0 ? storeFiles : initialFiles ?? [];
+  const folders = storeFolders.length > 0 ? storeFolders : initialFolders ?? [];
+
+  const {
+    isShareOpen,
+    isRenameOpen,
+    isDeleteOpen,
+    closeRenameDialog,
+    closeShareDialog,
+    closeDeleteDialog,
+  } = useContextMenuStore();
 
   return (
     <div className="rounded-lg border border-gray-700 bg-gray-800">
@@ -60,6 +72,23 @@ export default function FileList({
           </p>
         </div>
       )}
+
+      {/* Context Dialogs */}
+      <RenameDialog
+        trigger={false}
+        open={isRenameOpen}
+        onOpenChange={closeRenameDialog}
+      />
+      <ShareDialog
+        trigger={false}
+        open={isShareOpen}
+        onOpenChange={closeShareDialog}
+      />
+      <DeleteDialog
+        trigger={false}
+        open={isDeleteOpen}
+        onOpenChange={closeDeleteDialog}
+      />
     </div>
   );
 }

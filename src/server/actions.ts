@@ -486,7 +486,10 @@ export async function renameFolder(
       .where(eq(foldersSchema.id, folderId));
   } catch (err) {
     if (isUniqueConstraintViolation(err)) {
-      return { success: false, error: "Folder with this name already exists" };
+      return {
+        success: false,
+        error: `Folder named "${folder.name}" already exists`,
+      };
     }
 
     return { success: false, error: "Something went wrong" };
@@ -523,7 +526,10 @@ export async function renameFile(
       .where(eq(filesSchema.id, fileId));
   } catch (err) {
     if (isUniqueConstraintViolation(err)) {
-      return { success: false, error: "File with this name already exists" };
+      return {
+        success: false,
+        error: `File with named "${file.name}" already exists`,
+      };
     }
 
     return { success: false, error: "Something went wrong" };

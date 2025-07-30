@@ -1,21 +1,21 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { ReactNode } from "react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { Button } from "./ui/button";
 import {
   Form,
+  FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  FormControl,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { Card } from "./ui/card";
-import type { ReactNode } from "react";
 
 const shareSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -52,62 +52,68 @@ export function ShareForm({
   });
 
   return (
-    <Card className="p-4">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email to Share With</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="user@example.com"
-                    {...field}
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Share with (email address)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter email address"
+                  disabled={isPending}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="permission"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Permission</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex gap-4"
-                  >
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <RadioGroupItem value="view" disabled={isPending} />
-                      </FormControl>
-                      <FormLabel className="font-normal">View</FormLabel>
-                    </FormItem>
+        <FormField
+          control={form.control}
+          name="permission"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Permission</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex flex-col gap-4"
+                >
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <RadioGroupItem value="view" disabled={isPending} />
+                    </FormControl>
+                    <FormLabel className="flex flex-col items-start gap-0 font-normal">
+                      <span>View only</span>
+                      <FormDescription>Can view and download</FormDescription>
+                    </FormLabel>
+                  </FormItem>
 
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <RadioGroupItem value="edit" disabled={isPending} />
-                      </FormControl>
-                      <FormLabel className="font-normal">Edit</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <RadioGroupItem value="edit" disabled={isPending} />
+                    </FormControl>
+                    <FormLabel className="flex flex-col items-start gap-0 font-normal">
+                      <span>Can edit</span>
+                      <FormDescription>
+                        Can view, download and modify
+                      </FormDescription>
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          {submitButton(isPending)}
-        </form>
-      </Form>
-    </Card>
+        {submitButton(isPending)}
+      </form>
+    </Form>
   );
 }

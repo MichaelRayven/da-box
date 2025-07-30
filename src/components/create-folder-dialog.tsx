@@ -26,7 +26,7 @@ interface CreateFolderDialogProps extends DialogProps {
 
 export function CreateFolderDialog({
   trigger = (
-    <Button>
+    <Button variant="outline">
       <PlusIcon className="mr-2 size-4" />
       New
     </Button>
@@ -70,7 +70,7 @@ export function CreateFolderDialog({
     <Dialog {...props} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="gap-6">
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
         </DialogHeader>

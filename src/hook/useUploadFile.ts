@@ -13,7 +13,8 @@ import {
 
 interface UseUploadFileOptions {
   onSuccess?: (data: FileType[], variables: File[], context: unknown) => void;
-  onError?: (error: unknown, variables: File[], context: unknown) => void;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  onError?: (error: any, variables: File[], context: unknown) => void;
   onUpload?: (variables: File[]) => void;
   onFileUpload?: (variables: File) => void;
   onFileUploaded?: (file: FileType) => void;
@@ -130,11 +131,7 @@ export function useUploadFile({
     return uploaded;
   }
 
-  const { mutate, mutateAsync, ...mutation } = useMutation<
-    FileType[],
-    unknown,
-    File[]
-  >({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutationFn: uploadFiles,
     onMutate: onUpload,
     onSuccess,

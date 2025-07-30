@@ -13,6 +13,7 @@ import { Share2Icon, LoaderIcon } from "lucide-react";
 import { ShareForm } from "./share-form"; // Assuming your form is in share-form.tsx
 import { toast } from "sonner";
 import { useControllableState } from "~/hook/useControllableState";
+import { useContextMenuStore } from "~/lib/store/context-menu";
 
 interface ShareDialogProps {
   open?: boolean;
@@ -30,6 +31,8 @@ export function ShareDialog({
     </Button>
   ),
 }: ShareDialogProps) {
+  const file = useContextMenuStore((s) => s.selectedFile);
+
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: false,
@@ -58,9 +61,9 @@ export function ShareDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="gap-6">
         <DialogHeader>
-          <DialogTitle>Share With Others</DialogTitle>
+          <DialogTitle>Share "{file?.name}"</DialogTitle>
         </DialogHeader>
 
         <ShareForm

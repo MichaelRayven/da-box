@@ -1,12 +1,7 @@
 import { create } from "zustand";
+import type { FileType } from "../interface";
 
-interface FileType {
-  id: string;
-  name: string;
-  // add other properties as needed
-}
-
-interface UseFileStore {
+interface UseContextMenuStore {
   selectedFile: FileType | null;
 
   isDeleteOpen: boolean;
@@ -25,7 +20,7 @@ interface UseFileStore {
   closeShareDialog: () => void;
 }
 
-export const useFileStore = create<UseFileStore>((set) => ({
+export const useContextMenuStore = create<UseContextMenuStore>((set) => ({
   selectedFile: null,
 
   isDeleteOpen: false,
@@ -36,13 +31,13 @@ export const useFileStore = create<UseFileStore>((set) => ({
 
   openDeleteDialog: (file) => set({ selectedFile: file, isDeleteOpen: true }),
 
-  closeDeleteDialog: () => set({ selectedFile: null, isDeleteOpen: false }),
+  closeDeleteDialog: () => set({ isDeleteOpen: false }),
 
   openRenameDialog: (file) => set({ selectedFile: file, isRenameOpen: true }),
 
-  closeRenameDialog: () => set({ selectedFile: null, isRenameOpen: false }),
+  closeRenameDialog: () => set({ isRenameOpen: false }),
 
   openShareDialog: (file) => set({ selectedFile: file, isShareOpen: true }),
 
-  closeShareDialog: () => set({ selectedFile: null, isShareOpen: false }),
+  closeShareDialog: () => set({ isShareOpen: false }),
 }));

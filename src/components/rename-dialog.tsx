@@ -63,7 +63,7 @@ export function RenameDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="gap-6">
         <DialogHeader>
           <DialogTitle>Rename Item</DialogTitle>
         </DialogHeader>
