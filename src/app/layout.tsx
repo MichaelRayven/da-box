@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import { Toaster } from "~/components/ui/sonner";
 import { Providers } from "./providers";
 
@@ -16,11 +17,16 @@ const geist = Geist({
   variable: "--font-geist-sans",
 });
 
+const dela = localFont({
+  variable: "--font-dela-gothic-one",
+  src: "../../public/fonts/DelaGothicOne-Regular.ttf",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${dela.variable} ${geist.variable}`}>
       <body>
         <Providers>
           <div className="bg-background text-foreground">{children}</div>

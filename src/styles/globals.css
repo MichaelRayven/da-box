@@ -6,6 +6,7 @@
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-dela: var(--font-dela-gothic-one), cursive;
 }
 
 @theme inline {
@@ -87,5 +88,15 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .font-geist {
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .font-dela {
+    font-family: var(--font-dela), cursive;
   }
 }
