@@ -15,7 +15,7 @@ export function GithubAuthForm({ className, isPending }: GithubAuthFormProps) {
     <form
       className="flex w-full justify-center"
       action={async () => {
-        await signIn("github");
+        await signIn("github", { redirectTo: "/drive" });
       }}
     >
       <Button

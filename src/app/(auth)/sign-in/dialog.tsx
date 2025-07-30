@@ -26,7 +26,6 @@ export function SignInDialog() {
   };
 
   const successHandler = () => {
-    toast.success("Signed in!");
     router.replace("/drive");
   };
 
@@ -53,14 +52,13 @@ export function SignInDialog() {
     async mutationFn(values: z.infer<typeof emailSignInSchema>) {
       const result = await signIn("resend", {
         ...values,
-        redirect: false,
+        redirectTo: "/drive ",
       });
       if (result?.error) {
         throw new Error("Something went wrong. Please try again later.");
       }
     },
     onError: errorHandler,
-    onSuccess: successHandler,
   });
 
   const isPending = emailSignInMutation.isPending || signInMutation.isPending;

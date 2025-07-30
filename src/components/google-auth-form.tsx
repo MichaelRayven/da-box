@@ -15,7 +15,7 @@ export function GoogleAuthForm({ className, isPending }: GoogleAuthFormProps) {
     <form
       className="flex w-full justify-center"
       action={async () => {
-        await signIn("google");
+        await signIn("google", { redirectTo: "/drive" });
       }}
     >
       <Button
