@@ -4,7 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { KeyRoundIcon, MailIcon, TriangleAlertIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type z from "zod";
 import { EmailAuthForm } from "~/components/email-auth-form";
@@ -14,51 +15,56 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import type { emailSignInSchema, signInSchema } from "~/lib/validation";
 import { SignInForm } from "./form";
-import { useRouter } from "next/navigation";
+
+const signInErrorMessages: Record<string, string> = {
+  CredentialsSignin: "Invalid email or password. Please try again.",
+  OAuthAccountNotLinked:
+    "This account is linked to a different sign-in method. Please use the method you originally used.",
+  AccountNotLinked:
+    "This account is linked to a different sign-in method. Please use the method you originally used.",
+  OAuthCallbackError: "Something went wrong during sign-in. Please try again.",
+  OAuthSignInError:
+    "We couldn't start the sign-in process. Please try again or use a different method.",
+  EmailSignInError:
+    "We couldn't send you a sign-in link. Please check your email and try again.",
+  MissingCSRF: "Security check failed. Please refresh the page and try again.",
+};
+
+const errorToast = (error: string) => {
+  toast.error(error, {
+    icon: <TriangleAlertIcon />,
+  });
+};
 
 export function SignInDialog() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const errorHandler = (error: Error) => {
-    toast.error(error.message, {
-      icon: <TriangleAlertIcon />,
-    });
-  };
-
-  const successHandler = () => {
-    router.replace("/drive");
-  };
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      errorToast(
+        signInErrorMessages[error] ||
+          "Something went wrong. Please try again later."
+      );
+    }
+  }, [searchParams]);
 
   const signInMutation = useMutation({
     mutationFn: async (values: z.infer<typeof signInSchema>) => {
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         ...values,
-        redirect: false,
+        redirectTo: "/drive",
       });
-
-      if (result?.error) {
-        throw new Error(
-          result.error === "CredentialsSignin"
-            ? "Invalid email or password."
-            : "Something went wrong. Please try again later."
-        );
-      }
     },
-    onError: errorHandler,
-    onSuccess: successHandler,
   });
 
   const emailSignInMutation = useMutation({
     async mutationFn(values: z.infer<typeof emailSignInSchema>) {
-      const result = await signIn("resend", {
+      await signIn("resend", {
         ...values,
-        redirectTo: "/drive ",
+        redirectTo: "/drive",
       });
-      if (result?.error) {
-        throw new Error("Something went wrong. Please try again later.");
-      }
     },
-    onError: errorHandler,
   });
 
   const isPending = emailSignInMutation.isPending || signInMutation.isPending;
