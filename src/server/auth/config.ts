@@ -53,6 +53,7 @@ export const authConfig = {
     signIn: "/sign-in",
     signOut: "/sign-out",
     newUser: "/onboarding",
+    verifyRequest: "/verification",
   },
   cookies: {
     sessionToken: {

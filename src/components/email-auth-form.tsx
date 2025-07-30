@@ -68,7 +68,7 @@ export function EmailAuthForm({
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input
-                  type="email"
+                  type="text"
                   aria-required="true"
                   autoComplete="email"
                   disabled={isPending}
