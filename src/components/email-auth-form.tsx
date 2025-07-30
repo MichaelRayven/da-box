@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MailIcon } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { LoaderIcon, MailIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -21,13 +21,30 @@ import { emailSignInSchema } from "~/lib/validation";
 interface EmailAuthFormProps {
   id?: string;
   className?: string;
-  showSubmit?: boolean;
+  isPending?: boolean;
+  onSubmit?: (data: z.infer<typeof emailSignInSchema>) => void;
+  submitButton?: (isPending?: boolean) => ReactNode;
 }
 
 export function EmailAuthForm({
   id,
   className,
-  showSubmit = true,
+  isPending,
+  onSubmit = () => {},
+  submitButton = (isPending) => (
+    <Button type="submit" disabled={isPending} className="mt-2 w-full">
+      {isPending ? (
+        <>
+          Sending...
+          <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
+        </>
+      ) : (
+        <>
+          Continue <MailIcon className="size-6" />
+        </>
+      )}
+    </Button>
+  ),
 }: EmailAuthFormProps) {
   const form = useForm<z.infer<typeof emailSignInSchema>>({
     resolver: zodResolver(emailSignInSchema),
@@ -35,10 +52,6 @@ export function EmailAuthForm({
       email: "",
     },
   });
-
-  const onSubmit = async (values: z.infer<typeof emailSignInSchema>) => {
-    await signIn("resend", { ...values, redirect: true, redirectTo: "/" });
-  };
 
   return (
     <Form {...form}>
@@ -58,6 +71,7 @@ export function EmailAuthForm({
                   type="email"
                   aria-required="true"
                   autoComplete="email"
+                  disabled={isPending}
                   placeholder="email@example.com"
                   {...field}
                 />
@@ -66,11 +80,7 @@ export function EmailAuthForm({
             </FormItem>
           )}
         />
-        {showSubmit && (
-          <Button type="submit" className="mt-2 w-full">
-            Continue <MailIcon className="size-6" />
-          </Button>
-        )}
+        {submitButton(isPending)}
       </form>
     </Form>
   );

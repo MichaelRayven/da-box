@@ -3,8 +3,14 @@
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { Button } from "./ui/button";
+import { cn } from "~/lib/utils";
 
-export function GoogleAuthForm() {
+interface GoogleAuthFormProps {
+  className?: string;
+  isPending?: boolean;
+}
+
+export function GoogleAuthForm({ className, isPending }: GoogleAuthFormProps) {
   return (
     <form
       className="flex w-full justify-center"
@@ -12,7 +18,12 @@ export function GoogleAuthForm() {
         await signIn("google");
       }}
     >
-      <Button type="submit" variant="secondary" className="w-full">
+      <Button
+        type="submit"
+        variant="secondary"
+        disabled={isPending}
+        className={cn("w-full", className)}
+      >
         Continue with Google
         <Image
           src="https://authjs.dev/img/providers/google.svg"
