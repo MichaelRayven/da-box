@@ -1,19 +1,19 @@
 "use client";
 
+import { EditIcon, LoaderIcon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useControllableState } from "~/hook/useControllableState";
+import { RenameForm } from "./rename-form"; // adjust path as needed
+import { Button } from "./ui/button";
 import {
   Dialog,
-  DialogTrigger,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
+  DialogTrigger,
 } from "./ui/dialog";
-import { Button } from "./ui/button";
-import { EditIcon, LoaderIcon } from "lucide-react";
-import { RenameForm } from "./rename-form"; // adjust path as needed
-import { toast } from "sonner";
-import { useControllableState } from "~/hook/useControllableState";
-import { useState } from "react";
 
 interface RenameDialogProps {
   open?: boolean;

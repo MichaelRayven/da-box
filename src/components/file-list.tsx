@@ -9,12 +9,12 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { FileType, FolderType } from "~/lib/interface";
+import { useContextMenuStore } from "~/lib/store/context-menu";
 import { useDriveStore } from "~/lib/store/drive";
+import { DeleteDialog } from "./delete-dialog";
 import { FileRow, FolderRow } from "./file-row";
 import { RenameDialog } from "./rename-dialog";
 import { ShareDialog } from "./share-dialog";
-import { useContextMenuStore } from "~/lib/store/context-menu";
-import { DeleteDialog } from "./delete-dialog";
 
 export default function FileList({
   folders: initialFolders,
@@ -27,8 +27,9 @@ export default function FileList({
   const storeFiles = useDriveStore((s) => s.files);
   const storeFolders = useDriveStore((s) => s.folders);
 
-  const files = storeFiles.length > 0 ? storeFiles : initialFiles ?? [];
-  const folders = storeFolders.length > 0 ? storeFolders : initialFolders ?? [];
+  const files = storeFiles.length > 0 ? storeFiles : (initialFiles ?? []);
+  const folders =
+    storeFolders.length > 0 ? storeFolders : (initialFolders ?? []);
 
   const {
     isShareOpen,

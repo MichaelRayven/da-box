@@ -52,7 +52,7 @@ Configured test db connection, next steps:
 
 ## Note from 7/30/2025
 
-- [ ] Add context menu
+- [x] Add context menu
 - [ ] Add sign in page error messages
 - [ ] Add sign in page toasts
 - [ ] Add sign up page error messages

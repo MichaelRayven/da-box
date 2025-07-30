@@ -1,19 +1,19 @@
 "use client";
 
+import { LoaderIcon, Share2Icon } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
+  DialogTrigger,
 } from "~/components/ui/dialog";
-import { Button } from "~/components/ui/button";
-import { Share2Icon, LoaderIcon } from "lucide-react";
-import { ShareForm } from "./share-form"; // Assuming your form is in share-form.tsx
-import { toast } from "sonner";
 import { useControllableState } from "~/hook/useControllableState";
 import { useContextMenuStore } from "~/lib/store/context-menu";
+import { ShareForm } from "./share-form"; // Assuming your form is in share-form.tsx
 
 interface ShareDialogProps {
   open?: boolean;
@@ -53,7 +53,7 @@ export function ShareDialog({
           return `Shared with ${data.email}`;
         },
         error: "Failed to share",
-      }
+      },
     );
   };
 
