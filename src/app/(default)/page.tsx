@@ -14,6 +14,7 @@ import {
   VideoIcon,
   ZapIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -65,12 +66,14 @@ const Index = () => {
             </a>
           </div>
         </div>
-        <Button
-          variant="outline"
-          className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          Get Started
-        </Button>
+        <Link href="sign-in">
+          <Button
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            Get Started
+          </Button>
+        </Link>
       </nav>
 
       {/* Hero Section */}
@@ -92,20 +95,25 @@ const Index = () => {
             privacy-first design. Start free, scale as you grow.
           </p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="bg-primary text-primary-foreground shadow-glow hover:bg-primary/90"
-            >
-              Get Started (Free – 1 GB)
-              <ArrowRightIcon className="ml-2 h-4 w-4" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              Explore Documentation
-            </Button>
+            <Link href="/sign-in">
+              <Button
+                size="lg"
+                className="bg-primary text-primary-foreground shadow-glow hover:bg-primary/90"
+              >
+                Get Started (Free – 1 GB)
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+
+            <Link href="/docs">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                Explore Documentation
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -306,12 +314,14 @@ const Index = () => {
               <p className="mb-6 text-body-md text-muted-foreground">
                 Perfect for hobbyist use, testing, or personal backups.
               </p>
-              <Button
-                variant="outline"
-                className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground "
-              >
-                Get Started
-              </Button>
+              <Link href="/sign-in">
+                <Button
+                  variant="outline"
+                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground "
+                >
+                  Get Started
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -448,19 +458,23 @@ const Index = () => {
           Get your free 1 GB account now, or learn more in the documentation.
         </p>
         <div className="flex flex-col justify-center gap-4 sm:flex-row">
-          <Button
-            size="lg"
-            className="bg-primary text-primary-foreground shadow-glow hover:bg-primary/90"
-          >
-            Get Started (Free)
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-          >
-            Docs & API
-          </Button>
+          <Link href="/sign-in">
+            <Button
+              size="lg"
+              className="bg-primary text-primary-foreground shadow-glow hover:bg-primary/90"
+            >
+              Get Started (Free)
+            </Button>
+          </Link>
+          <Link href="/docs">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              Docs & API
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -472,40 +486,40 @@ const Index = () => {
               DaBOX
             </h3>
             <p className="text-body-md text-muted-foreground">
-              © 2025 DaBOX. Open source. Privacy respected.
+              © 2025 DaBOX. Michael Rayven — MIT Licensed
             </p>
           </div>
           <div className="flex justify-center space-x-6">
-            <a
+            <Link
               href="https://github.com/MichaelRayven/da-box"
               className="text-muted-foreground transition-colors hover:text-primary"
             >
               Github
-            </a>
-            <a
+            </Link>
+            <Link
               href="/docs"
               className="text-body-md text-muted-foreground transition-colors hover:text-primary"
             >
               Docs
-            </a>
-            <a
+            </Link>
+            <Link
               href="/contact"
               className="text-body-md text-muted-foreground transition-colors hover:text-primary"
             >
               Contact
-            </a>
-            <a
+            </Link>
+            <Link
               href="/legal/privacy-police"
               className="text-body-md text-muted-foreground transition-colors hover:text-primary"
             >
               Privacy Policy
-            </a>
-            <a
+            </Link>
+            <Link
               href="/legal/terms-of-service"
               className="text-body-md text-muted-foreground transition-colors hover:text-primary"
             >
               Terms of Service
-            </a>
+            </Link>
           </div>
         </div>
       </footer>
