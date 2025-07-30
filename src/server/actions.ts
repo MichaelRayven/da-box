@@ -329,11 +329,6 @@ export async function deleteFile(
   }
 }
 
-function getPublicObjectUrl(bucket: string, key: string) {
-  const base = env.S3_ENDPOINT.slice(0, env.S3_ENDPOINT.lastIndexOf("/"));
-  return `${base}/object/public/${bucket}/${key}`;
-}
-
 // Accepts: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF
 function convertToJpeg(buffer: Buffer): Promise<Buffer> {
   return sharp(buffer).jpeg({ quality: 90 }).toBuffer();
@@ -364,7 +359,7 @@ export async function uploadAvatar(
 
   return {
     success: true,
-    data: { url: getPublicObjectUrl(env.S3_AVATAR_BUCKET_NAME, key) },
+    data: { url: `/api/user/avatar?userId=${session.userId}` },
   };
 }
 
