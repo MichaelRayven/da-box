@@ -1,4 +1,4 @@
-import NeonAdapter from "@auth/neon-adapter";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
@@ -6,8 +6,14 @@ import GoogleProvider from "next-auth/providers/google";
 import ResendProvider from "next-auth/providers/resend";
 import { env } from "~/env";
 import { signInSchema } from "~/lib/validation";
-import { db, pool } from "~/server/db";
-import { sessions } from "~/server/db/schema";
+import { db } from "~/server/db";
+import {
+  accounts,
+  authenticators,
+  sessions,
+  users,
+  verificationTokens,
+} from "~/server/db/schema";
 import {
   comparePasswords,
   generateSessionExpiration,
@@ -22,6 +28,7 @@ import {
  */
 declare module "next-auth" {
   interface Session extends DefaultSession {
+    userId: string;
     user: {
       id: string;
       username?: string;
@@ -92,9 +99,7 @@ export const authConfig = {
           user.salt,
         );
 
-        if (!passwordMatch) {
-          return null;
-        }
+        if (!passwordMatch) return null;
 
         return user;
       },
@@ -112,7 +117,13 @@ export const authConfig = {
       clientSecret: env.AUTH_GITHUB_SECRET,
     }),
   ],
-  adapter: NeonAdapter(pool),
+  adapter: DrizzleAdapter(db, {
+    usersTable: users,
+    accountsTable: accounts,
+    sessionsTable: sessions,
+    verificationTokensTable: verificationTokens,
+    authenticatorsTable: authenticators,
+  }),
   jwt: {
     async encode({ token }) {
       // Use generated session token from callbacks

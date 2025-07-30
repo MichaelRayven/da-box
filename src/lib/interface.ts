@@ -13,23 +13,47 @@ import type { AdapterAccountType } from "next-auth/adapters";
 //   url?: string;
 // }
 
-export interface File {
+export type FileType = {
   id: string;
   name: string;
-  type: "file";
-  size: string;
-  url: string;
-  parent: string;
-  modified: string;
-  owner: string;
-}
+  size: number;
+  key: string;
+  type: string;
+  hidden: boolean;
+  parentId: string;
+  ownerId: string;
+  modified: Date | null;
+  createdAt: Date | null;
+};
 
-export interface Folder {
+export type FolderType = {
   id: string;
   name: string;
-  type: "folder";
-  parent: string | null;
-  owner: string;
-}
+  parentId: string | null;
+  ownerId: string;
+  modified: Date | null;
+  createdAt: Date | null;
+};
 
 export type AccountType = AdapterAccountType | "credentials";
+
+export type ActionResponse<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+export interface PostgresError extends Error {
+  cause: {
+    code?: string;
+    constraint?: string;
+    detail?: string;
+    table?: string;
+    column?: string;
+    schema?: string;
+  };
+}

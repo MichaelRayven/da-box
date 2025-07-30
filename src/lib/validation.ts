@@ -38,6 +38,29 @@ export const passwordSchema = z
     "Password must contain at least one special character",
   );
 
+export const avatarSchema = z.union([
+  z
+    .custom<File>()
+    .refine((file) => {
+      if (!file) return true;
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/avif",
+        "image/gif",
+        "image/svg+xml",
+        "image/tiff",
+      ];
+      return validTypes.includes(file.type);
+    }, "Unsupported image format")
+    .refine(
+      (file) => !file || file.size <= 5 * 1024 * 1024,
+      "Max file size is 5MB",
+    ),
+  z.string().url(),
+]);
+
 export const signUpSchema = z
   .object({
     name: nameSchema,
@@ -58,4 +81,26 @@ export const signInSchema = z.object({
 
 export const emailSignInSchema = z.object({
   email: emailSchema,
+});
+
+export const updateProfileSchema = z.object({
+  name: nameSchema.optional(),
+  username: usernameSchema.optional(),
+  avatar: avatarSchema.optional(),
+});
+
+export const fileNameSchema = z.object({
+  name: z
+    .string()
+    .max(255, "Filename is too long")
+    .refine(
+      (name) =>
+        !name.includes("/") && !name.includes("\\") && !name.includes("\0"),
+      {
+        message: "Filename cannot contain slashes or null bytes",
+      },
+    )
+    .refine((name) => /^[^<>:"|?*]+$/.test(name), {
+      message: 'Filename contains invalid characters (<>:"|?*)',
+    }),
 });
