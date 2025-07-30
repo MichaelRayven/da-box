@@ -12,8 +12,10 @@ export default async function GoogleDriveClone() {
 
   if (!root) {
     // Redirects to drive
-    const folderId = await onboardUser(session.user.id);
-    return redirect(`/drive/folders/${folderId}`);
+    const folder = await onboardUser(session.user.id);
+    if (!folder) throw new Error("Something went wrong!");
+
+    return redirect(`/drive/folders/${folder.id}`);
   }
 
   const folder = root.folders.find((f) => f.name === "My Drive")!;
