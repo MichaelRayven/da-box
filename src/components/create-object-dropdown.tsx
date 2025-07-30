@@ -1,7 +1,7 @@
 "use client";
 
 import { FilePlusIcon, FolderPlusIcon, PlusIcon } from "lucide-react";
-import React from "react";
+import { useState } from "react";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { Button } from "./ui/button";
 import {
@@ -13,8 +13,8 @@ import {
 import { UploadFileDialog } from "./upload-file-dialog";
 
 export function CreateObjectDropdown() {
-  const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
-  const [uploadDialogOpen, setUploadDialogOpen] = React.useState(false);
+  const [folderDialogOpen, setFolderDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   // const uploader = useUploadFile();
 
   return (

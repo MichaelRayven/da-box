@@ -4,8 +4,9 @@ import type { DialogProps } from "@radix-ui/react-dialog";
 import { useMutation } from "@tanstack/react-query";
 import { LoaderIcon, PlusIcon, TriangleAlertIcon } from "lucide-react";
 import { useParams } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useControllableState } from "~/hook/useControllableState";
 import { useDriveStore } from "~/lib/store/drive";
 import { createFolder } from "~/server/actions";
 import { CreateFolderForm } from "./create-folder-form";
@@ -35,11 +36,11 @@ export function CreateFolderDialog({
   const addFolder = useDriveStore((s) => s.addFolder);
   const { folderId } = useParams();
 
-  const [open, setOpen] = useState(props.open);
-  const onOpenChange = (open: boolean) => {
-    props?.onOpenChange?.(false);
-    setOpen(open);
-  };
+  const [open, setOpen] = useControllableState({
+    value: props.open,
+    defaultValue: false,
+    onChange: props.onOpenChange,
+  });
 
   const mutation = useMutation({
     mutationFn: async (name: string) => {
@@ -56,7 +57,7 @@ export function CreateFolderDialog({
     onSuccess: (data, name) => {
       addFolder(data);
       toast.success(`Created folder "${name}"`);
-      onOpenChange(false);
+      setOpen(false);
     },
     onError: (error: Error) => {
       toast.error(error.message, {
@@ -66,7 +67,7 @@ export function CreateFolderDialog({
   });
 
   return (
-    <Dialog {...props} open={open} onOpenChange={onOpenChange}>
+    <Dialog {...props} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent>

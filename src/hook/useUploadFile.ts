@@ -1,3 +1,5 @@
+"use client";
+
 import type { CompletedPart } from "@aws-sdk/client-s3";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";

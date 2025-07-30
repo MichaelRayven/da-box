@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
+import { useControllableState } from "~/hook/useControllableState";
 import { useUploadFile } from "~/hook/useUploadFile";
 import { useDriveStore } from "~/lib/store/drive";
 import { Button } from "./ui/button";
@@ -36,16 +37,15 @@ export function UploadFileDialog({
   ...props
 }: UploadFileDialogProps) {
   const addFile = useDriveStore((s) => s.addFile);
-  const [open, setOpen] = useState(props.open);
-
-  const onOpenChange = (open: boolean) => {
-    props?.onOpenChange?.(false);
-    setOpen(open);
-  };
+  const [open, setOpen] = useControllableState({
+    value: props.open,
+    defaultValue: false,
+    onChange: props.onOpenChange,
+  });
 
   const { uploadAsync, isPending } = useUploadFile({
     onUpload() {
-      onOpenChange(false);
+      setOpen(false);
     },
     onFileUploaded(file) {
       addFile(file);
@@ -68,7 +68,7 @@ export function UploadFileDialog({
   };
 
   return (
-    <Dialog {...props} open={open} onOpenChange={onOpenChange}>
+    <Dialog {...props} open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent>
