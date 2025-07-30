@@ -68,9 +68,9 @@ Configured test db connection, next steps:
 
 ## Platforms
 
-We are using Netlify as our host.
-Supabase as a database provider.
-GitHub for OAuth: https://github.com/settings/developers
-Google for OAuth: https://console.developers.google.com/apis/credentials
+We are using Netlify as our host.  
+Supabase as a database provider.  
+GitHub for OAuth: https://github.com/settings/developers  
+Google for OAuth: https://console.developers.google.com/apis/credentials  
 
-Copyright 2025. MIT Licence
+© 2025 DaBOX. Michael Rayven — MIT Licensed
