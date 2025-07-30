@@ -62,6 +62,8 @@ Configured test db connection, next steps:
 - [ ] Add trash support
 - [ ] Add share form
 - [ ] Add share dialog
+- [ ] Use redirect type replace
+- [ ] Google sign in (goes to password recovery for some reason?)
 
 
 ## Platforms
@@ -70,3 +72,5 @@ We are using Netlify as our host.
 Supabase as a database provider.
 GitHub for OAuth: https://github.com/settings/developers
 Google for OAuth: https://console.developers.google.com/apis/credentials
+
+Copyright 2025. MIT Licence
