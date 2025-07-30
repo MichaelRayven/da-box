@@ -528,7 +528,7 @@ export async function renameFile(
     if (isUniqueConstraintViolation(err)) {
       return {
         success: false,
-        error: `File with named "${file.name}" already exists`,
+        error: `File named "${newName}" already exists`,
       };
     }
 
