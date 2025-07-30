@@ -15,26 +15,7 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import type { emailSignInSchema, signInSchema } from "~/lib/validation";
 import { SignInForm } from "./form";
-
-const signInErrorMessages: Record<string, string> = {
-  CredentialsSignin: "Invalid email or password. Please try again.",
-  OAuthAccountNotLinked:
-    "This account is linked to a different sign-in method. Please use the method you originally used.",
-  AccountNotLinked:
-    "This account is linked to a different sign-in method. Please use the method you originally used.",
-  OAuthCallbackError: "Something went wrong during sign-in. Please try again.",
-  OAuthSignInError:
-    "We couldn't start the sign-in process. Please try again or use a different method.",
-  EmailSignInError:
-    "We couldn't send you a sign-in link. Please check your email and try again.",
-  MissingCSRF: "Security check failed. Please refresh the page and try again.",
-};
-
-const errorToast = (error: string) => {
-  toast.error(error, {
-    icon: <TriangleAlertIcon />,
-  });
-};
+import { getSignInError } from "~/lib/utils";
 
 export function SignInDialog() {
   const searchParams = useSearchParams();
@@ -42,10 +23,9 @@ export function SignInDialog() {
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
-      errorToast(
-        signInErrorMessages[error] ||
-          "Something went wrong. Please try again later."
-      );
+      toast.error(getSignInError(error), {
+        icon: <TriangleAlertIcon />,
+      });
     }
   }, [searchParams]);
 
@@ -132,6 +112,7 @@ export function SignInDialog() {
             <Button
               className="p-0 text-base text-muted-foreground"
               variant="link"
+              disabled={isPending}
               asChild
             >
               <Link href="/sign-up">
