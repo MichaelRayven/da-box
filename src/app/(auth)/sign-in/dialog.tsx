@@ -14,13 +14,27 @@ import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import type { emailSignInSchema, signInSchema } from "~/lib/validation";
 import { SignInForm } from "./form";
+import { useRouter } from "next/navigation";
 
 export function SignInDialog() {
+  const router = useRouter();
+
+  const errorHandler = (error: Error) => {
+    toast.error(error.message, {
+      icon: <TriangleAlertIcon />,
+    });
+  };
+
+  const successHandler = () => {
+    toast.success("Signed in!");
+    router.replace("/drive");
+  };
+
   const signInMutation = useMutation({
     mutationFn: async (values: z.infer<typeof signInSchema>) => {
       const result = await signIn("credentials", {
         ...values,
-        redirectTo: "/drive",
+        redirect: false,
       });
 
       if (result?.error) {
@@ -31,28 +45,22 @@ export function SignInDialog() {
         );
       }
     },
-    onError(error: Error) {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
+    onError: errorHandler,
+    onSuccess: successHandler,
   });
 
   const emailSignInMutation = useMutation({
     async mutationFn(values: z.infer<typeof emailSignInSchema>) {
       const result = await signIn("resend", {
         ...values,
-        redirectTo: "/drive",
+        redirect: false,
       });
       if (result?.error) {
         throw new Error("Something went wrong. Please try again later.");
       }
     },
-    onError(error: Error) {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
+    onError: errorHandler,
+    onSuccess: successHandler,
   });
 
   const isPending = emailSignInMutation.isPending || signInMutation.isPending;
