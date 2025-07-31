@@ -26,6 +26,7 @@ type ShareFormData = z.infer<typeof shareSchema>;
 
 interface ShareFormProps {
   isPending?: boolean;
+  error?: string;
   onSubmit?: (data: ShareFormData) => void;
   submitButton?: (isPending?: boolean) => ReactNode;
 }
@@ -40,6 +41,7 @@ function SubmitButton({ isPending = false }: { isPending?: boolean }) {
 
 export function ShareForm({
   isPending = false,
+  error,
   onSubmit = () => {},
   submitButton = (isPending) => <SubmitButton isPending={isPending} />,
 }: ShareFormProps) {
@@ -50,6 +52,8 @@ export function ShareForm({
       permission: "view",
     },
   });
+
+  if (error) form.setError("email", { message: error }, { shouldFocus: true });
 
   return (
     <Form {...form}>

@@ -15,7 +15,7 @@ import mime from "mime-types";
 import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
-import type { Result } from "~/lib/interface";
+import type { FileType, FolderType, Result } from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import type {
   files as filesSchema,
@@ -29,32 +29,6 @@ import { s3 } from "./s3";
 import { revalidatePath } from "next/cache";
 
 export async function getFileViewingUrl(
-  fileId: string,
-): Promise<Result<{ url: string }>> {
-  const session = await auth();
-  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
-
-  const query = await QUERIES.requestFileFor({
-    fileId,
-    userId: session.userId,
-    action: "view",
-  });
-  if (!query.success) return { success: false, error: ERRORS.FORBIDDEN };
-
-  if (query.data.trashed)
-    return { success: false, error: ERRORS.FILE_NOT_ACCESSIBLE };
-
-  const command = new GetObjectCommand({
-    Bucket: env.S3_FILE_BUCKET_NAME,
-    Key: query.data.key,
-  });
-
-  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
-
-  return { success: true, data: { url } };
-}
-
-export async function getFileDownloadUrl(
   fileId: string,
 ): Promise<Result<{ url: string }>> {
   const session = await auth();
@@ -192,6 +166,8 @@ export async function completeFileUpload({
   });
   if (!mutation.success) return mutation;
 
+  revalidatePath("/drive/files/[fileId]", "page");
+
   return { success: true, data: { file: mutation.data } };
 }
 
@@ -311,6 +287,8 @@ export async function completePartialFileUpload({
     });
 
     if (!mutation.success) return mutation;
+
+    revalidatePath("/drive/files/[fileId]", "page");
 
     return { success: true, data: { file: mutation.data } };
   } catch (e) {
@@ -617,15 +595,11 @@ export async function renameFile(
   return { success: true, data: { fileId, name: name } };
 }
 
-export async function shareFile({
-  fileId,
-  email,
-  permission,
-}: {
-  fileId: string;
-  email: string;
-  permission: "view" | "edit";
-}): Promise<Result<null>> {
+export async function shareFile(
+  fileId: string,
+  email: string,
+  permission: "view" | "edit",
+): Promise<Result<null>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
@@ -655,15 +629,11 @@ export async function shareFile({
   return { success: true, data: null };
 }
 
-export async function shareFolder({
-  folderId,
-  email,
-  permission,
-}: {
-  folderId: string;
-  email: string;
-  permission: "view" | "edit";
-}): Promise<Result<null>> {
+export async function shareFolder(
+  folderId: string,
+  email: string,
+  permission: "view" | "edit",
+): Promise<Result<null>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
@@ -711,7 +681,6 @@ export async function favoriteFile(fileId: string): Promise<Result<null>> {
   if (!mutation.success) return mutation;
 
   revalidatePath("/drive/files/[fileId]", "page");
-  revalidatePath("/drive/starred", "page");
 
   return { success: true, data: null };
 }
@@ -733,7 +702,6 @@ export async function favoriteFolder(folderId: string): Promise<Result<null>> {
   if (!mutation.success) return mutation;
 
   revalidatePath("/drive/files/[fileId]", "page");
-  revalidatePath("/drive/starred", "page");
 
   return { success: true, data: null };
 }
@@ -747,7 +715,6 @@ export async function unfavoriteFile(fileId: string) {
   if (!mutation.success) return mutation;
 
   revalidatePath("/drive/files/[fileId]", "page");
-  revalidatePath("/drive/starred", "page");
 
   return { success: true, data: null };
 }
@@ -761,7 +728,68 @@ export async function unfavoriteFolder(folderId: string) {
   if (!mutation.success) return mutation;
 
   revalidatePath("/drive/files/[fileId]", "page");
-  revalidatePath("/drive/starred", "page");
 
   return { success: true, data: null };
+}
+
+export async function getFolders(
+  folderId: string,
+): Promise<Result<FolderType[]>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const query = await QUERIES.getFolders(folderId, session.userId);
+  if (!query.success) return query;
+
+  return {
+    success: true,
+    data: query.data.map((f) => ({
+      ...f,
+      url: `/drive/folders/${f.id}`,
+      starred: f.starred.length > 0,
+    })),
+  };
+}
+
+export async function getFiles(folderId: string): Promise<Result<FileType[]>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const query = await QUERIES.getFiles(folderId, session.userId);
+  if (!query.success) return query;
+
+  return {
+    success: true,
+    data: query.data.map((f) => ({
+      ...f,
+      url: `/drive/files/${f.id}`,
+      starred: f.starred.length > 0,
+    })),
+  };
+}
+
+export async function getShared(): Promise<
+  Result<{ files: FileType[]; folders: FolderType[] }>
+> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const query = await QUERIES.getSharedForUser(session.userId);
+  if (!query.success) return query;
+
+  return {
+    success: true,
+    data: {
+      files: query.data.files.map((f) => ({
+        ...f,
+        url: `/drive/files/${f.id}`,
+        starred: f.starred.length > 0,
+      })),
+      folders: query.data.folders.map((f) => ({
+        ...f,
+        url: `/drive/folders/${f.id}`,
+        starred: f.starred.length > 0,
+      })),
+    },
+  };
 }

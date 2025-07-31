@@ -8,7 +8,6 @@ import {
   users,
   shared,
   starred,
-  files,
 } from "./schema";
 import { isUniqueConstraintViolation } from "~/lib/utils";
 import type { Result } from "~/lib/interface";
@@ -231,61 +230,72 @@ export async function shareFolder({
     .transaction(async (tx) => {
       const folder = await tx.query.folders.findFirst({
         where: eq(foldersSchema.id, folderId),
-        with: {
-          parent: true,
-        },
+        with: { parent: true },
       });
 
       if (!folder) throw new Error(ERRORS.FOLDER_NOT_FOUND);
       if (!folder.parent) throw new Error(ERRORS.FOLDER_IS_ROOT);
 
-      const share = await tx.query.shared.findFirst({
+      // Find parent shared entry
+      const parentShare = await tx.query.shared.findFirst({
         where: and(
           eq(shared.sharedWithId, sharedWithId),
           eq(shared.folderId, folder.parent.id),
         ),
       });
 
-      // Get nested folders and files
-      const query = await QUERIES.getAllNestedFolders(folderId);
-      if (!query.success) throw new Error(ERRORS.FOLDER_SHARE_FAILED);
+      // Queue: each item has folderId and parentShareId
+      const queue: { folderId: string; parentShareId: string | null }[] = [
+        { folderId, parentShareId: parentShare?.id ?? null },
+      ];
 
-      const subfolderIds = query.data.map((f) => f.id);
-      const folderIds = [...subfolderIds, folderId];
+      while (queue.length > 0) {
+        const { folderId: currentFolderId, parentShareId } = queue.shift()!;
 
-      const files = await tx
-        .select({ id: filesSchema.id })
-        .from(filesSchema)
-        .where(inArray(filesSchema.parentId, folderIds))
-        .catch(() => []);
-
-      const folderShares = folderIds.map((id) =>
-        tx
+        // Create shared entry for current folder
+        const [folderShare] = await tx
           .insert(shared)
           .values({
-            folderId: id,
+            folderId: currentFolderId,
             sharedWithId,
-            sharedById: folder.parent!.ownerId,
-            parentId: share?.id,
+            sharedById: folder.parent.ownerId,
+            parentId: parentShareId,
             permission,
           })
-          .onConflictDoNothing(),
-      );
+          .onConflictDoNothing()
+          .returning({ id: shared.id });
 
-      const fileShares = files.map((file) =>
-        tx
-          .insert(shared)
-          .values({
-            fileId: file.id,
-            sharedWithId,
-            sharedById: folder.parent!.ownerId,
-            parentId: share?.id,
-            permission,
-          })
-          .onConflictDoNothing(),
-      );
+        const currentShareId = folderShare?.id ?? parentShareId;
 
-      await Promise.all([...folderShares, ...fileShares]);
+        // Share all files inside the current folder
+        const filesInFolder = await tx
+          .select({ id: filesSchema.id })
+          .from(filesSchema)
+          .where(eq(filesSchema.parentId, currentFolderId));
+
+        for (const file of filesInFolder) {
+          await tx
+            .insert(shared)
+            .values({
+              fileId: file.id,
+              sharedWithId,
+              sharedById: folder.parent.ownerId,
+              parentId: currentShareId,
+              permission,
+            })
+            .onConflictDoNothing();
+        }
+
+        // Enqueue all subfolders
+        const subfolders = await tx
+          .select({ id: foldersSchema.id })
+          .from(foldersSchema)
+          .where(eq(foldersSchema.parentId, currentFolderId));
+
+        for (const subfolder of subfolders) {
+          queue.push({ folderId: subfolder.id, parentShareId: currentShareId });
+        }
+      }
     })
     .then(handleSuccess)
     .catch(handleError);
@@ -447,6 +457,7 @@ export async function createFile({
           sharedById: shared.sharedById,
           parentId: shared.parentId,
           fileId: shared.fileId,
+          permission: shared.permission,
         })
         .from(shared)
         .where(eq(shared.folderId, parentId));
@@ -457,10 +468,11 @@ export async function createFile({
             tx
               .insert(shared)
               .values({
-                fileId: entry.fileId,
+                fileId: file.id,
                 sharedWithId: entry.sharedWithId,
                 sharedById: entry.sharedById,
                 parentId: entry.parentId,
+                permission: entry.permission,
               })
               .onConflictDoNothing(),
           ),
@@ -519,6 +531,7 @@ export async function createFolder({
           sharedWithId: shared.sharedWithId,
           parentId: shared.parentId,
           folderId: shared.folderId,
+          permission: shared.permission,
         })
         .from(shared)
         .where(eq(shared.folderId, parentId));
@@ -529,10 +542,11 @@ export async function createFolder({
             tx
               .insert(shared)
               .values({
-                folderId: entry.folderId,
+                folderId: folder.id,
                 sharedWithId: entry.sharedWithId,
                 sharedById: entry.sharedById,
                 parentId: entry.parentId,
+                permission: entry.permission,
               })
               .onConflictDoNothing(),
           ),

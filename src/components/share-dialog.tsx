@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderIcon, Share2Icon } from "lucide-react";
+import { LoaderIcon, Share2Icon, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import {
@@ -14,12 +14,19 @@ import {
 import { useControllableState } from "~/hook/useControllableState";
 import { useContextMenuStore } from "~/lib/store/context-menu";
 import { ShareForm } from "./share-form"; // Assuming your form is in share-form.tsx
+import { shareFile, shareFolder } from "~/server/actions";
+import { useMutation } from "@tanstack/react-query";
 
 interface ShareDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
 }
+
+type Values = {
+  email: string;
+  permission: "view" | "edit";
+};
 
 export function ShareDialog({
   open: openProp,
@@ -31,7 +38,7 @@ export function ShareDialog({
     </Button>
   ),
 }: ShareDialogProps) {
-  const file = useContextMenuStore((s) => s.selectedFile);
+  const { type, data } = useContextMenuStore((s) => s.selectedItem) ?? {};
 
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -39,22 +46,25 @@ export function ShareDialog({
     onChange: onOpenChange,
   });
 
-  const handleSubmit = (data: {
-    email: string;
-    permission: "view" | "edit";
-  }) => {
-    toast.promise(
-      // Replace this with your actual API/mutation logic
-      new Promise((resolve) => setTimeout(() => resolve(data), 1000)),
-      {
-        loading: "Sharing...",
-        success: () => {
-          setOpen(false);
-          return `Shared with ${data.email}`;
-        },
-        error: "Failed to share",
-      },
-    );
+  const mutation = useMutation({
+    async mutationFn(values: Values) {
+      const action = type === "file" ? shareFile : shareFolder;
+      const result = await action(data!.id, values.email, values.permission);
+      if (!result.success) throw new Error(result.error);
+      return result;
+    },
+    onSuccess() {
+      setOpen(false);
+    },
+    onError: (error: Error) => error,
+  });
+
+  const handleSubmit = (values: Values) => {
+    toast.promise(mutation.mutateAsync(values), {
+      loading: "Sharing...",
+      success: "Shared successfully",
+      error: (error: Error) => error?.message || "Share failed",
+    });
   };
 
   return (
@@ -63,11 +73,13 @@ export function ShareDialog({
 
       <DialogContent className="gap-6">
         <DialogHeader>
-          <DialogTitle>Share "{file?.name}"</DialogTitle>
+          <DialogTitle>Share "{data?.name}"</DialogTitle>
         </DialogHeader>
 
         <ShareForm
           onSubmit={handleSubmit}
+          error={mutation.error?.message}
+          isPending={mutation.isPending}
           submitButton={(isPending) => (
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" asChild disabled={isPending}>

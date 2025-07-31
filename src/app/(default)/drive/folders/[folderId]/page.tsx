@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import DriveContents from "~/components/drive-contents";
+import { getFiles, getFolders } from "~/server/actions";
 import { auth } from "~/server/auth";
-import { getFiles, getFolders, getParentsForFolder } from "~/server/db/queries";
+import { getParentsForFolder } from "~/server/db/queries";
 
 export default async function GoogleDriveClone({
   params,
@@ -23,6 +24,8 @@ export default async function GoogleDriveClone({
 
   if (!folders.success || !files.success || !parents.success) return notFound();
 
+  console.log(parents.data);
+
   const crumbs = parents.data.map((f) => ({
     name: f.name,
     url: `/drive/folders/${f.id}`,
@@ -31,16 +34,6 @@ export default async function GoogleDriveClone({
   crumbs.unshift({ name: "My Drive", url: "/drive" });
 
   return (
-    <DriveContents
-      crumbs={crumbs}
-      files={files.data.map((f) => ({
-        ...f,
-        url: `/drive/files/${f.id}`,
-      }))}
-      folders={folders.data.map((f) => ({
-        ...f,
-        url: `/drive/folders/${f.id}`,
-      }))}
-    />
+    <DriveContents crumbs={crumbs} files={files.data} folders={folders.data} />
   );
 }

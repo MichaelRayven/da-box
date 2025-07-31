@@ -11,10 +11,10 @@ You can check it out at: https://da-box.netlify.app/
 - [x] Add auth
 - [x] Add onboarding page (set name, username, avatar)
 - [ ] Add dashboard
-- [ ] Add file uploading
+- [x] Add file uploading
 - [ ] Date, size filtering
-- [ ] Renaming and deletion
-- [ ] Access control
+- [x] Renaming and deletion
+- [x] Access control
 - [ ] File view page
 
 ## Note from 7/21/2025
@@ -32,7 +32,7 @@ Configured test db connection, next steps:
 
 - [x] Change folders to link components, remove all client state
 - [x] Clean up the database and data fetching patterns
-- [ ] Add a homepage
+- [x] Add a homepage
 
 ## Note from 7/27/2025
 
@@ -45,26 +45,27 @@ Configured test db connection, next steps:
 - [x] Autofill existing data in onboarding
 - [x] Autofill avatar in onboarding
 - [x] Protect onboarding route from unauthenticated users
-- [ ] Update file and folder schema
-- [ ] Add custom verification page
+- [x] Update file and folder schema
+- [x] Add custom verification page
 - [x] Add file upload
 - [x] Add multipart upload
 
 ## Note from 7/30/2025
 
 - [x] Add context menu
-- [ ] Add sign in page error messages
-- [ ] Add sign in page toasts
-- [ ] Add sign up page error messages
-- [ ] Add sign up page toasts
-- [ ] Add email auth page error messages
-- [ ] Add email auth page toasts
-- [ ] Add trash support
-- [ ] Add share form
-- [ ] Add share dialog
+- [x] Add sign in page error messages
+- [x] Add sign in page toasts
+- [x] Add sign up page error messages
+- [x] Add sign up page toasts
+- [x] Add email auth page error messages
+- [x] Add email auth page toasts
+- [x] Add trash support
+- [x] Add share form
+- [x] Add share dialog
 - [ ] Use redirect type replace
-- [ ] Google sign in (goes to password recovery for some reason?)
 
+## Note from 7/31/2025
+- [ ] Need to add ability to remove from shared
 
 ## Platforms
 

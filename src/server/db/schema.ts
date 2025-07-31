@@ -72,6 +72,10 @@ export const filesRelations = relations(files, ({ one, many }) => ({
   shared: many(shared, {
     relationName: "file_shared",
   }),
+
+  starred: many(starred, {
+    relationName: "file_starred",
+  }),
 }));
 
 export const folders = createTable(
@@ -131,6 +135,10 @@ export const foldersRelations = relations(folders, ({ one, many }) => ({
 
   shared: many(shared, {
     relationName: "folder_shared",
+  }),
+
+  starred: many(starred, {
+    relationName: "folder_starred",
   }),
 }));
 
@@ -210,6 +218,19 @@ export const starred = createTable(
     unique("unique_star_folder").on(table.userId, table.folderId),
   ],
 );
+
+export const starredRelations = relations(starred, ({ one, many }) => ({
+  folder: one(folders, {
+    fields: [starred.folderId],
+    references: [folders.id],
+    relationName: "folder_starred",
+  }),
+  file: one(files, {
+    fields: [starred.fileId],
+    references: [files.id],
+    relationName: "file_starred",
+  }),
+}));
 
 export const users = createTable(
   "users_table",

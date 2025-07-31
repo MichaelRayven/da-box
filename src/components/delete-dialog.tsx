@@ -43,21 +43,24 @@ export function DeleteDialog({
 
   const mutation = useMutation({
     async mutationFn() {
-      if (type === "file") {
-        return await deleteFile(data!.id);
-      }
-
-      return await deleteFolder(data!.id);
+      const action = type === "file" ? deleteFile : deleteFolder;
+      const result = await action(data!.id);
+      if (!result.success) throw new Error(result.error);
+      return result;
     },
     onSuccess() {
       setOpen(false);
     },
-    onError(error: Error) {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
+    onError: (error: Error) => error,
   });
+
+  const handleSubmit = () => {
+    toast.promise(mutation.mutateAsync(), {
+      loading: "Deleting...",
+      success: "Deleted successfully",
+      error: (error: Error) => error?.message || "Delete failed",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -77,7 +80,7 @@ export function DeleteDialog({
           <Button variant="outline" asChild disabled={mutation.isPending}>
             <DialogClose>Cancel</DialogClose>
           </Button>
-          <form action={() => mutation.mutate()}>
+          <form action={handleSubmit}>
             <Button
               type="submit"
               variant={"destructive"}

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import {
   favoriteFile,
   favoriteFolder,
-  getFileDownloadUrl,
+  getFileViewingUrl,
   restoreFile,
   restoreFolder,
   trashFile,
@@ -23,7 +23,8 @@ export function useContextMenuAction(item: ItemType) {
   const handleDelete = () => openDeleteDialog(item);
   const handleDownload = async () => {
     if (!isFile) return;
-    const result = await getFileDownloadUrl(item.data.id);
+
+    const result = await getFileViewingUrl(item.data.id);
     if (result.success) {
       const a = document.createElement("a");
       a.href = result.data.url;
@@ -32,9 +33,27 @@ export function useContextMenuAction(item: ItemType) {
     }
   };
 
-  const handleTrash = async () => {
+  const handleRestore = () => {
+    const action = isFile ? restoreFile : restoreFolder;
+
+    toast.promise(
+      async () => {
+        const result = await action(item.data.id);
+        if (!result.success) throw new Error(result.error);
+        return result;
+      },
+      {
+        loading: `Restoring ${item.type} "${item.data.name}"...`,
+        success: `Restored ${item.type} "${item.data.name}"`,
+        error: (error: Error) =>
+          error?.message ||
+          `Failed to restore ${item.type} "${item.data.name}"`,
+      },
+    );
+  };
+
+  const handleTrash = () => {
     const action = isFile ? trashFile : trashFolder;
-    const restoreAction = isFile ? restoreFile : restoreFolder;
 
     toast.promise(
       async () => {
@@ -45,27 +64,39 @@ export function useContextMenuAction(item: ItemType) {
       {
         loading: `Putting ${item.type} "${item.data.name}" into trash...`,
         success: `Put ${item.type} "${item.data.name}" into trash`,
-        error: `Failed to put ${item.type} "${item.data.name}" into trash`,
+        error: (error: Error) =>
+          error?.message ||
+          `Failed to put ${item.type} "${item.data.name}" into trash`,
         action: {
           label: "Undo",
-          onClick: () => restoreAction(item.data.id),
+          onClick: handleRestore,
         },
       },
     );
   };
 
-  const handleRestore = async () => {
-    const action = isFile ? restoreFile : restoreFolder;
-    const result = await action(item.data.id);
-    if (result.success) {
-      toast.success(`Restored ${item.type} "${item.data.name}"`);
-    } else {
-      toast.error(`Failed to restore ${item.type} "${item.data.name}"`);
-    }
+  const handleUnfavorite = () => {
+    const action = isFile ? unfavoriteFile : unfavoriteFolder;
+
+    toast.promise(
+      async () => {
+        const result = await action(item.data.id);
+        if (!result.success) throw new Error(result.error);
+        return result;
+      },
+      {
+        loading: `Removing ${item.type} "${item.data.name}" from favorites...`,
+        success: `Removed ${item.type} "${item.data.name}" from favorites`,
+        error: (error: Error) =>
+          error?.message ||
+          `Failed to remove ${item.type} "${item.data.name}" from favorites`,
+      },
+    );
   };
 
-  const handleFavorite = async () => {
+  const handleFavorite = () => {
     const action = isFile ? favoriteFile : favoriteFolder;
+
     toast.promise(
       async () => {
         const result = await action(item.data.id);
@@ -78,23 +109,10 @@ export function useContextMenuAction(item: ItemType) {
         error: `Failed to add ${item.type} "${item.data.name}" to favorites`,
         action: {
           label: "Remove",
-          onClick: () =>
-            (isFile ? unfavoriteFile : unfavoriteFolder)(item.data.id),
+          onClick: handleUnfavorite,
         },
       },
     );
-  };
-
-  const handleUnfavorite = async () => {
-    const action = isFile ? unfavoriteFile : unfavoriteFolder;
-    const result = await action(item.data.id);
-    if (result.success) {
-      toast.success(`Removed ${item.type} "${item.data.name}" from favorites`);
-    } else {
-      toast.error(
-        `Failed to remove ${item.type} "${item.data.name}" from favorites`,
-      );
-    }
   };
 
   if (item.data.trashed) {

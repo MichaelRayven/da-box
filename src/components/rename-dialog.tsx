@@ -44,25 +44,25 @@ export function RenameDialog({
   });
 
   const mutation = useMutation({
-    async mutationFn(values: { name: string }) {
-      let result: Awaited<ReturnType<typeof renameFile | typeof renameFolder>>;
-      if (type === "file") {
-        result = await renameFile(data!.id, values.name);
-      } else {
-        result = await renameFolder(data!.id, values.name);
-      }
-
+    async mutationFn(newName: string) {
+      const action = type === "file" ? renameFile : renameFolder;
+      const result = await action(data!.id, newName);
       if (!result.success) throw new Error(result.error);
+      return result;
     },
-    onSuccess(values) {
+    onSuccess() {
       setOpen(false);
     },
-    onError(error: Error) {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
+    onError: (error: Error) => error,
   });
+
+  const handleSubmit = (newName: string) => {
+    toast.promise(mutation.mutateAsync(newName), {
+      loading: "Renaming...",
+      success: "Renamed successfully",
+      error: (error: Error) => error?.message || "Rename failed",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -77,7 +77,7 @@ export function RenameDialog({
           defaultName={currentName}
           isPending={mutation.isPending}
           error={mutation.error?.message}
-          onSubmit={(values) => mutation.mutate(values)}
+          onSubmit={(values) => handleSubmit(values.name)}
           submitButton={(isPending) => (
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" asChild disabled={isPending}>

@@ -57,7 +57,10 @@ export async function getParentsForFolder(
     return handleError(e);
   }
 
-  parents.shift(); // Remove root
+  if (currentId === null) {
+    parents.shift();
+  }
+
   return { success: true, data: parents };
 }
 /**
@@ -126,33 +129,74 @@ export async function getRootFolderForUser(
     .catch(handleError);
 }
 
-export async function getFiles(
-  folderId: string,
-): Promise<Result<(typeof filesSchema.$inferSelect)[]>> {
-  return db
-    .select()
-    .from(filesSchema)
-    .where(
-      and(eq(filesSchema.parentId, folderId), eq(filesSchema.trashed, false)),
-    )
+export async function getFiles(folderId: string, userId: string) {
+  return db.query.files
+    .findMany({
+      where: and(
+        eq(filesSchema.parentId, folderId),
+        eq(filesSchema.trashed, false),
+      ),
+      with: {
+        starred: {
+          where: eq(starred.userId, userId),
+        },
+      },
+    })
     .then((files) => ({ success: true as const, data: files }))
     .catch(handleError);
 }
 
-export async function getFolders(
-  folderId: string,
-): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
-  return db
-    .select()
-    .from(foldersSchema)
-    .where(
-      and(
+export async function getFolders(folderId: string, userId: string) {
+  return db.query.folders
+    .findMany({
+      where: and(
         eq(foldersSchema.parentId, folderId),
         eq(foldersSchema.trashed, false),
       ),
-    )
+      with: {
+        starred: {
+          where: eq(starred.userId, userId),
+        },
+      },
+    })
     .then((folders) => ({ success: true as const, data: folders }))
     .catch(handleError);
+}
+
+export async function getSharedForUser(userId: string) {
+  try {
+    const query = await db.query.shared.findMany({
+      where: and(eq(shared.sharedWithId, userId), isNull(shared.parentId)),
+      with: {
+        folder: {
+          with: {
+            starred: {
+              where: eq(starred.userId, userId),
+            },
+          },
+        },
+        file: {
+          with: {
+            starred: {
+              where: eq(starred.userId, userId),
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      success: true as const,
+      data: {
+        files: query.map((item) => item.file).filter((item) => item !== null),
+        folders: query
+          .map((item) => item.folder)
+          .filter((item) => item !== null),
+      },
+    };
+  } catch (error) {
+    return handleError(error);
+  }
 }
 
 /**
@@ -210,42 +254,6 @@ export async function getAllNestedFiles(
   }
 
   return { success: true, data: allFiles };
-}
-
-/**
- * Get all non-trashed files and folders shared with a user.
- * @returns Array of shared files and folders.
- */
-export async function getSharedWithUser(userId: string): Promise<
-  Result<{
-    files: (typeof filesSchema.$inferSelect)[];
-    folders: (typeof foldersSchema.$inferSelect)[];
-  }>
-> {
-  return db
-    .select({
-      files: filesSchema,
-      folders: foldersSchema,
-    })
-    .from(shared)
-    .leftJoin(
-      filesSchema,
-      and(eq(shared.fileId, filesSchema.id), eq(filesSchema.trashed, false)),
-    )
-    .leftJoin(
-      foldersSchema,
-      and(
-        eq(shared.folderId, foldersSchema.id),
-        eq(foldersSchema.trashed, false),
-      ),
-    )
-    .where(and(eq(shared.sharedWithId, userId), isNull(shared.parentId)))
-    .then((results) => {
-      const files = results.map((r) => r.files).filter((r) => r !== null);
-      const folders = results.map((r) => r.folders).filter((r) => r !== null);
-      return { success: true as const, data: { files, folders } };
-    })
-    .catch(handleError);
 }
 
 export async function getStarredForUser(userId: string): Promise<
