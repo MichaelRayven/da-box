@@ -15,12 +15,7 @@ import {
 } from "~/components/ui/dialog";
 import { useControllableState } from "~/hook/useControllableState";
 import { useContextMenuStore } from "~/lib/store/context-menu";
-import {
-  restoreFile,
-  restoreFolder,
-  trashFile,
-  trashFolder,
-} from "~/server/actions";
+import { deleteFile, deleteFolder } from "~/server/actions";
 
 interface DeleteDialogProps {
   open?: boolean;
@@ -49,24 +44,12 @@ export function DeleteDialog({
   const mutation = useMutation({
     async mutationFn() {
       if (type === "file") {
-        return await trashFile(item!.id);
+        return await deleteFile(item!.id);
       }
 
-      return await trashFolder(item!.id);
+      return await deleteFolder(item!.id);
     },
     onSuccess() {
-      toast.success(`Put ${type} "${item!.name}" into trash`, {
-        action: {
-          label: "Undo",
-          onClick: async () => {
-            if (type === "file") {
-              return await restoreFile(item!.id);
-            }
-
-            return await restoreFolder(item!.id);
-          },
-        },
-      });
       setOpen(false);
     },
     onError(error: Error) {

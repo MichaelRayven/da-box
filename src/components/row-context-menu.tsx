@@ -5,6 +5,8 @@ import {
   DownloadIcon,
   EditIcon,
   ShareIcon,
+  StarIcon,
+  StarOffIcon,
   Trash2Icon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -23,6 +25,8 @@ export function RowContextMenu({
   onDelete,
   onRestore,
   onTrash,
+  onFavorite,
+  onUnfavorite,
 }: {
   children: ReactNode;
   onDownload?: () => void;
@@ -31,6 +35,8 @@ export function RowContextMenu({
   onDelete?: () => void;
   onRestore?: () => void;
   onTrash?: () => void;
+  onFavorite?: () => void;
+  onUnfavorite?: () => void;
 }) {
   return (
     <ContextMenu>
@@ -64,6 +70,16 @@ export function RowContextMenu({
         {onTrash && (
           <ContextMenuItem onClick={onTrash} aria-label="Move to trash">
             <Trash2Icon /> Move to trash
+          </ContextMenuItem>
+        )}
+        {onFavorite && (
+          <ContextMenuItem onClick={onFavorite} aria-label="Favorite item">
+            <StarIcon /> Add to favorites
+          </ContextMenuItem>
+        )}
+        {onUnfavorite && (
+          <ContextMenuItem onClick={onUnfavorite} aria-label="Unfavorite item">
+            <StarOffIcon /> Remove from favorites
           </ContextMenuItem>
         )}
       </ContextMenuContent>

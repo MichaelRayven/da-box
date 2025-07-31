@@ -8,7 +8,15 @@ import { useContextMenuStore } from "~/lib/store/context-menu";
 import { formatFileSize } from "~/lib/utils";
 import { RowContextMenu } from "./row-context-menu";
 import { RowDropdownMenu } from "./row-dropdown-menu";
-import { restoreFolder } from "~/server/actions";
+import {
+  favoriteFolder,
+  restoreFile,
+  restoreFolder,
+  trashFile,
+  trashFolder,
+  unfavoriteFolder,
+} from "~/server/actions";
+import { toast } from "sonner";
 
 export function FileRow({ file }: { file: FileType }) {
   const { openRenameDialog, openShareDialog, openDeleteDialog } =
@@ -17,6 +25,18 @@ export function FileRow({ file }: { file: FileType }) {
   const handleRename = () => openRenameDialog({ type: "file", item: file });
   const handleDelete = () => openDeleteDialog({ type: "file", item: file });
   const handleDownload = () => console.log("Download", file);
+  const handleRestore = async () => {
+    await restoreFile(file.id);
+  };
+  const handleTrash = async () => {
+    toast.success(`Put file "${file.name}" into trash`, {
+      action: {
+        label: "Undo",
+        onClick: async () => await restoreFile(file.id),
+      },
+    });
+    await trashFile(file.id);
+  };
 
   return (
     <RowContextMenu
@@ -24,6 +44,8 @@ export function FileRow({ file }: { file: FileType }) {
       onDelete={handleDelete}
       onShare={handleShare}
       onRename={handleRename}
+      onRestore={handleRestore}
+      onTrash={handleTrash}
     >
       <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
         <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
@@ -47,6 +69,8 @@ export function FileRow({ file }: { file: FileType }) {
             onDelete={handleDelete}
             onShare={handleShare}
             onRename={handleRename}
+            onRestore={handleRestore}
+            onTrash={handleTrash}
           />
         </TableCell>
       </TableRow>
@@ -61,14 +85,53 @@ export function FolderRow({ folder }: { folder: FolderType }) {
   const handleRename = () => openRenameDialog({ type: "folder", item: folder });
   const handleDelete = () => openDeleteDialog({ type: "folder", item: folder });
   const handleDownload = () => console.log("Download", folder);
+  const handleTrash = async () => {
+    toast.promise(
+      async () => {
+        const res = await trashFolder(folder.id);
+        if (!res.success) throw new Error(res.error);
+      },
+      {
+        loading: `Putting folder "${folder.name}" into trash...`,
+        success: `Put folder "${folder.name}" into trash`,
+        error: `Failed to put folder "${folder.name}" into trash`,
+        action: {
+          label: "Undo",
+          onClick: async () => await restoreFolder(folder.id),
+        },
+      }
+    );
+  };
+  const handleRestore = async () => await restoreFolder(folder.id);
+  const handleFavorite = async () => {
+    toast.promise(
+      async () => {
+        const res = await favoriteFolder(folder.id);
+        if (!res.success) throw new Error(res.error);
+      },
+      {
+        loading: `Adding folder "${folder.name}" to favorites...`,
+        success: `Added folder "${folder.name}" to favorites`,
+        error: `Failed to add folder "${folder.name}" to favorites`,
+        action: {
+          label: "Remove",
+          onClick: async () => await unfavoriteFolder(folder.id),
+        },
+      }
+    );
+  };
+  const handleUnfavorite = async () => await unfavoriteFolder(folder.id);
 
   return (
     <RowContextMenu
       onDownload={handleDownload}
-      onTrash={handleDelete}
+      onTrash={handleTrash}
       onShare={handleShare}
       onRename={handleRename}
-      onRestore={async () => await restoreFolder(folder.id)}
+      onRestore={handleRestore}
+      onDelete={handleDelete}
+      onFavorite={handleFavorite}
+      onUnfavorite={handleUnfavorite}
     >
       <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
         <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
@@ -86,8 +149,12 @@ export function FolderRow({ folder }: { folder: FolderType }) {
           <RowDropdownMenu
             onDownload={handleDownload}
             onDelete={handleDelete}
+            onTrash={handleTrash}
             onShare={handleShare}
             onRename={handleRename}
+            onRestore={handleRestore}
+            onFavorite={handleFavorite}
+            onUnfavorite={handleUnfavorite}
           />
         </TableCell>
       </TableRow>

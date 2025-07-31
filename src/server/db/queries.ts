@@ -1,7 +1,7 @@
 import "server-only";
 
 import * as ERRORS from "~/lib/errors";
-import { and, eq, isNull, desc } from "drizzle-orm";
+import { and, eq, isNull, desc, or } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   files as filesSchema,
@@ -267,7 +267,7 @@ export async function getStarredForUser(userId: string): Promise<
     .leftJoin(
       foldersSchema,
       and(
-        eq(starred.fileId, foldersSchema.id),
+        eq(starred.folderId, foldersSchema.id),
         eq(foldersSchema.trashed, false),
       ),
     )
@@ -413,7 +413,7 @@ export async function getUserByEmail(
 export async function fileExists(
   name: string,
   parentId: string,
-): Promise<Result<boolean>> {
+): Promise<boolean> {
   try {
     const existing = await db.query.files.findFirst({
       where: and(
@@ -423,16 +423,16 @@ export async function fileExists(
       ),
     });
 
-    return { success: true, data: !!existing };
+    return !!existing;
   } catch (error) {
-    return { success: false, error: "Failed to check file existence" };
+    return false;
   }
 }
 
 export async function folderExists(
   name: string,
   parentId: string,
-): Promise<Result<boolean>> {
+): Promise<boolean> {
   try {
     const existing = await db.query.folders.findFirst({
       where: and(
@@ -442,8 +442,60 @@ export async function folderExists(
       ),
     });
 
-    return { success: true, data: !!existing };
+    return !!existing;
   } catch (error) {
-    return { success: false, error: "Failed to check folder existence" };
+    return false;
   }
+}
+
+async function isFileInTrash(fileId: string): Promise<boolean> {
+  const file = await db.query.files.findFirst({
+    where: eq(filesSchema.id, fileId),
+    columns: { trashed: true, parentId: true },
+  });
+
+  if (!file) return false;
+  if (file.trashed) return true;
+
+  let currentParentId: string | null = file.parentId;
+
+  while (currentParentId !== null) {
+    const parent: any = await db.query.folders.findFirst({
+      where: eq(foldersSchema.id, currentParentId),
+      columns: { trashed: true, parentId: true },
+    });
+
+    if (!parent) break;
+    if (parent.trashed) return true;
+
+    currentParentId = parent.parentId;
+  }
+
+  return false;
+}
+
+export async function folderInTrash(folderId: string): Promise<boolean> {
+  const folder = await db.query.folders.findFirst({
+    where: eq(foldersSchema.id, folderId),
+    columns: { trashed: true, parentId: true },
+  });
+
+  if (!folder) return false;
+  if (folder.trashed) return true;
+
+  let currentParentId: string | null = folder.parentId;
+
+  while (currentParentId !== null) {
+    const parent: any = await db.query.folders.findFirst({
+      where: eq(foldersSchema.id, currentParentId),
+      columns: { trashed: true, parentId: true },
+    });
+
+    if (!parent) break;
+    if (parent.trashed) return true;
+
+    currentParentId = parent.parentId;
+  }
+
+  return false;
 }

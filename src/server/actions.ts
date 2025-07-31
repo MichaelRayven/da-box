@@ -91,9 +91,8 @@ async function canCreateFile({
   }
 
   const fileExistsQuery = await QUERIES.fileExists(name, parentId);
-  if (!fileExistsQuery.success) {
+  if (!fileExistsQuery)
     return { success: false, error: ERRORS.FILE_ALREADY_EXISTS };
-  }
 
   return { success: true, data: null };
 }
@@ -624,6 +623,8 @@ export async function shareFile({
   });
   if (!mutation.success) return mutation;
 
+  revalidatePath("/drive/files/[fileId]", "page");
+
   return { success: true, data: null };
 }
 
@@ -660,6 +661,80 @@ export async function shareFolder({
     permission,
   });
   if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+
+  return { success: true, data: null };
+}
+
+export async function favoriteFile(fileId: string): Promise<Result<null>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Check permissions
+  const canFavorite = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "view",
+  });
+  if (!canFavorite.success) return canFavorite;
+
+  // Favorite file
+  const mutation = await MUTATIONS.starFile(fileId, session.userId);
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+  revalidatePath("/drive/starred", "page");
+
+  return { success: true, data: null };
+}
+
+export async function favoriteFolder(folderId: string): Promise<Result<null>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Check permissions
+  const canFavorite = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "view",
+  });
+  if (!canFavorite.success) return canFavorite;
+
+  // Favorite folder
+  const mutation = await MUTATIONS.starFolder(folderId, session.userId);
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+  revalidatePath("/drive/starred", "page");
+
+  return { success: true, data: null };
+}
+
+export async function unfavoriteFile(fileId: string) {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Favorite file
+  const mutation = await MUTATIONS.unstarFile(fileId, session.userId);
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+  revalidatePath("/drive/starred", "page");
+
+  return { success: true, data: null };
+}
+
+export async function unfavoriteFolder(folderId: string) {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Favorite file
+  const mutation = await MUTATIONS.unstarFolder(folderId, session.userId);
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+  revalidatePath("/drive/starred", "page");
 
   return { success: true, data: null };
 }

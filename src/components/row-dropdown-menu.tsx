@@ -5,6 +5,8 @@ import {
   EditIcon,
   EllipsisVerticalIcon,
   ShareIcon,
+  StarIcon,
+  StarOffIcon,
   Trash2Icon,
 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -22,6 +24,8 @@ export function RowDropdownMenu({
   onDelete,
   onRestore,
   onTrash,
+  onFavorite,
+  onUnfavorite,
 }: {
   onDownload?: () => void;
   onShare?: () => void;
@@ -29,6 +33,8 @@ export function RowDropdownMenu({
   onDelete?: () => void;
   onRestore?: () => void;
   onTrash?: () => void;
+  onFavorite?: () => void;
+  onUnfavorite?: () => void;
 }) {
   return (
     <DropdownMenu>
@@ -66,6 +72,16 @@ export function RowDropdownMenu({
         {onTrash && (
           <DropdownMenuItem onClick={onTrash} aria-label="Move to trash">
             <Trash2Icon /> Move to trash
+          </DropdownMenuItem>
+        )}
+        {onFavorite && (
+          <DropdownMenuItem onClick={onFavorite} aria-label="Favorite item">
+            <StarIcon /> Add to favorites
+          </DropdownMenuItem>
+        )}
+        {onUnfavorite && (
+          <DropdownMenuItem onClick={onUnfavorite} aria-label="Unfavorite item">
+            <StarOffIcon /> Remove from favorites
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
