@@ -23,8 +23,14 @@ export default async function StarredFolderPage() {
   return (
     <DriveContents
       crumbs={[{ name: "Starred", url: "/drive/starred" }]}
-      files={starred.data.files}
-      folders={starred.data.folders}
+      files={starred.data.files.map((f) => ({
+        ...f,
+        url: `/drive/files/${f.key}`,
+      }))}
+      folders={starred.data.folders.map((f) => ({
+        ...f,
+        url: `/drive/folders/${f.id}`,
+      }))}
     />
   );
 }

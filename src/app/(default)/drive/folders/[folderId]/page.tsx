@@ -12,13 +12,13 @@ export default async function GoogleDriveClone({
 
   const session = await auth();
 
-  if (!session?.user.id) return redirect("/sign-in");
+  if (!session?.userId) return redirect("/sign-in");
 
   // Execute in parallel
   const [folders, files, parents] = await Promise.all([
     getFolders(folderId),
     getFiles(folderId),
-    getParentsForFolder(folderId),
+    getParentsForFolder(folderId, session.userId),
   ]);
 
   if (!folders.success || !files.success || !parents.success) return notFound();
@@ -31,6 +31,16 @@ export default async function GoogleDriveClone({
   crumbs.unshift({ name: "My Drive", url: "/drive" });
 
   return (
-    <DriveContents crumbs={crumbs} files={files.data} folders={folders.data} />
+    <DriveContents
+      crumbs={crumbs}
+      files={files.data.map((f) => ({
+        ...f,
+        url: `/drive/files/${f.key}`,
+      }))}
+      folders={folders.data.map((f) => ({
+        ...f,
+        url: `/drive/folders/${f.id}`,
+      }))}
+    />
   );
 }

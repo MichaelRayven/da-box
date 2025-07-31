@@ -23,8 +23,14 @@ export default async function TrashFolderPage() {
   return (
     <DriveContents
       crumbs={[{ name: "Trash", url: "/drive/trash" }]}
-      files={trashed.data.files}
-      folders={trashed.data.folders}
+      files={trashed.data.files.map((f) => ({
+        ...f,
+        url: `/drive/files/${f.key}`,
+      }))}
+      folders={trashed.data.folders.map((f) => ({
+        ...f,
+        url: `/drive/folders/${f.id}`,
+      }))}
     />
   );
 }

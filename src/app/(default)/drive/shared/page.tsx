@@ -1,7 +1,8 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { onboardUser } from "~/server/db/mutations";
-import { getRootFolderForUser } from "~/server/db/queries";
+import { getRootFolderForUser, getSharedWithUser } from "~/server/db/queries";
+import DriveContents from "../../_components/drive-contents";
 
 export default async function SharedFolderPage() {
   const session = await auth();
@@ -10,12 +11,26 @@ export default async function SharedFolderPage() {
 
   const root = await getRootFolderForUser(session.user.id);
 
-  if (!root) {
+  if (!root.success) {
     const rootFolderId = await onboardUser(session.user.id);
     return redirect(`/drive/folders/${rootFolderId}`);
   }
 
-  const folder = root.folders.find((f) => f.name === "Shared")!;
+  const shared = await getSharedWithUser(session.userId);
 
-  return redirect(`/drive/folders/${folder.id}`);
+  if (!shared.success) return notFound();
+
+  return (
+    <DriveContents
+      crumbs={[{ name: "Shared", url: "/drive/shared" }]}
+      files={shared.data.files.map((f) => ({
+        ...f,
+        url: `/drive/files/${f.key}`,
+      }))}
+      folders={shared.data.folders.map((f) => ({
+        ...f,
+        url: `/drive/shared/folders/${f.id}`,
+      }))}
+    />
+  );
 }

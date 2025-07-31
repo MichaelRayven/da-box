@@ -16,12 +16,16 @@ import { cookies } from "next/headers";
 import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
-import type { Result, FileType, FolderType } from "~/lib/interface";
+import type { Result } from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
-import { auth } from "./auth";
+import type {
+  files as filesSchema,
+  folders as foldersSchema,
+} from "~/server/db/schema";
 import * as MUTATIONS from "./db/mutations";
 import * as QUERIES from "./db/queries";
 import * as ERRORS from "~/lib/errors";
+import { auth } from "./auth";
 import { s3 } from "./s3";
 
 export async function getFileViewingUrl(
@@ -30,7 +34,11 @@ export async function getFileViewingUrl(
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
-  const query = await QUERIES.requestFileFor(fileId, session.userId, "view");
+  const query = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "view",
+  });
   if (!query.success) return { success: false, error: ERRORS.FORBIDDEN };
 
   const command = new GetObjectCommand({
@@ -46,15 +54,15 @@ export async function getFileViewingUrl(
 export async function createFolder(
   name: string,
   parentId: string,
-): Promise<Result<{ folder: FolderType }>> {
+): Promise<Result<{ folder: typeof foldersSchema.$inferSelect }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
-  const query = await QUERIES.requestFolderFor(
-    parentId,
-    session.userId,
-    "edit",
-  );
+  const query = await QUERIES.requestFolderFor({
+    folderId: parentId,
+    userId: session.userId,
+    action: "edit",
+  });
   if (!query.success) return { success: false, error: ERRORS.FORBIDDEN };
 
   const mutation = await MUTATIONS.createFolder({ name, parentId });
@@ -68,7 +76,11 @@ async function canCreateFile({
   name,
   parentId,
 }: { userId: string; name: string; parentId: string }): Promise<Result<null>> {
-  const folderQuery = await QUERIES.requestFolderFor(parentId, userId, "edit");
+  const folderQuery = await QUERIES.requestFolderFor({
+    folderId: parentId,
+    userId,
+    action: "edit",
+  });
   if (!folderQuery.success) {
     return { success: false, error: ERRORS.FORBIDDEN };
   }
@@ -87,7 +99,7 @@ export async function startFileUpload({
 }: {
   name: string;
   parentId: string;
-}): Promise<Result<{ url: string }>> {
+}): Promise<Result<{ url: string; key: string }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
@@ -106,7 +118,7 @@ export async function startFileUpload({
 
   const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
 
-  return { success: true, data: { url } };
+  return { success: true, data: { url, key } };
 }
 
 export async function completeFileUpload({
@@ -117,7 +129,7 @@ export async function completeFileUpload({
   key: string;
   name: string;
   parentId: string;
-}): Promise<Result<{ file: FileType }>> {
+}): Promise<Result<{ file: typeof filesSchema.$inferSelect }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
@@ -225,7 +237,7 @@ export async function completePartialFileUpload({
   parentId: string;
   uploadId: string;
   parts: CompletedPart[];
-}): Promise<Result<{ file: FileType }>> {
+}): Promise<Result<{ file: typeof filesSchema.$inferSelect }>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
@@ -288,7 +300,11 @@ export async function deleteFile(
     };
   }
 
-  const query = await QUERIES.requestFileFor(fileId, session.userId, "edit");
+  const query = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "edit",
+  });
   if (!query.success) return query;
 
   try {
@@ -321,11 +337,11 @@ export async function deleteFolder(
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
   // Check delete folder permission
-  const query = await QUERIES.requestFolderFor(
+  const query = await QUERIES.requestFolderFor({
     folderId,
-    session.userId,
-    "edit",
-  );
+    userId: session.userId,
+    action: "edit",
+  });
   if (!query.success) return query;
 
   // Get all the files inside
@@ -482,11 +498,11 @@ export async function shareFile({
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
   // Check permissions
-  const canShare = await QUERIES.requestFileFor(
+  const canShare = await QUERIES.requestFileFor({
     fileId,
-    session.userId,
-    "share",
-  );
+    userId: session.userId,
+    action: "share",
+  });
   if (!canShare.success) return canShare;
 
   // Check user exists
@@ -518,11 +534,11 @@ export async function shareFolder({
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
   // Check permissions
-  const canShare = await QUERIES.requestFolderFor(
+  const canShare = await QUERIES.requestFolderFor({
     folderId,
-    session.userId,
-    "share",
-  );
+    userId: session.userId,
+    action: "share",
+  });
   if (!canShare.success) return canShare;
 
   // Check user exists

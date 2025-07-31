@@ -175,7 +175,7 @@ export const shared = createTable(
   ],
 );
 
-const sharedRelations = relations(shared, ({ one, many }) => ({
+export const sharedRelations = relations(shared, ({ one, many }) => ({
   folder: one(folders, {
     fields: [shared.folderId],
     references: [folders.id],

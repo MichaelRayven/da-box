@@ -213,7 +213,7 @@ export async function getAllNestedFiles(
 }
 
 /**
- * Get all non-trashed, non-hidden files and folders shared with a user.
+ * Get all non-trashed files and folders shared with a user.
  * @returns Array of shared files and folders.
  */
 export async function getSharedWithUser(userId: string): Promise<
@@ -334,19 +334,23 @@ async function hasAccessToResource(
   );
 }
 
-export async function requestFileFor(
-  fileId: string,
-  userId: string,
-  action: Action = "view",
-): Promise<Result<typeof filesSchema.$inferSelect>> {
+export async function requestFileFor({
+  fileId,
+  userId,
+  action = "view",
+}: {
+  fileId: string;
+  userId: string;
+  action?: Action;
+}): Promise<Result<typeof filesSchema.$inferSelect>> {
   const result = await getFileById(fileId);
   if (!result.success) return result;
 
   const file = result.data;
   const allowed = await hasAccessToResource(
     "file",
-    file.ownerId,
     fileId,
+    file.ownerId,
     userId,
     action,
   );
@@ -358,19 +362,23 @@ export async function requestFileFor(
   return { success: true, data: file };
 }
 
-export async function requestFolderFor(
-  folderId: string,
-  userId: string,
-  action: Action = "view",
-): Promise<Result<typeof foldersSchema.$inferSelect>> {
+export async function requestFolderFor({
+  folderId,
+  userId,
+  action = "view",
+}: {
+  folderId: string;
+  userId: string;
+  action?: Action;
+}): Promise<Result<typeof foldersSchema.$inferSelect>> {
   const result = await getFolderById(folderId);
   if (!result.success) return result;
 
   const folder = result.data;
   const allowed = await hasAccessToResource(
     "folder",
-    folder.ownerId,
     folderId,
+    folder.ownerId,
     userId,
     action,
   );

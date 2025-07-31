@@ -17,9 +17,21 @@ import type {
 //   url?: string;
 // }
 
-export type FileType = typeof filesSchema.$inferSelect;
+export type FileType = {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+  modified: Date | null;
+  ownerId: string;
+};
 
-export type FolderType = typeof foldersSchema.$inferSelect;
+export type FolderType = {
+  name: string;
+  url: string;
+  modified: Date | null;
+  ownerId: string;
+};
 
 export type Crumb = {
   name: string;
