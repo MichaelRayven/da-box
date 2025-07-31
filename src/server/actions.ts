@@ -54,6 +54,33 @@ export async function getFileViewingUrl(
   return { success: true, data: { url } };
 }
 
+export async function getFileDownloadUrl(
+  fileId: string,
+): Promise<Result<{ url: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const query = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "view",
+  });
+  if (!query.success) return { success: false, error: ERRORS.FORBIDDEN };
+
+  if (query.data.trashed)
+    return { success: false, error: ERRORS.FILE_NOT_ACCESSIBLE };
+
+  const command = new GetObjectCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: query.data.key,
+    ResponseContentDisposition: `attachment; filename="${query.data.name}"`,
+  });
+
+  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+
+  return { success: true, data: { url } };
+}
+
 export async function createFolder(
   name: string,
   parentId: string,
@@ -91,7 +118,7 @@ async function canCreateFile({
   }
 
   const fileExistsQuery = await QUERIES.fileExists(name, parentId);
-  if (!fileExistsQuery)
+  if (fileExistsQuery)
     return { success: false, error: ERRORS.FILE_ALREADY_EXISTS };
 
   return { success: true, data: null };
@@ -110,14 +137,14 @@ export async function startFileUpload({
   const can = await canCreateFile({ userId: session.userId, name, parentId });
   if (!can.success) return can;
 
-  const key = `${session.userId}/uploads/${crypto.randomUUID()}.${
-    mime.extension(name) || "bin"
-  }`;
+  const type = mime.lookup(name) || "application/octet-stream";
+  const ext = mime.extension(type) || "bin";
+  const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
   const command = new PutObjectCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
     Key: key,
-    ContentType: mime.contentType(name) || "application/octet-stream",
+    ContentType: type,
   });
 
   const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
@@ -181,7 +208,7 @@ export async function initPartialFileUpload({
   const can = await canCreateFile({ userId: session.userId, name, parentId });
   if (!can.success) return can;
 
-  const type = mime.contentType(name) || "application/octet-stream";
+  const type = mime.lookup(name) || "application/octet-stream";
   const ext = mime.extension(type) || "bin";
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 

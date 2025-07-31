@@ -35,7 +35,7 @@ export default async function GoogleDriveClone({
       crumbs={crumbs}
       files={files.data.map((f) => ({
         ...f,
-        url: `/drive/files/${f.key}`,
+        url: `/drive/files/${f.id}`,
       }))}
       folders={folders.data.map((f) => ({
         ...f,

@@ -20,12 +20,13 @@ export default async function TrashFolderPage() {
 
   if (!trashed.success) return notFound();
 
+  // TODO: disable opening trashed folders
   return (
     <DriveContents
       crumbs={[{ name: "Trash", url: "/drive/trash" }]}
       files={trashed.data.files.map((f) => ({
         ...f,
-        url: `/drive/files/${f.key}`,
+        url: `/drive/files/${f.id}`,
       }))}
       folders={trashed.data.folders.map((f) => ({
         ...f,

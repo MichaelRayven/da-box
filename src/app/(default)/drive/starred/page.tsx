@@ -25,7 +25,7 @@ export default async function StarredFolderPage() {
       crumbs={[{ name: "Starred", url: "/drive/starred" }]}
       files={starred.data.files.map((f) => ({
         ...f,
-        url: `/drive/files/${f.key}`,
+        url: `/drive/files/${f.id}`,
       }))}
       folders={starred.data.folders.map((f) => ({
         ...f,

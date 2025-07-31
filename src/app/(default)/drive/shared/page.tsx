@@ -25,7 +25,7 @@ export default async function SharedFolderPage() {
       crumbs={[{ name: "Shared", url: "/drive/shared" }]}
       files={shared.data.files.map((f) => ({
         ...f,
-        url: `/drive/files/${f.key}`,
+        url: `/drive/files/${f.id}`,
       }))}
       folders={shared.data.folders.map((f) => ({
         ...f,

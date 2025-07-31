@@ -15,14 +15,12 @@ import { files } from "~/server/db/schema";
 
 interface UseUploadFileOptions {
   onSuccess?: (data: FileType[], variables: File[], context: unknown) => void;
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   onError?: (error: any, variables: File[], context: unknown) => void;
   onUpload?: (variables: File[]) => void;
   onFileUpload?: (variables: File) => void;
   onFileUploaded?: (file: FileType) => void;
   onPartUpload?: (file: File, partNumber: number, totalParts: number) => void;
   onFinished?: (
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     data: any,
     error: unknown,
     variables: File[],
@@ -49,6 +47,7 @@ export function useUploadFile({
       name: file.name,
       parentId: parentId,
     });
+
     if (!res.success) throw new Error(res.error);
 
     const putRes = await fetch(res.data.url, {
@@ -136,8 +135,14 @@ export function useUploadFile({
           ? await uploadSmallFile(file, parentId)
           : await uploadLargeFile(file, parentId, onPartUpload);
 
-      uploaded.push(uploadedFile);
-      onFileUploaded?.(uploadedFile);
+      uploaded.push({
+        ...uploadedFile,
+        url: `/drive/files/${uploadedFile.key}`,
+      });
+      onFileUploaded?.({
+        ...uploadedFile,
+        url: `/drive/files/${uploadedFile.key}`,
+      });
     }
 
     return uploaded;

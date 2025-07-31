@@ -13,9 +13,9 @@ export default async function FilePage({
 
   if (!session?.userId) return redirect("/sign-in", RedirectType.replace);
 
-  const { success, data } = await getFileViewingUrl(fileId);
+  const query = await getFileViewingUrl(fileId);
 
-  if (!success) notFound();
+  if (!query.success) notFound();
 
-  return redirect(data!, RedirectType.replace);
+  return redirect(query.data.url, RedirectType.replace);
 }
