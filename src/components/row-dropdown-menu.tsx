@@ -59,9 +59,14 @@ export function RowDropdownMenu({
             <EditIcon /> Rename
           </DropdownMenuItem>
         )}
-        {onDelete && (
-          <DropdownMenuItem onClick={onDelete} aria-label="Delete item">
-            <Trash2Icon /> Delete
+        {onFavorite && (
+          <DropdownMenuItem onClick={onFavorite} aria-label="Favorite item">
+            <StarIcon /> Add to favorites
+          </DropdownMenuItem>
+        )}
+        {onUnfavorite && (
+          <DropdownMenuItem onClick={onUnfavorite} aria-label="Unfavorite item">
+            <StarOffIcon /> Remove from favorites
           </DropdownMenuItem>
         )}
         {onRestore && (
@@ -74,14 +79,9 @@ export function RowDropdownMenu({
             <Trash2Icon /> Move to trash
           </DropdownMenuItem>
         )}
-        {onFavorite && (
-          <DropdownMenuItem onClick={onFavorite} aria-label="Favorite item">
-            <StarIcon /> Add to favorites
-          </DropdownMenuItem>
-        )}
-        {onUnfavorite && (
-          <DropdownMenuItem onClick={onUnfavorite} aria-label="Unfavorite item">
-            <StarOffIcon /> Remove from favorites
+        {onDelete && (
+          <DropdownMenuItem onClick={onDelete} aria-label="Delete item">
+            <Trash2Icon /> Delete
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

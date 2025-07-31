@@ -57,9 +57,14 @@ export function RowContextMenu({
             <EditIcon /> Rename
           </ContextMenuItem>
         )}
-        {onDelete && (
-          <ContextMenuItem onClick={onDelete} aria-label="Delete item">
-            <Trash2Icon /> Delete
+        {onFavorite && (
+          <ContextMenuItem onClick={onFavorite} aria-label="Favorite item">
+            <StarIcon /> Add to favorites
+          </ContextMenuItem>
+        )}
+        {onUnfavorite && (
+          <ContextMenuItem onClick={onUnfavorite} aria-label="Unfavorite item">
+            <StarOffIcon /> Remove from favorites
           </ContextMenuItem>
         )}
         {onRestore && (
@@ -72,14 +77,9 @@ export function RowContextMenu({
             <Trash2Icon /> Move to trash
           </ContextMenuItem>
         )}
-        {onFavorite && (
-          <ContextMenuItem onClick={onFavorite} aria-label="Favorite item">
-            <StarIcon /> Add to favorites
-          </ContextMenuItem>
-        )}
-        {onUnfavorite && (
-          <ContextMenuItem onClick={onUnfavorite} aria-label="Unfavorite item">
-            <StarOffIcon /> Remove from favorites
+        {onDelete && (
+          <ContextMenuItem onClick={onDelete} aria-label="Delete item">
+            <Trash2Icon /> Delete
           </ContextMenuItem>
         )}
       </ContextMenuContent>

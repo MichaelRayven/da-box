@@ -108,8 +108,8 @@ export function useContextMenuAction(item: ItemType) {
     share: handleShare,
     rename: handleRename,
     download: isFile ? handleDownload : undefined,
-    favorite: handleFavorite,
+    favorite: !item.data.starred ? handleFavorite : undefined,
     trash: handleTrash,
-    unfavorite: handleUnfavorite,
+    unfavorite: item.data.starred ? handleUnfavorite : undefined,
   };
 }

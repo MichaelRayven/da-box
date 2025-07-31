@@ -33,7 +33,7 @@ export function DeleteDialog({
     </Button>
   ),
 }: DeleteDialogProps) {
-  const { item, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
+  const { data, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
 
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -44,10 +44,10 @@ export function DeleteDialog({
   const mutation = useMutation({
     async mutationFn() {
       if (type === "file") {
-        return await deleteFile(item!.id);
+        return await deleteFile(data!.id);
       }
 
-      return await deleteFolder(item!.id);
+      return await deleteFolder(data!.id);
     },
     onSuccess() {
       setOpen(false);
@@ -65,7 +65,7 @@ export function DeleteDialog({
 
       <DialogContent className="gap-6">
         <DialogHeader>
-          <DialogTitle>Delete "{item?.name}"</DialogTitle>
+          <DialogTitle>Delete "{data?.name}"</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete this {type}?
             <br />

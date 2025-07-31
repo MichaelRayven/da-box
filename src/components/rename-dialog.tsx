@@ -16,7 +16,6 @@ import {
 import { useContextMenuStore } from "~/lib/store/context-menu";
 import { renameFile, renameFolder } from "~/server/actions";
 import { useMutation } from "@tanstack/react-query";
-import { useDriveStore } from "~/lib/store/drive";
 
 interface RenameDialogProps {
   open?: boolean;
@@ -36,8 +35,7 @@ export function RenameDialog({
   ),
   currentName = "",
 }: RenameDialogProps) {
-  const { item, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
-  // const renameFileLocal = useDriveStore((s) => s.renameFile);
+  const { data, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
 
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -46,17 +44,17 @@ export function RenameDialog({
   });
 
   const mutation = useMutation({
-    async mutationFn(data: { name: string }) {
+    async mutationFn(values: { name: string }) {
       let result: Awaited<ReturnType<typeof renameFile | typeof renameFolder>>;
       if (type === "file") {
-        result = await renameFile(item!.id, data.name);
+        result = await renameFile(data!.id, values.name);
       } else {
-        result = await renameFolder(item!.id, data.name);
+        result = await renameFolder(data!.id, values.name);
       }
 
       if (!result.success) throw new Error(result.error);
     },
-    onSuccess(data) {
+    onSuccess(values) {
       setOpen(false);
     },
     onError(error: Error) {
