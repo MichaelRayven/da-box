@@ -738,6 +738,13 @@ export async function getFolders(
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
+  const canView = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "view",
+  });
+  if (!canView.success) return canView;
+
   const query = await QUERIES.getFolders(folderId, session.userId);
   if (!query.success) return query;
 
@@ -754,6 +761,13 @@ export async function getFolders(
 export async function getFiles(folderId: string): Promise<Result<FileType[]>> {
   const session = await auth();
   if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const canView = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "view",
+  });
+  if (!canView.success) return canView;
 
   const query = await QUERIES.getFiles(folderId, session.userId);
   if (!query.success) return query;

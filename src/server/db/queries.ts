@@ -134,6 +134,7 @@ export async function getFiles(folderId: string, userId: string) {
     .findMany({
       where: and(
         eq(filesSchema.parentId, folderId),
+        eq(filesSchema.ownerId, userId),
         eq(filesSchema.trashed, false),
       ),
       with: {
@@ -151,6 +152,7 @@ export async function getFolders(folderId: string, userId: string) {
     .findMany({
       where: and(
         eq(foldersSchema.parentId, folderId),
+        eq(foldersSchema.ownerId, userId),
         eq(foldersSchema.trashed, false),
       ),
       with: {
