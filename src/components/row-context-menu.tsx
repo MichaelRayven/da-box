@@ -26,16 +26,16 @@ export function RowContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={onDownload} aria-label="Download file">
+        <ContextMenuItem onClick={onDownload} aria-label="Download item">
           <DownloadIcon /> Download
         </ContextMenuItem>
-        <ContextMenuItem onClick={onShare} aria-label="Share file">
+        <ContextMenuItem onClick={onShare} aria-label="Share item">
           <ShareIcon /> Share
         </ContextMenuItem>
-        <ContextMenuItem onClick={onRename} aria-label="Rename file">
+        <ContextMenuItem onClick={onRename} aria-label="Rename item">
           <EditIcon /> Rename
         </ContextMenuItem>
-        <ContextMenuItem onClick={onDelete} aria-label="Delete file">
+        <ContextMenuItem onClick={onDelete} aria-label="Delete item">
           <Trash2Icon /> Delete
         </ContextMenuItem>
       </ContextMenuContent>

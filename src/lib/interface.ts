@@ -18,6 +18,7 @@ import type {
 // }
 
 export type FileType = {
+  id: string;
   name: string;
   url: string;
   size: number;
@@ -27,6 +28,7 @@ export type FileType = {
 };
 
 export type FolderType = {
+  id: string;
   name: string;
   url: string;
   modified: Date | null;

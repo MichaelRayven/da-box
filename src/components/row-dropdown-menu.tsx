@@ -34,16 +34,16 @@ export function RowDropdownMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={onDownload} aria-label="Download file">
+        <DropdownMenuItem onClick={onDownload} aria-label="Download item">
           <DownloadIcon /> Download
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onShare} aria-label="Share file">
+        <DropdownMenuItem onClick={onShare} aria-label="Share item">
           <ShareIcon /> Share
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onRename} aria-label="Rename file">
+        <DropdownMenuItem onClick={onRename} aria-label="Rename item">
           <EditIcon /> Rename
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete} aria-label="Delete file">
+        <DropdownMenuItem onClick={onDelete} aria-label="Delete item">
           <Trash2Icon /> Delete
         </DropdownMenuItem>
       </DropdownMenuContent>

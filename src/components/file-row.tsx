@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  DownloadIcon,
-  EditIcon,
-  FileTextIcon,
-  FolderIcon,
-  ShareIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { FileTextIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
 import { TableCell, TableRow } from "~/components/ui/table";
 import type { FileType, FolderType } from "~/lib/interface";
 import { useContextMenuStore } from "~/lib/store/context-menu";
 import { formatFileSize } from "~/lib/utils";
-import { RowDropdownMenu } from "./row-dropdown-menu";
 import { RowContextMenu } from "./row-context-menu";
+import { RowDropdownMenu } from "./row-dropdown-menu";
 
 export function FileRow({ file }: { file: FileType }) {
   const { openRenameDialog, openShareDialog, openDeleteDialog } =

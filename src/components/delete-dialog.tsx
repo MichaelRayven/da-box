@@ -15,9 +15,9 @@ import {
 } from "~/components/ui/dialog";
 import { useControllableState } from "~/hook/useControllableState";
 import { useContextMenuStore } from "~/lib/store/context-menu";
-import { deleteFile } from "~/server/actions";
+import { deleteFile, deleteFolder } from "~/server/actions";
 
-interface ShareDialogProps {
+interface DeleteDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
@@ -32,8 +32,8 @@ export function DeleteDialog({
       Share
     </Button>
   ),
-}: ShareDialogProps) {
-  const file = useContextMenuStore((s) => s.selectedFile)!;
+}: DeleteDialogProps) {
+  const { item, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
 
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -43,10 +43,14 @@ export function DeleteDialog({
 
   const mutation = useMutation({
     async mutationFn() {
-      return await deleteFile(file.id);
+      if (type === "file") {
+        return await deleteFile(item!.id);
+      }
+
+      return await deleteFolder(item!.id);
     },
     onSuccess() {
-      toast.success(`Deleted "${file.name}"`);
+      toast.success(`Deleted ${type} "${item!.name}"`);
       setOpen(false);
     },
     onError(error: Error) {
@@ -62,9 +66,9 @@ export function DeleteDialog({
 
       <DialogContent className="gap-6">
         <DialogHeader>
-          <DialogTitle>Delete "{file?.name}"</DialogTitle>
+          <DialogTitle>Delete "{item?.name}"</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this file?
+            Are you sure you want to delete this {type}?
             <br />
             You can't recover it after you proceed.
           </DialogDescription>

@@ -66,7 +66,7 @@ export default function DriveContents(props: {
         </div>
       </div>
 
-      <FileList files={props.files} folders={props.folders} />
+      <FileList files={props.files ?? []} folders={props.folders ?? []} />
     </div>
   );
 }
