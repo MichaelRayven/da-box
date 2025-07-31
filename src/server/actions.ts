@@ -16,37 +16,34 @@ import { cookies } from "next/headers";
 import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
-import type {
-  ActionResponse,
-  FileType,
-  FolderType,
-  PostgresError,
-} from "~/lib/interface";
-import { isUniqueConstraintViolation } from "~/lib/utils";
+import type { Result, FileType, FolderType } from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import { auth } from "./auth";
 import { db } from "./db";
-import { updateUser } from "./db/mutations";
-import { getAllSubfolders, getFileById } from "./db/queries";
+import * as MUTATIONS from "./db/mutations";
+import * as QUERIES from "./db/queries";
+import * as ERRORS from "~/lib/errors";
 import { files as filesSchema, folders as foldersSchema } from "./db/schema";
 import { s3 } from "./s3";
 
-export async function getFileViewingUrl(fileId: string) {
+export async function getFileViewingUrl(
+  fileId: string,
+): Promise<Result<string>> {
   const session = await auth();
 
   if (!session?.userId) {
-    return { success: false, error: "Unauthorized" };
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
   }
 
-  const file = await getFileById(fileId);
-
-  if (file?.ownerId !== session.userId) {
-    return { success: false, error: "Forbidden" };
-  }
+  const query = await QUERIES.getFileIfAccessible(fileId, session.userId);
+  if (!query.success) return query;
 
   const command = new GetObjectCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
-    Key: file.key,
+    Key: query.data.key,
   });
 
   const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
@@ -57,161 +54,96 @@ export async function getFileViewingUrl(fileId: string) {
 export async function createFolder(
   name: string,
   parentId: string,
-): Promise<ActionResponse<{ folder: FolderType }>> {
+): Promise<Result<FolderType>> {
   const session = await auth();
 
   if (!session?.userId) {
-    return { success: false, error: "Unauthorized" };
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
   }
 
-  const parent = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.id, parentId),
-      eq(foldersSchema.ownerId, session.userId),
-    ),
-  });
+  const folder = await MUTATIONS.createFolder(name, parentId, session.userId);
 
-  if (!parent) return { success: false, error: "Forbidden" };
+  if (!folder.success) return folder;
 
-  try {
-    const [folder] = await db
-      .insert(foldersSchema)
-      .values({
-        name: name,
-        ownerId: session.userId,
-        parentId: parentId,
-      })
-      .returning();
-
-    if (!folder) return { success: false, error: "Something went wrong" };
-
-    return { success: true, data: { folder } };
-  } catch (err) {
-    if (isUniqueConstraintViolation(err)) {
-      return { success: false, error: "Folder with this name already exists" };
-    }
-
-    return { success: false, error: "Something went wrong" };
-  }
+  return { success: true, data: folder.data };
 }
 
 export async function getFileUploadUrl(
   name: string,
-  type: string,
-  parentId: string,
   size: number,
-): Promise<ActionResponse<{ file: FileType; url: string }>> {
+  parentId: string,
+): Promise<Result<{ file: FileType; url: string }>> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-  const parent = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.id, parentId),
-      eq(foldersSchema.ownerId, session.userId),
-    ),
-  });
-
-  if (!parent) return { success: false, error: "Forbidden" };
-
-  const ext = name?.split(".").pop() ?? "bin";
-  const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
-
-  try {
-    const [file] = await db
-      .insert(filesSchema)
-      .values({
-        name,
-        key,
-        ownerId: session.userId,
-        parentId,
-        size,
-        type,
-        hidden: false,
-      })
-      .returning();
-
-    if (!file) return { success: false, error: "Something went wrong" };
-
-    const command = new PutObjectCommand({
-      Bucket: env.S3_FILE_BUCKET_NAME,
-      Key: key,
-      ContentType: type,
-    });
-
-    const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
-
-    return { success: true, data: { file, url } };
-  } catch (err) {
-    if (isUniqueConstraintViolation(err)) {
-      return { success: false, error: "File with this name already exists" };
-    }
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
   }
 
-  return { success: false, error: "Something went wrong" };
+  const type = mime.contentType(name) || "application/octet-stream";
+  const ext = mime.extension(type) || "bin";
+  const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
+
+  const mutation = await MUTATIONS.createFile({
+    userId: session.userId,
+    name,
+    key,
+    parentId,
+    size,
+    type,
+    hidden: false,
+  });
+
+  if (!mutation.success) return mutation;
+
+  const file = mutation.data;
+
+  const command = new PutObjectCommand({
+    Bucket: env.S3_FILE_BUCKET_NAME,
+    Key: key,
+    ContentType: type,
+  });
+
+  const url = await getSignedUrl(s3, command, { expiresIn: 5 * 60 });
+
+  return { success: true, data: { file, url } };
 }
 
 export async function startPartialFileUpload(
   name: string,
   size: number,
   parentId: string,
-): Promise<ActionResponse<{ uploadId: string; key: string }>> {
+): Promise<Result<{ uploadId: string; key: string }>> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-  const parent = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.id, parentId),
-      eq(foldersSchema.ownerId, session.userId),
-    ),
-  });
-
-  if (!parent) return { success: false, error: "Forbidden" };
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
+  }
 
   const type = mime.contentType(name) || "application/octet-stream";
-  const ext = mime.extension(type);
+  const ext = mime.extension(type) || "bin";
   const key = `${session.userId}/uploads/${crypto.randomUUID()}.${ext}`;
 
-  let file: FileType | undefined;
+  const mutation = await MUTATIONS.createFile({
+    userId: session.userId,
+    name,
+    key,
+    parentId,
+    size,
+    type,
+    hidden: true,
+  });
 
-  try {
-    [file] = await db.insert(filesSchema).values({
-      name: name,
-      key: key,
-      ownerId: session.userId,
-      parentId: parentId,
-      size: size,
-      type: type,
-      hidden: true,
-    });
-
-    if (!file) return { success: false, error: "Something went wrong" };
-  } catch (err) {
-    if (isUniqueConstraintViolation(err)) {
-      file = await db.query.files.findFirst({
-        where: and(
-          eq(filesSchema.name, name),
-          eq(filesSchema.parentId, parentId),
-        ),
-      });
-
-      if (file?.hidden) {
-        await db
-          .update(filesSchema)
-          .set({
-            name: name,
-            key: key,
-            ownerId: session.userId,
-            parentId: parentId,
-            size: size,
-            type: type,
-            hidden: true,
-          })
-          .where(eq(filesSchema.id, file.id));
-      } else {
-        return { success: false, error: "File with this name already exists" };
-      }
-    }
-  }
+  // TODO: Resolve conflicts with hidden files
+  if (!mutation.success) return mutation;
 
   const command = new CreateMultipartUploadCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
@@ -221,7 +153,7 @@ export async function startPartialFileUpload(
 
   const { UploadId } = await s3.send(command);
 
-  if (!UploadId) return { success: false, error: "Something went wrong" };
+  if (!UploadId) return { success: false, error: ERRORS.SERVER_ERROR };
 
   return { success: true, data: { uploadId: UploadId, key } };
 }
@@ -230,13 +162,18 @@ export async function getUploadFilePartUrl(
   key: string,
   uploadId: string,
   partNumber: number,
-): Promise<ActionResponse<{ url: string }>> {
+): Promise<Result<{ url: string }>> {
   const session = await auth();
 
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
+  }
 
   if (!key.startsWith(`${session.userId}/`)) {
-    return { success: false, error: "Forbidden" };
+    return { success: false, error: ERRORS.FORBIDDEN };
   }
 
   const command = new UploadPartCommand({
@@ -254,12 +191,18 @@ export async function completePartialFileUpload(
   key: string,
   uploadId: string,
   parts: CompletedPart[],
-): Promise<ActionResponse<{ file: FileType }>> {
+): Promise<Result<{ file: FileType }>> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
+
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
+  }
 
   if (!key.startsWith(`${session.userId}/`)) {
-    return { success: false, error: "Forbidden" };
+    return { success: false, error: ERRORS.FORBIDDEN };
   }
 
   const command = new CompleteMultipartUploadCommand({
@@ -280,43 +223,45 @@ export async function completePartialFileUpload(
       .where(eq(filesSchema.key, key))
       .returning();
 
-    if (!updatedFile) return { success: false, error: "Something went wrong" };
+    if (!updatedFile) return { success: false, error: ERRORS.SERVER_ERROR };
 
     return { success: true, data: { file: updatedFile } };
   } catch (e) {
-    console.error(e);
+    console.error("Multipart upload error:", e);
+    return { success: false, error: ERRORS.SERVER_ERROR };
   }
-  return { success: false, error: "Something went wrong" };
 }
 
 export async function deleteFile(
   fileId: string,
-): Promise<ActionResponse<{ fileId: string }>> {
+): Promise<Result<{ fileId: string }>> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
 
-  const file = await db.query.files.findFirst({
-    where: and(
-      eq(filesSchema.id, fileId),
-      eq(filesSchema.ownerId, session.userId),
-    ),
-  });
-
-  if (!file) {
-    return { success: false, error: "File not found" };
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
   }
+
+  const query = await QUERIES.getFileIfAccessible(
+    fileId,
+    session.userId,
+    "edit",
+  );
+  if (!query.success) return query;
 
   try {
     // 1. Delete from S3
     await s3.send(
       new DeleteObjectCommand({
         Bucket: env.S3_FILE_BUCKET_NAME,
-        Key: file.key,
+        Key: query.data.key,
       }),
     );
 
     // 2. Delete from DB
-    await db.delete(filesSchema).where(eq(filesSchema.id, fileId));
+    await MUTATIONS.deleteFile(fileId);
 
     // 3. Force revalidation cookie
     const c = await cookies();
@@ -329,6 +274,57 @@ export async function deleteFile(
   }
 }
 
+export async function deleteFolder(
+  folderId: string,
+): Promise<Result<{ folderId: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Check delete folder permission
+  const query = await QUERIES.getFolderIfAccessible(
+    folderId,
+    session.userId,
+    "edit",
+  );
+  if (!query.success) return query;
+
+  // Get all the files inside
+  const filesQuery = await QUERIES.getAllNestedFiles(folderId);
+  if (!filesQuery.success) return filesQuery;
+
+  // Delete files one by one
+  for (const file of filesQuery.data) {
+    // 1. Delete from S3
+    await s3
+      .send(
+        new DeleteObjectCommand({
+          Bucket: env.S3_FILE_BUCKET_NAME,
+          Key: file.key,
+        }),
+      )
+      .catch((err) => {
+        console.error(`Failed to delete S3 file: ${file.key}`, err);
+        return { success: false, error: "Failed to delete file" };
+      });
+
+    // 2. Delete from DB
+    const mutation = await MUTATIONS.deleteFile(file.id);
+    if (!mutation.success)
+      return { success: false as const, error: ERRORS.FOLDER_DELETION_FAILED };
+  }
+
+  // Delete the folder
+  const mutation = await MUTATIONS.deleteFolder(folderId);
+  if (!mutation.success)
+    return { success: false as const, error: ERRORS.FOLDER_DELETION_FAILED };
+
+  // Refresh the page
+  const c = await cookies();
+  c.set("force-refresh", JSON.stringify(Math.random()));
+
+  return { success: true, data: { folderId } };
+}
+
 // Accepts: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF
 function convertToJpeg(buffer: Buffer): Promise<Buffer> {
   return sharp(buffer).jpeg({ quality: 90 }).toBuffer();
@@ -336,10 +332,9 @@ function convertToJpeg(buffer: Buffer): Promise<Buffer> {
 
 export async function uploadAvatar(
   avatar: File,
-): Promise<ActionResponse<{ url: string }>> {
+): Promise<Result<{ url: string }>> {
   const session = await auth();
-
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
   if (avatar.size > 5 * 1024 * 1024)
     return { success: false, error: "This file is too large" };
@@ -365,11 +360,9 @@ export async function uploadAvatar(
 
 export async function updateUserProfile(
   unsafeData: z.infer<typeof updateProfileSchema>,
-): Promise<ActionResponse<{ message: string }>> {
+): Promise<Result<{ message: string }>> {
   const session = await auth();
-  if (!session?.userId) {
-    return { success: false, error: "Unauthorized" };
-  }
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
   const { data, error, success } = updateProfileSchema.safeParse(unsafeData);
   if (!success) {
@@ -380,19 +373,18 @@ export async function updateUserProfile(
   let avatarUrl: string | undefined;
 
   if (avatar instanceof File) {
-    try {
-      const res = await uploadAvatar(avatar);
-      if (res.success) {
-        avatarUrl = res.data.url;
-      }
-    } catch (err) {
-      return { success: false, error: "Failed to upload avatar." };
-    }
+    const res = await uploadAvatar(avatar).catch((e) => ({
+      success: false as const,
+      error: ERRORS.UPLOAD_FAILED,
+    }));
+    if (!res.success) return res;
+
+    avatarUrl = res.data.url;
   } else if (typeof avatar === "string") {
     avatarUrl = avatar;
   }
 
-  await updateUser(session.userId, {
+  await MUTATIONS.updateUser(session.userId, {
     name,
     username,
     image: avatarUrl,
@@ -404,136 +396,118 @@ export async function updateUserProfile(
   };
 }
 
-export async function deleteFolder(
-  folderId: string,
-): Promise<ActionResponse<{ folderId: string }>> {
-  const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
-
-  const rootFolder = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.id, folderId),
-      eq(foldersSchema.ownerId, session.userId),
-    ),
-    with: {
-      files: true,
-    },
-  });
-
-  if (!rootFolder) {
-    return { success: false, error: "Folder not found" };
-  }
-
-  const allFolders = await getAllSubfolders(folderId);
-
-  const allFiles = [
-    ...rootFolder.files,
-    ...allFolders.flatMap((folder) => folder.files),
-  ];
-
-  for (const file of allFiles) {
-    try {
-      await s3.send(
-        new DeleteObjectCommand({
-          Bucket: env.S3_FILE_BUCKET_NAME,
-          Key: file.key,
-        }),
-      );
-    } catch (err) {
-      console.error(`Failed to delete S3 file: ${file.key}`, err);
-      return { success: false, error: "Failed to delete file" };
-    }
-  }
-
-  // Delete root folder (all descendants are cascade deleted)
-  await db.delete(foldersSchema).where(eq(foldersSchema.id, folderId));
-
-  return { success: true, data: { folderId } };
-}
-
 export async function renameFolder(
   folderId: string,
-  newName: string,
-): Promise<ActionResponse<{ folderId: string; name: string }>> {
+  name: string,
+): Promise<Result<{ folderId: string; name: string }>> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
-  const { success, data, error } = fileNameSchema.safeParse({ name: newName });
-  if (!success) {
-    return { success: false, error: error.message };
-  }
+  const { success, error } = fileNameSchema.safeParse({ name });
+  if (!success) return { success: false, error: error.message };
 
-  const folder = await db.query.folders.findFirst({
-    where: and(
-      eq(foldersSchema.id, folderId),
-      eq(foldersSchema.ownerId, session.userId),
-    ),
-    with: {
-      parent: true,
-    },
+  const mutation = await MUTATIONS.renameFolder({
+    userId: session.userId,
+    newName: name,
+    folderId,
   });
+  if (!mutation.success) return mutation;
 
-  if (!folder) return { success: false, error: "Folder not found" };
-
-  // Cannot rename Root, Trash, Shared or Starred
-  if (!folder.parentId || !folder.parent?.parentId)
-    return { success: false, error: "Forbidden" };
-
-  try {
-    await db
-      .update(foldersSchema)
-      .set({ name: data.name })
-      .where(eq(foldersSchema.id, folderId));
-  } catch (err) {
-    if (isUniqueConstraintViolation(err)) {
-      return {
-        success: false,
-        error: `Folder named "${folder.name}" already exists`,
-      };
-    }
-
-    return { success: false, error: "Something went wrong" };
-  }
-
-  return { success: true, data: { folderId, name: data.name } };
+  return { success: true, data: { folderId, name: name } };
 }
 
 export async function renameFile(
   fileId: string,
-  newName: string,
-): Promise<ActionResponse<{ fileId: string; name: string }>> {
+  name: string,
+): Promise<Result<{ fileId: string; name: string }>> {
   const session = await auth();
-  if (!session?.userId) return { success: false, error: "Unauthorized" };
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
-  const { success, data, error } = fileNameSchema.safeParse({ name: newName });
-  if (!success) {
-    return { success: false, error: error.message };
-  }
+  const { success, error } = fileNameSchema.safeParse({ name });
+  if (!success) return { success: false, error: error.message };
 
-  const file = await db.query.files.findFirst({
-    where: and(
-      eq(filesSchema.id, fileId),
-      eq(filesSchema.ownerId, session.userId),
-    ),
+  const mutation = await MUTATIONS.renameFile({
+    userId: session.userId,
+    newName: name,
+    fileId,
   });
+  if (!mutation.success) return mutation;
 
-  if (!file) return { success: false, error: "File not found" };
+  return { success: true, data: { fileId, name: name } };
+}
 
-  try {
-    await db
-      .update(filesSchema)
-      .set({ name: data.name })
-      .where(eq(filesSchema.id, fileId));
-  } catch (err) {
-    if (isUniqueConstraintViolation(err)) {
-      return {
-        success: false,
-        error: `File named "${newName}" already exists`,
-      };
-    }
+export async function shareFile({
+  fileId,
+  email,
+  permission,
+}: {
+  fileId: string;
+  email: string;
+  permission: "view" | "edit";
+}): Promise<Result<null>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
 
-    return { success: false, error: "Something went wrong" };
-  }
+  // Check permissions
+  const fileQuery = await QUERIES.getFileById(fileId);
+  if (!fileQuery.success)
+    return { success: false, error: ERRORS.FILE_NOT_FOUND };
 
-  return { success: true, data: { fileId, name: data.name } };
+  if (fileQuery.data.ownerId !== session.userId)
+    return { success: false, error: ERRORS.FORBIDDEN };
+
+  // Check user exists
+  const userQuery = await QUERIES.getUserByEmail(email);
+  if (!userQuery.success) return userQuery;
+
+  const userToShareWith = userQuery.data;
+
+  // Share file
+  const mutation = await MUTATIONS.shareFile(
+    fileId,
+    userToShareWith.id,
+    session.userId,
+    permission,
+  );
+  if (!mutation.success) return mutation;
+
+  return { success: true, data: null };
+}
+
+export async function shareFolder({
+  fileId: folderId,
+  email,
+  permission,
+}: {
+  fileId: string;
+  email: string;
+  permission: "view" | "edit";
+}): Promise<Result<null>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Check permissions
+  const folderQuery = await QUERIES.getFolderById(folderId);
+  if (!folderQuery.success)
+    return { success: false, error: ERRORS.FILE_NOT_FOUND };
+
+  if (folderQuery.data.ownerId !== session.userId)
+    return { success: false, error: ERRORS.FORBIDDEN };
+
+  // Check user exists
+  const userQuery = await QUERIES.getUserByEmail(email);
+  if (!userQuery.success) return userQuery;
+
+  const userToShareWith = userQuery.data;
+
+  // Share folder
+  const mutation = await MUTATIONS.shareFolder(
+    folderId,
+    userToShareWith.id,
+    session.userId,
+    permission,
+  );
+  if (!mutation.success) return mutation;
+
+  return { success: true, data: null };
 }

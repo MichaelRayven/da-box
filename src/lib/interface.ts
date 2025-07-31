@@ -37,7 +37,7 @@ export type FolderType = {
 
 export type AccountType = AdapterAccountType | "credentials";
 
-export type ActionResponse<T> =
+export type Result<T> =
   | {
       success: true;
       data: T;
