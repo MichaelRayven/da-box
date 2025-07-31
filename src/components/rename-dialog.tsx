@@ -1,7 +1,6 @@
 "use client";
 
 import { EditIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { useControllableState } from "~/hook/useControllableState";
 import { RenameForm } from "./rename-form"; // adjust path as needed
@@ -15,7 +14,7 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import { useContextMenuStore } from "~/lib/store/context-menu";
-import { renameFile } from "~/server/actions";
+import { renameFile, renameFolder } from "~/server/actions";
 import { useMutation } from "@tanstack/react-query";
 import { useDriveStore } from "~/lib/store/drive";
 
@@ -37,9 +36,8 @@ export function RenameDialog({
   ),
   currentName = "",
 }: RenameDialogProps) {
-  const file = useContextMenuStore((s) => s.selectedFile)!;
-  const closeDialog = useContextMenuStore((s) => s.closeRenameDialog);
-  const renameFileLocal = useDriveStore((s) => s.renameFile);
+  const { item, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
+  // const renameFileLocal = useDriveStore((s) => s.renameFile);
 
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -49,13 +47,17 @@ export function RenameDialog({
 
   const mutation = useMutation({
     async mutationFn(data: { name: string }) {
-      const result = await renameFile(file.id, data.name);
+      let result: Awaited<ReturnType<typeof renameFile | typeof renameFolder>>;
+      if (type === "file") {
+        result = await renameFile(item!.id, data.name);
+      } else {
+        result = await renameFolder(item!.id, data.name);
+      }
+
       if (!result.success) throw new Error(result.error);
-      return result.data;
     },
     onSuccess(data) {
-      renameFileLocal(data.fileId, data.name);
-      closeDialog();
+      setOpen(false);
     },
     onError(error: Error) {
       toast.error(error.message, {
@@ -76,6 +78,7 @@ export function RenameDialog({
         <RenameForm
           defaultName={currentName}
           isPending={mutation.isPending}
+          error={mutation.error?.message}
           onSubmit={(values) => mutation.mutate(values)}
           submitButton={(isPending) => (
             <div className="flex justify-end gap-2 pt-2">

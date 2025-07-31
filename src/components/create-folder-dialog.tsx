@@ -55,7 +55,7 @@ export function CreateFolderDialog({
       return response.data.folder;
     },
     onSuccess: (data, name) => {
-      addFolder(data);
+      addFolder({ url: `/drive/folders/${data.id}`, ...data });
       toast.success(`Created folder "${name}"`);
       setOpen(false);
     },

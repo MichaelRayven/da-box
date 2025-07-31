@@ -28,7 +28,7 @@ interface CreateFolderFormProps {
 export function CreateFolderForm({
   className,
   error,
-  isPending,
+  isPending = false,
   onSubmit = () => {},
   submitButton = (isPending) => (
     <Button type="submit" className="mt-2 w-full">

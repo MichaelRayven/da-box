@@ -27,6 +27,7 @@ import * as QUERIES from "./db/queries";
 import * as ERRORS from "~/lib/errors";
 import { auth } from "./auth";
 import { s3 } from "./s3";
+import { revalidatePath } from "next/cache";
 
 export async function getFileViewingUrl(
   fileId: string,
@@ -320,8 +321,7 @@ export async function deleteFile(
     await MUTATIONS.deleteFile(fileId);
 
     // 3. Force revalidation cookie
-    const c = await cookies();
-    c.set("force-refresh", JSON.stringify(Math.random()));
+    revalidatePath("/drive/files/[fileId]", "page");
 
     return { success: true, data: { fileId } };
   } catch (err) {
@@ -370,8 +370,7 @@ export async function deleteFolder(
     return { success: false as const, error: ERRORS.FOLDER_DELETION_FAILED };
 
   // Refresh the page
-  const c = await cookies();
-  c.set("force-refresh", JSON.stringify(Math.random()));
+  revalidatePath("/drive/files/[fileId]", "page");
 
   return { success: true, data: { folderId } };
 }
@@ -463,6 +462,8 @@ export async function renameFolder(
   });
   if (!mutation.success) return mutation;
 
+  revalidatePath("/drive/files/[fileId]", "page");
+
   return { success: true, data: { folderId, name: name } };
 }
 
@@ -481,6 +482,8 @@ export async function renameFile(
     newName: name,
   });
   if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
 
   return { success: true, data: { fileId, name: name } };
 }
