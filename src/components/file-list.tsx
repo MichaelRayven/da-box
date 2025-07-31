@@ -27,9 +27,8 @@ export default function FileList({
   const storeFiles = useDriveStore((s) => s.files);
   const storeFolders = useDriveStore((s) => s.folders);
 
-  const files = storeFiles.length > 0 ? storeFiles : (initialFiles ?? []);
-  const folders =
-    storeFolders.length > 0 ? storeFolders : (initialFolders ?? []);
+  const files = storeFiles.length > 0 ? storeFiles : initialFiles ?? [];
+  const folders = storeFolders.length > 0 ? storeFolders : initialFolders ?? [];
 
   const {
     isShareOpen,
@@ -55,10 +54,10 @@ export default function FileList({
         </TableHeader>
         <TableBody>
           {folders.map((item) => (
-            <FolderRow folder={item} key={item.id} />
+            <FolderRow folder={item} key={item.url} />
           ))}
           {files.map((item) => (
-            <FileRow file={item} key={item.id} />
+            <FileRow file={item} key={item.url} />
           ))}
         </TableBody>
       </Table>

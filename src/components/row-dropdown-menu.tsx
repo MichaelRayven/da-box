@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-export function FileDropdownMenu({
+export function RowDropdownMenu({
   onDownload,
   onShare,
   onRename,
@@ -35,8 +35,7 @@ export function FileDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={onDownload} aria-label="Download file">
-          <DownloadIcon />
-          Download
+          <DownloadIcon /> Download
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onShare} aria-label="Share file">
           <ShareIcon /> Share
@@ -45,8 +44,7 @@ export function FileDropdownMenu({
           <EditIcon /> Rename
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onDelete} aria-label="Delete file">
-          <Trash2Icon />
-          Delete
+          <Trash2Icon /> Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -9,7 +9,7 @@ import {
   ContextMenuTrigger,
 } from "./ui/context-menu";
 
-export function FileContextMenu({
+export function RowContextMenu({
   children,
   onDownload,
   onShare,
@@ -30,16 +30,13 @@ export function FileContextMenu({
           <DownloadIcon /> Download
         </ContextMenuItem>
         <ContextMenuItem onClick={onShare} aria-label="Share file">
-          <ShareIcon />
-          Share
+          <ShareIcon /> Share
         </ContextMenuItem>
         <ContextMenuItem onClick={onRename} aria-label="Rename file">
-          <EditIcon />
-          Rename
+          <EditIcon /> Rename
         </ContextMenuItem>
         <ContextMenuItem onClick={onDelete} aria-label="Delete file">
-          <Trash2Icon />
-          Delete
+          <Trash2Icon /> Delete
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
