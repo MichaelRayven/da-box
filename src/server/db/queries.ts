@@ -14,67 +14,52 @@ import type { Result } from "~/lib/interface";
 import { handleError } from "./utils";
 
 /**
- * Get all parent folders of a given folder, excluding the root folder.
- * @returns Array of parent folders
+ * Get all parent folders of a given folder until reaching the root or a folder not owned by or shared with the user.
+ * Excludes the root folder
+ * @returns Array of accessible parent folders or error if a folder is not found.
  */
 export async function getParentsForFolder(
-  folderId: string,
-): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
-  const parents: (typeof foldersSchema.$inferSelect)[] = [];
-  let currentId: string | null = folderId;
-
-  while (currentId !== null) {
-    const folderResult = await getFolderById(currentId);
-    if (!folderResult.success) {
-      return folderResult; // Propagate error (e.g., folder not found)
-    }
-    parents.unshift(folderResult.data);
-    currentId = folderResult.data.parentId;
-  }
-
-  return { success: true, data: parents };
-}
-
-/**
- * Get all parent folders of a given folder until reaching the root or a folder not owned by or shared with the user.
- * @returns Array of accessible parent folders
- */
-export async function getParentsForSharedFolder(
   folderId: string,
   userId: string,
 ): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
   const parents: (typeof foldersSchema.$inferSelect)[] = [];
   let currentId: string | null = folderId;
 
-  while (currentId !== null) {
-    const folderResult = await getFolderById(currentId);
-    if (!folderResult.success) {
-      return folderResult; // Propagate error (e.g., folder not found)
-    }
-    const folder = folderResult.data;
+  try {
+    while (currentId) {
+      const [result] = await db
+        .select({
+          folder: foldersSchema,
+          share: shared,
+        })
+        .from(foldersSchema)
+        .leftJoin(
+          shared,
+          and(
+            eq(shared.folderId, foldersSchema.id),
+            eq(shared.sharedWithId, userId),
+          ),
+        )
+        .where(eq(foldersSchema.id, currentId));
 
-    // Check if the folder is owned by or shared with the user
-    if (folder.ownerId !== userId) {
-      const shares = await db
-        .select({ id: shared.id })
-        .from(shared)
-        .where(
-          and(eq(shared.folderId, currentId), eq(shared.sharedWithId, userId)),
-        );
+      if (!result?.folder) {
+        return { success: false, error: ERRORS.FOLDER_NOT_FOUND };
+      }
 
-      if (shares.length <= 0) {
-        break; // Stop if the folder is not accessible
+      if (result.folder.ownerId === userId || result.share) {
+        parents.unshift(result.folder);
+        currentId = result.folder.parentId;
+      } else {
+        break;
       }
     }
-
-    parents.unshift(folder);
-    currentId = folder.parentId;
+  } catch (e) {
+    return handleError(e);
   }
 
-  parents.shift(); // Remove the queried folder (not a parent)
+  parents.shift(); // Remove root
   return { success: true, data: parents };
 }
-
 /**
  * Get a folder by its ID.
  * @returns Folder or error if not found.
@@ -119,22 +104,15 @@ export async function getFileById(
  * Get the root folder for a user.
  * @returns Root folder with subfolders or error if not found.
  */
-export async function getRootFolderForUser(userId: string): Promise<
-  Result<
-    typeof foldersSchema.$inferSelect & {
-      folders: (typeof foldersSchema.$inferSelect)[];
-    }
-  >
-> {
+export async function getRootFolderForUser(
+  userId: string,
+): Promise<Result<typeof foldersSchema.$inferSelect>> {
   return db.query.folders
     .findFirst({
       where: and(
         eq(foldersSchema.ownerId, userId),
         isNull(foldersSchema.parentId),
       ),
-      with: {
-        folders: true,
-      },
     })
     .then((folder) => {
       if (!folder) {
@@ -149,7 +127,6 @@ export async function getRootFolderForUser(userId: string): Promise<
 }
 
 /**
- * Get all non-hidden files in a folder.
  * @returns Array of files.
  */
 export async function getFiles(
@@ -158,9 +135,7 @@ export async function getFiles(
   return db
     .select()
     .from(filesSchema)
-    .where(
-      and(eq(filesSchema.parentId, folderId), eq(filesSchema.hidden, false)),
-    )
+    .where(and(eq(filesSchema.parentId, folderId)))
     .then((files) => ({ success: true as const, data: files }))
     .catch(handleError);
 }
@@ -184,7 +159,7 @@ export async function getFolders(
  * Recursively fetch all subfolders of a given folder with their files.
  * @returns Array of subfolders with their files.
  */
-export async function getAllSubfolders(
+export async function getAllNestedFolders(
   folderId: string,
 ): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
   const allFolders = [];
@@ -255,11 +230,7 @@ export async function getSharedWithUser(userId: string): Promise<
     .from(shared)
     .leftJoin(
       filesSchema,
-      and(
-        eq(shared.fileId, filesSchema.id),
-        eq(filesSchema.trashed, false),
-        eq(filesSchema.hidden, false),
-      ),
+      and(eq(shared.fileId, filesSchema.id), eq(filesSchema.trashed, false)),
     )
     .leftJoin(
       foldersSchema,
@@ -268,14 +239,10 @@ export async function getSharedWithUser(userId: string): Promise<
         eq(foldersSchema.trashed, false),
       ),
     )
-    .where(eq(shared.sharedWithId, userId))
+    .where(and(eq(shared.sharedWithId, userId), isNull(shared.parentId)))
     .then((results) => {
-      const files = results
-        .filter((r) => r.files !== null)
-        .map((r) => r.files) as (typeof filesSchema.$inferSelect)[];
-      const folders = results
-        .filter((r) => r.folders !== null)
-        .map((r) => r.folders) as (typeof foldersSchema.$inferSelect)[];
+      const files = results.map((r) => r.files).filter((r) => r !== null);
+      const folders = results.map((r) => r.folders).filter((r) => r !== null);
       return { success: true as const, data: { files, folders } };
     })
     .catch(handleError);
@@ -289,23 +256,25 @@ export async function getStarredForUser(userId: string): Promise<
 > {
   return db
     .select({
-      files: filesSchema,
-      folders: foldersSchema,
+      file: filesSchema,
+      folder: foldersSchema,
     })
     .from(starred)
     .leftJoin(
       filesSchema,
       and(eq(starred.fileId, filesSchema.id), eq(filesSchema.trashed, false)),
     )
-    .leftJoin(foldersSchema, eq(starred.folderId, foldersSchema.id))
+    .leftJoin(
+      foldersSchema,
+      and(
+        eq(starred.fileId, foldersSchema.id),
+        eq(foldersSchema.trashed, false),
+      ),
+    )
     .where(eq(starred.userId, userId))
     .then((results) => {
-      const files = results
-        .filter((r) => r.files !== null)
-        .map((r) => r.files) as (typeof filesSchema.$inferSelect)[];
-      const folders = results
-        .filter((r) => r.folders !== null)
-        .map((r) => r.folders) as (typeof foldersSchema.$inferSelect)[];
+      const files = results.map((r) => r.file).filter((r) => r !== null);
+      const folders = results.map((r) => r.folder).filter((r) => r !== null);
       return { success: true as const, data: { files, folders } };
     })
     .catch(handleError);
@@ -339,122 +308,78 @@ export async function getTrashedForUser(userId: string): Promise<
     }))
     .catch(handleError);
 }
-export async function getRecentFiles(
+
+type Resource = "file" | "folder";
+type Action = "view" | "edit" | "share";
+
+async function hasAccessToResource(
+  type: Resource,
+  resourceId: string,
+  ownerId: string,
   userId: string,
-  limit = 10,
-): Promise<Result<(typeof filesSchema.$inferSelect)[]>> {
-  return Promise.all([
-    db
-      .select()
-      .from(filesSchema)
-      .where(
-        and(
-          eq(filesSchema.ownerId, userId),
-          eq(filesSchema.hidden, false),
-          eq(filesSchema.trashed, false),
-        ),
-      )
-      .orderBy(desc(filesSchema.modified))
-      .limit(limit)
-      .catch(() => []),
-    db
-      .select({ file: filesSchema })
-      .from(shared)
-      .innerJoin(
-        filesSchema,
-        and(
-          eq(shared.fileId, filesSchema.id),
-          eq(filesSchema.hidden, false),
-          eq(filesSchema.trashed, false),
-        ),
-      )
-      .where(eq(shared.sharedWithId, userId))
-      .orderBy(desc(filesSchema.modified))
-      .limit(limit)
-      .catch(() => []),
-  ])
-    .then(([ownedFiles, sharedResults]) => {
-      const sharedFiles = sharedResults.map((r) => r.file);
-      const allFiles = [...ownedFiles, ...sharedFiles]
-        .sort(
-          (a, b) =>
-            new Date(b.modified!).getTime() - new Date(a.modified!).getTime(),
-        )
-        .slice(0, limit);
-      return { success: true as const, data: allFiles };
-    })
-    .catch(handleError);
+  action: Action,
+): Promise<boolean> {
+  if (ownerId === userId) return true;
+  if (action === "share") return false;
+
+  const share = await db.query.shared.findFirst({
+    where: and(
+      eq(type === "file" ? shared.fileId : shared.folderId, resourceId),
+      eq(shared.sharedWithId, userId),
+    ),
+  });
+
+  return (
+    !!share && (share.permission === "edit" || share.permission === action)
+  );
 }
 
-export async function getFileIfAccessible(
+export async function requestFileFor(
   fileId: string,
   userId: string,
-  permission: "edit" | "view" = "view",
+  action: Action = "view",
 ): Promise<Result<typeof filesSchema.$inferSelect>> {
-  const fileResult = await getFileById(fileId);
-  if (!fileResult.success) {
-    return fileResult; // File not found
-  }
+  const result = await getFileById(fileId);
+  if (!result.success) return result;
 
-  const { data: file } = fileResult;
-  const isOwner = file.ownerId === userId;
+  const file = result.data;
+  const allowed = await hasAccessToResource(
+    "file",
+    file.ownerId,
+    fileId,
+    userId,
+    action,
+  );
 
-  const share = await db.query.shared.findFirst({
-    where: and(eq(shared.fileId, fileId), eq(shared.sharedWithId, userId)),
-  });
-  const isShared =
-    !!share && (share.permission === "edit" || share.permission === permission);
-
-  if (!isOwner && !isShared) {
-    return {
-      success: false,
-      error: ERRORS.FORBIDDEN,
-    };
-  }
-
-  if (file.hidden || file.trashed) {
+  if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
+  if (file.trashed)
     return { success: false, error: ERRORS.FILE_NOT_ACCESSIBLE };
-  }
 
-  return { success: true, data: fileResult.data };
+  return { success: true, data: file };
 }
 
-/**
- *  Returns folder when accessible (not hidden, not is trash, user has required permissions)
- * @param folderId string
- * @param userId string
- * @param permission "view" or "edit"
- * @returns Folder on success
- */
-export async function getFolderIfAccessible(
+export async function requestFolderFor(
   folderId: string,
   userId: string,
-  permission: "edit" | "view" = "view",
+  action: Action = "view",
 ): Promise<Result<typeof foldersSchema.$inferSelect>> {
-  const folderResult = await getFolderById(folderId);
-  if (!folderResult.success) {
-    return folderResult; // Folder not found
-  }
+  const result = await getFolderById(folderId);
+  if (!result.success) return result;
 
-  const { data: folder } = folderResult;
-  const isOwner = folder.ownerId === userId;
+  const folder = result.data;
+  const allowed = await hasAccessToResource(
+    "folder",
+    folder.ownerId,
+    folderId,
+    userId,
+    action,
+  );
 
-  const share = await db.query.shared.findFirst({
-    where: and(eq(shared.folderId, folderId), eq(shared.sharedWithId, userId)),
-  });
-
-  const isShared =
-    !!share && (share.permission === "edit" || share.permission === permission);
-
-  if (!isOwner && !isShared) {
-    return { success: false, error: ERRORS.FORBIDDEN };
-  }
-
-  if (folder.trashed) {
+  if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
+  if (folder.trashed)
     return { success: false, error: ERRORS.FOLDER_NOT_ACCESSIBLE };
-  }
 
-  return { success: true, data: folderResult.data };
+  return { success: true, data: folder };
 }
 
 export async function getUserByEmail(
@@ -479,4 +404,42 @@ export async function getUserByEmail(
       };
     })
     .catch(handleError);
+}
+
+export async function fileExists(
+  name: string,
+  parentId: string,
+): Promise<Result<boolean>> {
+  try {
+    const existing = await db.query.files.findFirst({
+      where: and(
+        eq(filesSchema.name, name),
+        eq(filesSchema.parentId, parentId),
+        eq(filesSchema.trashed, false),
+      ),
+    });
+
+    return { success: true, data: !!existing };
+  } catch (error) {
+    return { success: false, error: "Failed to check file existence" };
+  }
+}
+
+export async function folderExists(
+  name: string,
+  parentId: string,
+): Promise<Result<boolean>> {
+  try {
+    const existing = await db.query.folders.findFirst({
+      where: and(
+        eq(foldersSchema.name, name),
+        eq(foldersSchema.parentId, parentId),
+        eq(foldersSchema.trashed, false),
+      ),
+    });
+
+    return { success: true, data: !!existing };
+  } catch (error) {
+    return { success: false, error: "Failed to check folder existence" };
+  }
 }

@@ -34,7 +34,6 @@ export const files = createTable(
     size: d.integer("size").notNull(),
     key: d.text("key").notNull().unique(),
     type: d.text("type").notNull(),
-    hidden: d.boolean("hidden").notNull(), // Used to hide file during uploading
     parentId: d
       .text("parentId")
       .notNull()
@@ -54,11 +53,10 @@ export const files = createTable(
   (table) => [
     index("owner_files_idx").on(table.ownerId),
     index("parent_files_idx").on(table.parentId),
-    unique("unique_file_per_parent").on(table.parentId, table.name),
   ],
 );
 
-export const filesRelations = relations(files, ({ one }) => ({
+export const filesRelations = relations(files, ({ one, many }) => ({
   owner: one(users, {
     fields: [files.ownerId],
     references: [users.id],
@@ -69,6 +67,10 @@ export const filesRelations = relations(files, ({ one }) => ({
     fields: [files.parentId],
     references: [folders.id],
     relationName: "folder_files", // 👈 must match the one in foldersRelations
+  }),
+
+  shared: many(shared, {
+    relationName: "file_shared",
   }),
 }));
 
@@ -103,7 +105,6 @@ export const folders = createTable(
     }).onDelete("cascade"),
     index("owner_folders_idx").on(table.ownerId),
     index("parent_folders_idx").on(table.parentId),
-    unique("unique_folder_per_parent").on(table.parentId, table.name),
   ],
 );
 
@@ -127,6 +128,10 @@ export const foldersRelations = relations(folders, ({ one, many }) => ({
   folders: many(folders, {
     relationName: "folder_children",
   }),
+
+  shared: many(shared, {
+    relationName: "folder_shared",
+  }),
 }));
 
 export const permission = pgEnum("permission", ["view", "edit"]);
@@ -146,6 +151,7 @@ export const shared = createTable(
       .text("sharedWithId")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    parentId: d.text("parentId"),
     fileId: d
       .text("fileId")
       .references(() => files.id, { onDelete: "cascade" }),
@@ -159,10 +165,28 @@ export const shared = createTable(
       .notNull(),
   }),
   (table) => [
+    foreignKey({
+      name: "shared_parent_foreign_key",
+      foreignColumns: [table.id],
+      columns: [table.parentId],
+    }).onDelete("cascade"),
     unique("unique_file_share").on(table.sharedWithId, table.fileId),
     unique("unique_folder_share").on(table.sharedWithId, table.folderId),
   ],
 );
+
+const sharedRelations = relations(shared, ({ one, many }) => ({
+  folder: one(folders, {
+    fields: [shared.folderId],
+    references: [folders.id],
+    relationName: "folder_shared",
+  }),
+  file: one(files, {
+    fields: [shared.fileId],
+    references: [files.id],
+    relationName: "file_shared",
+  }),
+}));
 
 export const starred = createTable(
   "starred_table",

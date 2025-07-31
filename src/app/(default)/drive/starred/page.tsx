@@ -1,7 +1,8 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { onboardUser } from "~/server/db/mutations";
-import { getRootFolderForUser } from "~/server/db/queries";
+import { getRootFolderForUser, getStarredForUser } from "~/server/db/queries";
+import DriveContents from "../../_components/drive-contents";
 
 export default async function StarredFolderPage() {
   const session = await auth();
@@ -10,12 +11,20 @@ export default async function StarredFolderPage() {
 
   const root = await getRootFolderForUser(session.user.id);
 
-  if (!root) {
+  if (!root.success) {
     const rootFolderId = await onboardUser(session.user.id);
     return redirect(`/drive/folders/${rootFolderId}`);
   }
 
-  const folder = root.folders.find((f) => f.name === "Starred")!;
+  const starred = await getStarredForUser(session.userId);
 
-  return redirect(`/drive/folders/${folder.id}`);
+  if (!starred.success) return notFound();
+
+  return (
+    <DriveContents
+      crumbs={[{ name: "Starred", url: "/drive/starred" }]}
+      files={starred.data.files}
+      folders={starred.data.folders}
+    />
+  );
 }

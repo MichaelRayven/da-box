@@ -4,11 +4,11 @@ import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
 import { UploadFileDialog } from "~/components/upload-file-dialog";
-import type { FileType, FolderType } from "~/lib/interface";
+import type { Crumb, FileType, FolderType } from "~/lib/interface";
 import DriveStoreHydrator from "./drive-store-hydrator";
 
 export default function DriveContents(props: {
-  parents?: FolderType[];
+  crumbs?: Crumb[];
   files?: FileType[];
   folders?: FolderType[];
 }) {
@@ -16,7 +16,7 @@ export default function DriveContents(props: {
     <div className="flex-1 p-6">
       <div className="mb-6 flex items-center justify-between">
         <Breadcrumbs
-          breadcrumbs={props.parents}
+          breadcrumbs={props.crumbs}
           className="flex items-center space-x-2"
         />
 

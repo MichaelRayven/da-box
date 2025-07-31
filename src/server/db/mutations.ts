@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "~/server/db";
 import {
   folders as foldersSchema,
@@ -8,6 +8,7 @@ import {
   users,
   shared,
   starred,
+  files,
 } from "./schema";
 import { isUniqueConstraintViolation } from "~/lib/utils";
 import type { Result } from "~/lib/interface";
@@ -64,29 +65,15 @@ export async function onboardUser(userId: string): Promise<Result<string>> {
 }
 
 /**
- * Recursively mark a folder and all its descendants as trashed.
+ * Mark a folder as trashed.
  */
 export async function trashFolder(folderId: string): Promise<Result<null>> {
   return db
-    .transaction(async (tx) => {
-      const query = await QUERIES.getAllSubfolders(folderId);
-      if (!query.success) throw new Error(query.error);
-
-      const subfolderIds = query.data.map((f) => f.id);
-
-      const foldersToTrash = [...subfolderIds, folderId];
-
-      await Promise.all([
-        tx
-          .update(foldersSchema)
-          .set({ trashed: true })
-          .where(inArray(foldersSchema.id, foldersToTrash)),
-        tx
-          .update(filesSchema)
-          .set({ trashed: true })
-          .where(inArray(filesSchema.parentId, foldersToTrash)),
-      ]);
-    })
+    .update(foldersSchema)
+    .set({ trashed: true })
+    .where(
+      and(eq(foldersSchema.id, folderId), isNotNull(foldersSchema.parentId)),
+    )
     .then(handleSuccess)
     .catch(handleError);
 }
@@ -104,28 +91,30 @@ export async function trashFile(fileId: string): Promise<Result<null>> {
 }
 
 /**
- * Recursively recover a trashed folder and its descendants.
+ * Recover folder if the name is available
  */
 export async function recoverFolder(folderId: string): Promise<Result<null>> {
   return db
     .transaction(async (tx) => {
-      const query = await QUERIES.getAllSubfolders(folderId);
-      if (!query.success) throw new Error(query.error);
+      const query = await QUERIES.getFolderById(folderId);
+      if (!query.success) throw new Error(ERRORS.FOLDER_NOT_FOUND);
 
-      const subfolderIds = query.data.map((f) => f.id);
+      const existing = await tx.query.folders.findFirst({
+        where: and(
+          eq(foldersSchema.parentId, query.data.parentId!),
+          eq(foldersSchema.name, query.data.name),
+          eq(foldersSchema.trashed, false),
+        ),
+      });
 
-      const foldersToRecover = [...subfolderIds, folderId];
+      if (existing) {
+        throw new Error(ERRORS.FOLDER_ALREADY_EXISTS);
+      }
 
-      await Promise.all([
-        tx
-          .update(foldersSchema)
-          .set({ trashed: false })
-          .where(inArray(foldersSchema.id, foldersToRecover)),
-        tx
-          .update(filesSchema)
-          .set({ trashed: false })
-          .where(inArray(filesSchema.parentId, foldersToRecover)),
-      ]);
+      return tx
+        .update(foldersSchema)
+        .set({ trashed: false })
+        .where(eq(foldersSchema.id, folderId));
     })
     .then(handleSuccess)
     .catch(handleError);
@@ -136,9 +125,27 @@ export async function recoverFolder(folderId: string): Promise<Result<null>> {
  */
 export async function recoverFile(fileId: string): Promise<Result<null>> {
   return db
-    .update(filesSchema)
-    .set({ trashed: false })
-    .where(eq(filesSchema.id, fileId))
+    .transaction(async (tx) => {
+      const query = await QUERIES.getFileById(fileId);
+      if (!query.success) throw new Error(ERRORS.FILE_NOT_FOUND);
+
+      const existing = await tx.query.files.findFirst({
+        where: and(
+          eq(filesSchema.parentId, query.data.parentId!),
+          eq(filesSchema.name, query.data.name),
+          eq(filesSchema.trashed, false),
+        ),
+      });
+
+      if (existing) {
+        throw new Error(ERRORS.FILE_ALREADY_EXISTS);
+      }
+
+      return tx
+        .update(filesSchema)
+        .set({ trashed: false })
+        .where(eq(filesSchema.id, fileId));
+    })
     .then(handleSuccess)
     .catch(handleError);
 }
@@ -165,37 +172,87 @@ export async function deleteFolder(folderId: string): Promise<Result<null>> {
     .catch(handleError);
 }
 
-export async function shareFile(
-  fileId: string,
-  sharedWithId: string,
-  sharedById: string,
-  permission: "view" | "edit" = "view",
-): Promise<Result<null>> {
-  return db
-    .insert(shared)
-    .values({ fileId, sharedWithId, sharedById, permission })
-    .onConflictDoNothing()
-    .then(handleSuccess)
-    .catch(handleError);
+export async function shareFile({
+  fileId,
+  sharedWithId,
+  permission = "view",
+}: {
+  fileId: string;
+  sharedWithId: string;
+  permission: "view" | "edit";
+}): Promise<Result<null>> {
+  return db.transaction(async (tx) => {
+    // Check if file exists
+    const file = await tx.query.files.findFirst({
+      where: eq(filesSchema.id, fileId),
+      with: {
+        parent: true,
+      },
+    });
+
+    if (!file) return { success: false, error: ERRORS.FILE_NOT_FOUND };
+
+    // Check if parent is shared
+    const share = await tx.query.shared.findFirst({
+      where: and(
+        eq(shared.sharedWithId, sharedWithId),
+        eq(shared.folderId, file.parent.id),
+      ),
+    });
+
+    return tx
+      .insert(shared)
+      .values({
+        fileId,
+        sharedWithId,
+        sharedById: file.parent.ownerId,
+        parentId: share?.id,
+        permission,
+      })
+      .onConflictDoNothing()
+      .then(handleSuccess)
+      .catch(handleError);
+  });
 }
 
 /**
  * Share a folder recursively with a user (includes child folders and files).
  */
-export async function shareFolder(
-  folderId: string,
-  sharedWithId: string,
-  sharedById: string,
-  permission: "view" | "edit" = "view",
-): Promise<Result<null>> {
-  const query = await QUERIES.getAllSubfolders(folderId);
-  if (!query.success) return query;
-
-  const subfolderIds = query.data.map((f) => f.id);
-  const folderIds = [...subfolderIds, folderId];
-
+export async function shareFolder({
+  folderId,
+  sharedWithId,
+  permission = "view",
+}: {
+  folderId: string;
+  sharedWithId: string;
+  permission: "view" | "edit";
+}): Promise<Result<null>> {
   return db
     .transaction(async (tx) => {
+      const folder = await tx.query.folders.findFirst({
+        where: eq(foldersSchema.id, folderId),
+        with: {
+          parent: true,
+        },
+      });
+
+      if (!folder) throw new Error(ERRORS.FOLDER_NOT_FOUND);
+      if (!folder.parent) throw new Error(ERRORS.FOLDER_IS_ROOT);
+
+      const share = await tx.query.shared.findFirst({
+        where: and(
+          eq(shared.sharedWithId, sharedWithId),
+          eq(shared.folderId, folder.parent.id),
+        ),
+      });
+
+      // Get nested folders and files
+      const query = await QUERIES.getAllNestedFolders(folderId);
+      if (!query.success) throw new Error(ERRORS.FOLDER_SHARE_FAILED);
+
+      const subfolderIds = query.data.map((f) => f.id);
+      const folderIds = [...subfolderIds, folderId];
+
       const files = await tx
         .select({ id: filesSchema.id })
         .from(filesSchema)
@@ -205,14 +262,26 @@ export async function shareFolder(
       const folderShares = folderIds.map((id) =>
         tx
           .insert(shared)
-          .values({ folderId: id, sharedWithId, sharedById, permission })
+          .values({
+            folderId: id,
+            sharedWithId,
+            sharedById: folder.parent!.ownerId,
+            parentId: share?.id,
+            permission,
+          })
           .onConflictDoNothing(),
       );
 
       const fileShares = files.map((file) =>
         tx
           .insert(shared)
-          .values({ fileId: file.id, sharedWithId, sharedById, permission })
+          .values({
+            fileId: file.id,
+            sharedWithId,
+            sharedById: folder.parent!.ownerId,
+            parentId: share?.id,
+            permission,
+          })
           .onConflictDoNothing(),
       );
 
@@ -225,10 +294,13 @@ export async function shareFolder(
 /**
  * Remove sharing for a single file.
  */
-export async function unshareFile(
-  fileId: string,
-  sharedWithId: string,
-): Promise<Result<null>> {
+export async function unshareFile({
+  fileId,
+  sharedWithId,
+}: {
+  fileId: string;
+  sharedWithId: string;
+}): Promise<Result<null>> {
   return db
     .delete(shared)
     .where(
@@ -239,51 +311,20 @@ export async function unshareFile(
 }
 
 /**
- * Recursively remove sharing for a folder and all its contents.
+ * Remove sharing for a single folder.
  */
-export async function unshareFolder(
-  folderId: string,
-  sharedWithId: string,
-): Promise<Result<null>> {
+export async function unshareFolder({
+  folderId,
+  sharedWithId,
+}: {
+  folderId: string;
+  sharedWithId: string;
+}): Promise<Result<null>> {
   return db
-    .transaction(async (tx) => {
-      const query = await QUERIES.getAllSubfolders(folderId);
-      if (!query.success) throw new Error(query.error);
-
-      const subfolderIds = query.data.map((f) => f.id);
-
-      const folderIds = [...subfolderIds, folderId];
-
-      const files = await tx
-        .select({ id: filesSchema.id })
-        .from(filesSchema)
-        .where(inArray(filesSchema.parentId, folderIds))
-        .catch(() => []);
-
-      const folderDelete = tx
-        .delete(shared)
-        .where(
-          and(
-            inArray(shared.folderId, folderIds),
-            eq(shared.sharedWithId, sharedWithId),
-          ),
-        );
-
-      const fileDelete =
-        files.length > 0
-          ? tx.delete(shared).where(
-              and(
-                inArray(
-                  shared.fileId,
-                  files.map((f) => f.id),
-                ),
-                eq(shared.sharedWithId, sharedWithId),
-              ),
-            )
-          : Promise.resolve();
-
-      await Promise.all([folderDelete, fileDelete]);
-    })
+    .delete(shared)
+    .where(
+      and(eq(shared.folderId, folderId), eq(shared.sharedWithId, sharedWithId)),
+    )
     .then(handleSuccess)
     .catch(handleError);
 }
@@ -350,30 +391,22 @@ export async function unstarFolder(
  * Creates a file in a specified folder, ensuring unique naming and propagating sharing permissions from the parent folder.
  */
 export async function createFile({
-  userId,
   name,
   parentId,
   key,
   size,
   type,
-  hidden = false,
 }: {
-  userId: string;
   name: string;
   parentId: string;
   key: string;
   size: number;
   type: string;
-  hidden: boolean;
 }): Promise<Result<typeof filesSchema.$inferSelect>> {
   return db
     .transaction(async (tx) => {
       // 1. Check parent exists
-      const query = await QUERIES.getFolderIfAccessible(
-        parentId,
-        userId,
-        "edit",
-      );
+      const query = await QUERIES.getFolderById(parentId);
       if (!query.success) throw new Error(query.error);
       const parent = query.data;
 
@@ -382,6 +415,7 @@ export async function createFile({
         where: and(
           eq(filesSchema.parentId, parentId),
           eq(filesSchema.name, name),
+          eq(filesSchema.trashed, false),
         ),
       });
 
@@ -389,7 +423,7 @@ export async function createFile({
         throw new Error(ERRORS.FILE_ALREADY_EXISTS);
       }
 
-      // Insert the new file as hidden
+      // Insert the new file
       const [file] = await tx
         .insert(filesSchema)
         .values({
@@ -399,7 +433,6 @@ export async function createFile({
           key,
           size,
           type,
-          hidden,
         })
         .returning();
 
@@ -412,6 +445,8 @@ export async function createFile({
         .select({
           sharedWithId: shared.sharedWithId,
           sharedById: shared.sharedById,
+          parentId: shared.parentId,
+          fileId: shared.fileId,
         })
         .from(shared)
         .where(eq(shared.folderId, parentId));
@@ -422,9 +457,10 @@ export async function createFile({
             tx
               .insert(shared)
               .values({
-                fileId: file.id,
+                fileId: entry.fileId,
                 sharedWithId: entry.sharedWithId,
                 sharedById: entry.sharedById,
+                parentId: entry.parentId,
               })
               .onConflictDoNothing(),
           ),
@@ -437,21 +473,19 @@ export async function createFile({
 }
 
 /**
- * Creates a folder under a specified parent folder, ensuring unique naming, permissions and propagating sharing permissions.
+ * Creates a folder under a specified parent folder, ensuring unique naming and propagating sharing permissions.
  */
-export async function createFolder(
-  name: string,
-  parentId: string,
-  userId: string,
-): Promise<Result<typeof foldersSchema.$inferSelect>> {
+export async function createFolder({
+  name,
+  parentId,
+}: {
+  name: string;
+  parentId: string;
+}): Promise<Result<typeof foldersSchema.$inferSelect>> {
   return db
     .transaction(async (tx) => {
       // 1. Check parent exists
-      const query = await QUERIES.getFolderIfAccessible(
-        parentId,
-        userId,
-        "edit",
-      );
+      const query = await QUERIES.getFolderById(parentId);
       if (!query.success) throw new Error(query.error);
       const parent = query.data;
 
@@ -460,6 +494,7 @@ export async function createFolder(
         where: and(
           eq(foldersSchema.parentId, parentId),
           eq(foldersSchema.name, name),
+          eq(foldersSchema.trashed, false),
         ),
       });
 
@@ -482,6 +517,8 @@ export async function createFolder(
         .select({
           sharedById: shared.sharedById,
           sharedWithId: shared.sharedWithId,
+          parentId: shared.parentId,
+          folderId: shared.folderId,
         })
         .from(shared)
         .where(eq(shared.folderId, parentId));
@@ -492,9 +529,10 @@ export async function createFolder(
             tx
               .insert(shared)
               .values({
-                folderId: folder.id,
+                folderId: entry.folderId,
                 sharedWithId: entry.sharedWithId,
                 sharedById: entry.sharedById,
+                parentId: entry.parentId,
               })
               .onConflictDoNothing(),
           ),
@@ -508,20 +546,18 @@ export async function createFolder(
     .catch(handleError);
 }
 
-// Renames the file, handles permission checking and name collisions
+// Renames the file, handles name collisions
 export async function renameFile({
-  userId,
   fileId,
   newName,
 }: {
-  userId: string;
   fileId: string;
   newName: string;
 }): Promise<Result<string>> {
   return db
     .transaction(async (tx) => {
       // 1. Check parent exists
-      const query = await QUERIES.getFileIfAccessible(fileId, userId, "edit");
+      const query = await QUERIES.getFileById(fileId);
       if (!query.success) throw new Error(query.error);
       const file = query.data;
 
@@ -530,6 +566,7 @@ export async function renameFile({
         where: and(
           eq(filesSchema.parentId, file.parentId),
           eq(filesSchema.name, newName),
+          eq(filesSchema.trashed, false),
         ),
       });
 
@@ -550,24 +587,18 @@ export async function renameFile({
     .catch(handleError);
 }
 
-// Renames the folder, handles permission checking and name collisions
+// Renames the folder, handles name collisions
 export async function renameFolder({
-  userId,
   folderId,
   newName,
 }: {
-  userId: string;
   folderId: string;
   newName: string;
 }): Promise<Result<string>> {
   return db
     .transaction(async (tx) => {
       // 1. Check parent exists
-      const query = await QUERIES.getFolderIfAccessible(
-        folderId,
-        userId,
-        "edit",
-      );
+      const query = await QUERIES.getFolderById(folderId);
       if (!query.success) throw new Error(query.error);
       const folder = query.data;
 

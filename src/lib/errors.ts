@@ -14,6 +14,8 @@ export const FOLDER_ALREADY_EXISTS =
   "A folder with the same name already in the current location.";
 export const FOLDER_CREATION_FAILED = "Failed to create folder.";
 export const FOLDER_DELETION_FAILED = "Failed to delete a folder.";
+export const FOLDER_SHARE_FAILED = "Failed to share folder.";
+export const FOLDER_IS_ROOT = "Cannot modify root";
 
 export const USER_NOT_FOUND = "This user doesn't exist";
 export const USERNAME_TAKEN = "This username is already taken.";

@@ -1,7 +1,8 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { onboardUser } from "~/server/db/mutations";
-import { getRootFolderForUser } from "~/server/db/queries";
+import { getRootFolderForUser, getTrashedForUser } from "~/server/db/queries";
+import DriveContents from "../../_components/drive-contents";
 
 export default async function TrashFolderPage() {
   const session = await auth();
@@ -10,12 +11,20 @@ export default async function TrashFolderPage() {
 
   const root = await getRootFolderForUser(session.user.id);
 
-  if (!root) {
+  if (!root.success) {
     const rootFolderId = await onboardUser(session.user.id);
     return redirect(`/drive/folders/${rootFolderId}`);
   }
 
-  const folder = root.folders.find((f) => f.name === "Trash")!;
+  const trashed = await getTrashedForUser(session.userId);
 
-  return redirect(`/drive/folders/${folder.id}`);
+  if (!trashed.success) return notFound();
+
+  return (
+    <DriveContents
+      crumbs={[{ name: "Trash", url: "/drive/trash" }]}
+      files={trashed.data.files}
+      folders={trashed.data.folders}
+    />
+  );
 }
