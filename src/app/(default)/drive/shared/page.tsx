@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { onboardUser } from "~/server/db/mutations";
 import { getRootFolderForUser, getSharedWithUser } from "~/server/db/queries";
-import DriveContents from "../../_components/drive-contents";
+import DriveContents from "~/components/drive-contents";
 
 export default async function SharedFolderPage() {
   const session = await auth();

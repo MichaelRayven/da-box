@@ -24,6 +24,8 @@ export type FileType = {
   size: number;
   type: string;
   modified: Date | null;
+  trashed: boolean;
+  starred: boolean;
   ownerId: string;
 };
 
@@ -32,8 +34,14 @@ export type FolderType = {
   name: string;
   url: string;
   modified: Date | null;
+  trashed: boolean;
+  starred: boolean;
   ownerId: string;
 };
+
+export type ItemType =
+  | { type: "file"; data: FileType }
+  | { type: "folder"; data: FolderType };
 
 export type Crumb = {
   name: string;

@@ -5,7 +5,6 @@ import FileList from "~/components/file-list";
 import { Button } from "~/components/ui/button";
 import { UploadFileDialog } from "~/components/upload-file-dialog";
 import type { Crumb, FileType, FolderType } from "~/lib/interface";
-import DriveStoreHydrator from "./drive-store-hydrator";
 
 export default function DriveContents(props: {
   crumbs?: Crumb[];
@@ -18,11 +17,6 @@ export default function DriveContents(props: {
         <Breadcrumbs
           breadcrumbs={props.crumbs}
           className="flex items-center space-x-2"
-        />
-
-        <DriveStoreHydrator
-          files={props.files ?? []}
-          folders={props.folders ?? []}
         />
 
         <div className="flex items-center space-x-2">

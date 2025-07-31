@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import DriveContents from "~/app/(default)/_components/drive-contents";
+import DriveContents from "~/components/drive-contents";
 import { auth } from "~/server/auth";
 import { getFiles, getFolders, getParentsForFolder } from "~/server/db/queries";
 

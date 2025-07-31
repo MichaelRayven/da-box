@@ -1,9 +1,5 @@
 import { create } from "zustand";
-import type { FileType, FolderType } from "../interface";
-
-type ItemType =
-  | { type: "file"; item: FileType }
-  | { type: "folder"; item: FolderType };
+import type { ItemType } from "../interface";
 
 interface UseContextMenuStore {
   selectedItem: ItemType | null;
