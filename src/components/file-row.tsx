@@ -8,6 +8,7 @@ import { useContextMenuStore } from "~/lib/store/context-menu";
 import { formatFileSize } from "~/lib/utils";
 import { RowContextMenu } from "./row-context-menu";
 import { RowDropdownMenu } from "./row-dropdown-menu";
+import { restoreFolder } from "~/server/actions";
 
 export function FileRow({ file }: { file: FileType }) {
   const { openRenameDialog, openShareDialog, openDeleteDialog } =
@@ -64,9 +65,10 @@ export function FolderRow({ folder }: { folder: FolderType }) {
   return (
     <RowContextMenu
       onDownload={handleDownload}
-      onDelete={handleDelete}
+      onTrash={handleDelete}
       onShare={handleShare}
       onRename={handleRename}
+      onRestore={async () => await restoreFolder(folder.id)}
     >
       <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
         <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">

@@ -41,6 +41,9 @@ export async function getFileViewingUrl(
   });
   if (!query.success) return { success: false, error: ERRORS.FORBIDDEN };
 
+  if (query.data.trashed)
+    return { success: false, error: ERRORS.FILE_NOT_ACCESSIBLE };
+
   const command = new GetObjectCommand({
     Bucket: env.S3_FILE_BUCKET_NAME,
     Key: query.data.key,

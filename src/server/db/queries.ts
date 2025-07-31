@@ -356,8 +356,6 @@ export async function requestFileFor({
   );
 
   if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
-  if (file.trashed)
-    return { success: false, error: ERRORS.FILE_NOT_ACCESSIBLE };
 
   return { success: true, data: file };
 }
@@ -384,8 +382,6 @@ export async function requestFolderFor({
   );
 
   if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
-  if (folder.trashed)
-    return { success: false, error: ERRORS.FOLDER_NOT_ACCESSIBLE };
 
   return { success: true, data: folder };
 }

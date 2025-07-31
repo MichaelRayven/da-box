@@ -20,11 +20,15 @@ export function RowDropdownMenu({
   onShare,
   onRename,
   onDelete,
+  onRestore,
+  onTrash,
 }: {
-  onDownload: () => void;
-  onShare: () => void;
-  onRename: () => void;
-  onDelete: () => void;
+  onDownload?: () => void;
+  onShare?: () => void;
+  onRename?: () => void;
+  onDelete?: () => void;
+  onRestore?: () => void;
+  onTrash?: () => void;
 }) {
   return (
     <DropdownMenu>
@@ -34,18 +38,36 @@ export function RowDropdownMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={onDownload} aria-label="Download item">
-          <DownloadIcon /> Download
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onShare} aria-label="Share item">
-          <ShareIcon /> Share
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onRename} aria-label="Rename item">
-          <EditIcon /> Rename
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDelete} aria-label="Delete item">
-          <Trash2Icon /> Delete
-        </DropdownMenuItem>
+        {onDownload && (
+          <DropdownMenuItem onClick={onDownload} aria-label="Download item">
+            <DownloadIcon /> Download
+          </DropdownMenuItem>
+        )}
+        {onShare && (
+          <DropdownMenuItem onClick={onShare} aria-label="Share item">
+            <ShareIcon /> Share
+          </DropdownMenuItem>
+        )}
+        {onRename && (
+          <DropdownMenuItem onClick={onRename} aria-label="Rename item">
+            <EditIcon /> Rename
+          </DropdownMenuItem>
+        )}
+        {onDelete && (
+          <DropdownMenuItem onClick={onDelete} aria-label="Delete item">
+            <Trash2Icon /> Delete
+          </DropdownMenuItem>
+        )}
+        {onRestore && (
+          <DropdownMenuItem onClick={onRestore} aria-label="Restore item">
+            <EditIcon /> Restore
+          </DropdownMenuItem>
+        )}
+        {onTrash && (
+          <DropdownMenuItem onClick={onTrash} aria-label="Move to trash">
+            <Trash2Icon /> Move to trash
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
