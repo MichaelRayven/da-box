@@ -12,7 +12,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import mime from "mime-types";
-import { cookies } from "next/headers";
 import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
@@ -68,6 +67,8 @@ export async function createFolder(
 
   const mutation = await MUTATIONS.createFolder({ name, parentId });
   if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
 
   return { success: true, data: { folder: mutation.data } };
 }
@@ -371,6 +372,105 @@ export async function deleteFolder(
 
   // Refresh the page
   revalidatePath("/drive/files/[fileId]", "page");
+
+  return { success: true, data: { folderId } };
+}
+
+export async function trashFile(
+  fileId: string,
+): Promise<Result<{ fileId: string }>> {
+  const session = await auth();
+
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
+  }
+
+  const query = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "edit",
+  });
+  if (!query.success) return query;
+
+  const mutation = await MUTATIONS.trashFile(fileId);
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+
+  return { success: true, data: { fileId } };
+}
+
+export async function trashFolder(
+  folderId: string,
+): Promise<Result<{ folderId: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const query = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "edit",
+  });
+  if (!query.success) return query;
+
+  // Trash the folder itself
+  const mutation = await MUTATIONS.trashFolder(folderId);
+  if (!mutation.success)
+    return { success: false, error: ERRORS.FOLDER_DELETION_FAILED };
+
+  revalidatePath("/drive/folders/[folderId]", "page");
+
+  return { success: true, data: { folderId } };
+}
+
+export async function restoreFile(
+  fileId: string,
+): Promise<Result<{ fileId: string }>> {
+  const session = await auth();
+
+  if (!session?.userId) {
+    return {
+      success: false,
+      error: ERRORS.UNAUTHORIZED,
+    };
+  }
+
+  const query = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "edit",
+  });
+  if (!query.success) return query;
+
+  const mutation = await MUTATIONS.restoreFile(fileId);
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+
+  return { success: true, data: { fileId } };
+}
+
+export async function restoreFolder(
+  folderId: string,
+): Promise<Result<{ folderId: string }>> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const query = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "edit",
+  });
+  if (!query.success) return query;
+
+  // Restore the folder itself
+  const mutation = await MUTATIONS.restoreFolder(folderId);
+  if (!mutation.success) mutation;
+
+  revalidatePath("/drive/folders/[folderId]", "page");
 
   return { success: true, data: { folderId } };
 }

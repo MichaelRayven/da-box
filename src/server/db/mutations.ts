@@ -91,9 +91,9 @@ export async function trashFile(fileId: string): Promise<Result<null>> {
 }
 
 /**
- * Recover folder if the name is available
+ * Restore folder if the name is available
  */
-export async function recoverFolder(folderId: string): Promise<Result<null>> {
+export async function restoreFolder(folderId: string): Promise<Result<null>> {
   return db
     .transaction(async (tx) => {
       const query = await QUERIES.getFolderById(folderId);
@@ -121,9 +121,9 @@ export async function recoverFolder(folderId: string): Promise<Result<null>> {
 }
 
 /**
- * Recover a single file from trash.
+ * Restore a single file from trash.
  */
-export async function recoverFile(fileId: string): Promise<Result<null>> {
+export async function restoreFile(fileId: string): Promise<Result<null>> {
   return db
     .transaction(async (tx) => {
       const query = await QUERIES.getFileById(fileId);

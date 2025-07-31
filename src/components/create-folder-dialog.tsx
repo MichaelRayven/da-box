@@ -33,7 +33,6 @@ export function CreateFolderDialog({
   ),
   ...props
 }: CreateFolderDialogProps) {
-  const addFolder = useDriveStore((s) => s.addFolder);
   const { folderId } = useParams();
 
   const [open, setOpen] = useControllableState({
@@ -48,15 +47,9 @@ export function CreateFolderDialog({
       if (!parent) throw new Error("No parent folder selected");
 
       const response = await createFolder(name, parent);
-      if (!response.success) {
-        throw new Error(response.error);
-      }
-
-      return response.data.folder;
+      if (!response.success) throw new Error(response.error);
     },
-    onSuccess: (data, name) => {
-      addFolder({ url: `/drive/folders/${data.id}`, ...data });
-      toast.success(`Created folder "${name}"`);
+    onSuccess: () => {
       setOpen(false);
     },
     onError: (error: Error) => {

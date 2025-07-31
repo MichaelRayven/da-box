@@ -126,31 +126,31 @@ export async function getRootFolderForUser(
     .catch(handleError);
 }
 
-/**
- * @returns Array of files.
- */
 export async function getFiles(
   folderId: string,
 ): Promise<Result<(typeof filesSchema.$inferSelect)[]>> {
   return db
     .select()
     .from(filesSchema)
-    .where(and(eq(filesSchema.parentId, folderId)))
+    .where(
+      and(eq(filesSchema.parentId, folderId), eq(filesSchema.trashed, false)),
+    )
     .then((files) => ({ success: true as const, data: files }))
     .catch(handleError);
 }
 
-/**
- * Get all subfolders in a folder.
- * @returns Array of subfolders.
- */
 export async function getFolders(
   folderId: string,
 ): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
   return db
     .select()
     .from(foldersSchema)
-    .where(eq(foldersSchema.parentId, folderId))
+    .where(
+      and(
+        eq(foldersSchema.parentId, folderId),
+        eq(foldersSchema.trashed, false),
+      ),
+    )
     .then((folders) => ({ success: true as const, data: folders }))
     .catch(handleError);
 }
