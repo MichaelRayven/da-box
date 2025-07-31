@@ -807,3 +807,113 @@ export async function getShared(): Promise<
     },
   };
 }
+
+export async function getSharedWithForFile(fileId: string): Promise<
+  Result<
+    {
+      id: string;
+      username: string;
+      email: string;
+      image?: string;
+      permission: "view" | "edit";
+    }[]
+  >
+> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const canView = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "share",
+  });
+  if (!canView.success) return canView;
+
+  return QUERIES.getSharedWithForFile({
+    fileId: fileId,
+    userId: session.userId,
+  });
+}
+
+export async function getSharedWithForFolder(folderId: string): Promise<
+  Result<
+    {
+      id: string;
+      username: string;
+      email: string;
+      image?: string;
+      permission: "view" | "edit";
+    }[]
+  >
+> {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const canView = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "share",
+  });
+  if (!canView.success) return canView;
+
+  return QUERIES.getSharedWithForFolder({
+    folderId: folderId,
+    userId: session.userId,
+  });
+}
+
+export async function unshareFile(fileId: string, email: string) {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Check permissions
+  const canShare = await QUERIES.requestFileFor({
+    fileId,
+    userId: session.userId,
+    action: "share",
+  });
+  if (!canShare.success) return canShare;
+
+  // Check user exists
+  const userQuery = await QUERIES.getUserByEmail(email);
+  if (!userQuery.success) return userQuery;
+  const sharedWithId = userQuery.data.id;
+
+  const mutation = await MUTATIONS.unshareFile({
+    fileId,
+    sharedWithId,
+  });
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/files/[fileId]", "page");
+
+  return { success: true, data: null };
+}
+
+export async function unshareFolder(folderId: string, email: string) {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  // Check permissions
+  const canShare = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "share",
+  });
+  if (!canShare.success) return canShare;
+
+  // Check user exists
+  const userQuery = await QUERIES.getUserByEmail(email);
+  if (!userQuery.success) return userQuery;
+  const sharedWithId = userQuery.data.id;
+
+  const mutation = await MUTATIONS.unshareFolder({
+    folderId,
+    sharedWithId,
+  });
+  if (!mutation.success) return mutation;
+
+  revalidatePath("/drive/folders/[folderId]", "page");
+
+  return { success: true, data: null };
+}

@@ -104,3 +104,8 @@ export const fileNameSchema = z.object({
       message: 'Filename contains invalid characters (<>:"|?*)',
     }),
 });
+
+export const shareSchema = z.object({
+  email: emailSchema,
+  permission: z.enum(["view", "edit"]),
+});

@@ -202,6 +202,130 @@ export async function getSharedForUser(userId: string) {
 }
 
 /**
+ * Get users with whom a file is shared.
+ * @returns Array of users and their permissions if the requesting user has share access, error otherwise.
+ */
+export async function getSharedWithForFile({
+  fileId,
+  userId,
+}: {
+  fileId: string;
+  userId: string;
+}): Promise<
+  Result<
+    Array<{
+      id: string;
+      username: string;
+      email: string;
+      image?: string;
+      permission: "view" | "edit";
+    }>
+  >
+> {
+  try {
+    const fileResult = await getFileById(fileId);
+    if (!fileResult.success) return fileResult;
+
+    const file = fileResult.data;
+    const allowed = await hasAccessToResource(
+      "file",
+      fileId,
+      file.ownerId,
+      userId,
+      "share",
+    );
+    if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
+
+    const shares = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        image: users.image,
+        permission: shared.permission,
+      })
+      .from(shared)
+      .innerJoin(users, eq(shared.sharedWithId, users.id))
+      .where(eq(shared.fileId, fileId));
+
+    return {
+      success: true,
+      data: shares.map((share) => ({
+        id: share.id,
+        username: share.username ?? "",
+        email: share.email ?? "",
+        image: share.image ?? undefined,
+        permission: share.permission as "view" | "edit",
+      })),
+    };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+/**
+ * Get users with whom a folder is shared.
+ * @returns Array of users and their permissions if the requesting user has share access, error otherwise.
+ */
+export async function getSharedWithForFolder({
+  folderId,
+  userId,
+}: {
+  folderId: string;
+  userId: string;
+}): Promise<
+  Result<
+    Array<{
+      id: string;
+      username: string;
+      email: string;
+      image?: string;
+      permission: "view" | "edit";
+    }>
+  >
+> {
+  try {
+    const folderResult = await getFolderById(folderId);
+    if (!folderResult.success) return folderResult;
+
+    const folder = folderResult.data;
+    const allowed = await hasAccessToResource(
+      "folder",
+      folderId,
+      folder.ownerId,
+      userId,
+      "share",
+    );
+    if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
+
+    const shares = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        image: users.image,
+        permission: shared.permission,
+      })
+      .from(shared)
+      .innerJoin(users, eq(shared.sharedWithId, users.id))
+      .where(eq(shared.folderId, folderId));
+
+    return {
+      success: true,
+      data: shares.map((share) => ({
+        id: share.id,
+        username: share.username ?? "",
+        email: share.email ?? "",
+        image: share.image ?? undefined,
+        permission: share.permission as "view" | "edit",
+      })),
+    };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+/**
  * Recursively fetch all subfolders of a given folder with their files.
  * @returns Array of subfolders with their files.
  */
@@ -338,6 +462,11 @@ async function hasAccessToResource(
       eq(shared.sharedWithId, userId),
     ),
   });
+
+  const isTrashed = await (type === "file"
+    ? isFileInTrash(resourceId)
+    : isFolderInTrash(resourceId));
+  if (isTrashed) return false;
 
   return (
     !!share && (share.permission === "edit" || share.permission === action)
@@ -484,7 +613,7 @@ async function isFileInTrash(fileId: string): Promise<boolean> {
   return false;
 }
 
-export async function folderInTrash(folderId: string): Promise<boolean> {
+export async function isFolderInTrash(folderId: string): Promise<boolean> {
   const folder = await db.query.folders.findFirst({
     where: eq(foldersSchema.id, folderId),
     columns: { trashed: true, parentId: true },
