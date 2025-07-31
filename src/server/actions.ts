@@ -917,3 +917,16 @@ export async function unshareFolder(folderId: string, email: string) {
 
   return { success: true, data: null };
 }
+
+export async function isSharedFolder(folderId: string) {
+  const session = await auth();
+  if (!session?.userId) return { success: false, error: ERRORS.UNAUTHORIZED };
+
+  const canShare = await QUERIES.requestFolderFor({
+    folderId,
+    userId: session.userId,
+    action: "view",
+  });
+
+  return canShare.success && canShare.data.ownerId !== session.userId;
+}

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import DriveContents from "~/components/drive-contents";
-import { getFiles, getFolders } from "~/server/actions";
+import { getFiles, getFolders, isSharedFolder } from "~/server/actions";
 import { auth } from "~/server/auth";
 import { getParentsForFolder } from "~/server/db/queries";
 
@@ -31,7 +31,11 @@ export default async function GoogleDriveClone({
     url: `/drive/folders/${f.id}`,
   }));
 
-  crumbs.unshift({ name: "My Drive", url: "/drive" });
+  if (await isSharedFolder(folderId)) {
+    crumbs.unshift({ name: "Shared", url: "/drive/shared" });
+  } else {
+    crumbs.unshift({ name: "My Drive", url: "/drive" });
+  }
 
   return (
     <DriveContents crumbs={crumbs} files={files.data} folders={folders.data} />
