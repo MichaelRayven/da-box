@@ -24,7 +24,7 @@ interface UseUploadFileOptions {
     data: any,
     error: unknown,
     variables: File[],
-    context: unknown,
+    context: unknown
   ) => void;
 }
 
@@ -71,7 +71,7 @@ export function useUploadFile({
   const uploadLargeFile = async (
     file: File,
     parentId: string,
-    onPartUpload?: (file: File, partNumber: number, totalParts: number) => void,
+    onPartUpload?: (file: File, partNumber: number, totalParts: number) => void
   ) => {
     const start = await initPartialFileUpload({
       name: file.name,
@@ -138,10 +138,12 @@ export function useUploadFile({
       uploaded.push({
         ...uploadedFile,
         url: `/drive/files/${uploadedFile.key}`,
+        starred: false,
       });
       onFileUploaded?.({
         ...uploadedFile,
         url: `/drive/files/${uploadedFile.key}`,
+        starred: false,
       });
     }
 
