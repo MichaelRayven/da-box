@@ -43,6 +43,20 @@
       "when": 1753830207282,
       "tag": "0005_sudden_glorian",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1753889314129,
+      "tag": "0006_wet_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1753890030684,
+      "tag": "0007_open_blindfold",
+      "breakpoints": true
     }
   ]
 }

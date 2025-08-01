@@ -1,13 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { KeyRoundIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { KeyRoundIcon, LoaderIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -25,16 +22,31 @@ import { signInSchema } from "~/lib/validation";
 interface SignInFormProps {
   id?: string;
   className?: string;
-  showSubmit?: boolean;
+  isPending?: boolean;
+  onSubmit?: (data: z.infer<typeof signInSchema>) => void;
+  submitButton?: (isPending?: boolean) => ReactNode;
 }
 
 export function SignInForm({
   id,
   className,
-  showSubmit = true,
+  isPending,
+  onSubmit = () => {},
+  submitButton = (isPending) => (
+    <Button type="submit" disabled={isPending} className="mt-2 w-full">
+      {isPending ? (
+        <>
+          Signing in...
+          <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
+        </>
+      ) : (
+        <>
+          Sign in <KeyRoundIcon className="size-6" />
+        </>
+      )}
+    </Button>
+  ),
 }: SignInFormProps) {
-  const router = useRouter();
-
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -42,37 +54,6 @@ export function SignInForm({
       password: "",
     },
   });
-
-  const mutation = useMutation({
-    mutationFn: async (values: z.infer<typeof signInSchema>) => {
-      const result = await signIn("credentials", {
-        ...values,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        const errorMessage =
-          result.error === "CredentialsSignin"
-            ? "Invalid email or password."
-            : "Something went wrong. Please try again.";
-
-        throw new Error(errorMessage);
-      }
-    },
-    onSuccess() {
-      toast.success("Signed into an account!");
-      router.replace("/");
-    },
-    onError(error: Error) {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
-  });
-
-  const onSubmit = (values: z.infer<typeof signInSchema>) => {
-    mutation.mutate(values);
-  };
 
   return (
     <Form {...form}>
@@ -92,7 +73,7 @@ export function SignInForm({
                   type="text"
                   aria-required="true"
                   autoComplete="email"
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   placeholder="email@example.com"
                   {...field}
                 />
@@ -121,7 +102,7 @@ export function SignInForm({
                   type="password"
                   aria-required="true"
                   autoComplete="password"
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   placeholder="Password..."
                   {...field}
                 />
@@ -130,24 +111,7 @@ export function SignInForm({
             </FormItem>
           )}
         />
-        {showSubmit && (
-          <Button
-            type="submit"
-            disabled={mutation.isPending}
-            className="mt-2 w-full"
-          >
-            {mutation.isPending ? (
-              <>
-                Signing in...
-                <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
-              </>
-            ) : (
-              <>
-                Sign in <KeyRoundIcon className="size-6" />
-              </>
-            )}
-          </Button>
-        )}
+        {submitButton(isPending)}
       </form>
     </Form>
   );

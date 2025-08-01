@@ -7,12 +7,11 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
-import type { FolderType } from "~/lib/interface";
-import type { folders } from "~/server/db/schema";
+import type { Crumb } from "~/lib/interface";
 
 interface BreadcrumbProps {
   className?: string;
-  breadcrumbs?: FolderType[];
+  breadcrumbs?: Crumb[];
 }
 
 export default function Breadcrumbs({
@@ -23,11 +22,11 @@ export default function Breadcrumbs({
     <Breadcrumb className={className}>
       <BreadcrumbList>
         {breadcrumbs.map((folder, index) => (
-          <Fragment key={folder.id}>
+          <Fragment key={folder.url}>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link
-                  href={`/drive/folders/${folder.id}`}
+                  href={folder.url}
                   className="rounded-md px-4 py-2 transition-colors hover:bg-foreground/5"
                 >
                   {folder.name}

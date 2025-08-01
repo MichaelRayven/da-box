@@ -1,12 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { KeyRoundIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { KeyRoundIcon, LoaderIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import type { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
@@ -24,16 +21,31 @@ import { signUpSchema } from "~/lib/validation";
 interface SignUpFormProps {
   id?: string;
   className?: string;
-  showSubmit?: boolean;
+  isPending?: boolean;
+  onSubmit?: (data: z.infer<typeof signUpSchema>) => void;
+  submitButton?: (isPending?: boolean) => ReactNode;
 }
 
 export function SignUpForm({
   id,
   className,
-  showSubmit = true,
+  isPending,
+  onSubmit = () => {},
+  submitButton = (isPending) => (
+    <Button type="submit" className="mt-2 w-full" disabled={isPending}>
+      {isPending ? (
+        <>
+          Creating account...
+          <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
+        </>
+      ) : (
+        <>
+          Create account <KeyRoundIcon className="size-6" />
+        </>
+      )}
+    </Button>
+  ),
 }: SignUpFormProps) {
-  const router = useRouter();
-
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -44,53 +56,6 @@ export function SignUpForm({
       confirmPassword: "",
     },
   });
-
-  const mutation = useMutation({
-    mutationFn: async (values: z.infer<typeof signUpSchema>) => {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Signup failed");
-      }
-
-      return res.json();
-    },
-    onSuccess: async (data, variables) => {
-      const result = await signIn("credentials", {
-        email: variables.email,
-        password: variables.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        const errorMessage =
-          result.error === "CredentialsSignin"
-            ? "Invalid email or password."
-            : "Something went wrong. Please try again.";
-
-        throw new Error(errorMessage);
-      }
-
-      toast.success("Account created!");
-      router.replace("/onboarding");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
-  });
-
-  const onSubmit = (values: z.infer<typeof signUpSchema>) => {
-    mutation.mutate(values);
-  };
 
   return (
     <Form {...form}>
@@ -111,7 +76,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="name"
                   placeholder="John Doe..."
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -131,7 +96,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="username"
                   placeholder="Username..."
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -151,7 +116,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="email"
                   placeholder="email@example.com"
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -171,7 +136,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="new-password"
                   placeholder="Password..."
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -191,7 +156,7 @@ export function SignUpForm({
                   aria-required="true"
                   autoComplete="new-password"
                   placeholder="Confirm password..."
-                  disabled={mutation.isPending}
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -199,24 +164,7 @@ export function SignUpForm({
             </FormItem>
           )}
         />
-        {showSubmit && (
-          <Button
-            type="submit"
-            className="mt-2 w-full"
-            disabled={mutation.isPending}
-          >
-            {mutation.isPending ? (
-              <>
-                Creating account...
-                <LoaderIcon className="animation-duration-[2s] size-6 animate-spin" />
-              </>
-            ) : (
-              <>
-                Create account <KeyRoundIcon className="size-6" />
-              </>
-            )}
-          </Button>
-        )}
+        {submitButton(isPending)}
       </form>
     </Form>
   );

@@ -1,9 +1,11 @@
 "use client";
 
-import { EditIcon, LoaderIcon } from "lucide-react";
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { EditIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useControllableState } from "~/hook/useControllableState";
+import { useContextMenuStore } from "~/lib/store/context-menu";
+import { renameFile, renameFolder } from "~/server/actions";
 import { RenameForm } from "./rename-form"; // adjust path as needed
 import { Button } from "./ui/button";
 import {
@@ -33,30 +35,33 @@ export function RenameDialog({
   ),
   currentName = "",
 }: RenameDialogProps) {
+  const { data, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
+
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: false,
     onChange: onOpenChange,
   });
 
-  const [isPending, setIsPending] = useState(false);
+  const mutation = useMutation({
+    async mutationFn(newName: string) {
+      const action = type === "file" ? renameFile : renameFolder;
+      const result = await action(data!.id, newName);
+      if (!result.success) throw new Error(result.error);
+      return result;
+    },
+    onSuccess() {
+      setOpen(false);
+    },
+    onError: (error: Error) => error,
+  });
 
-  const handleSubmit = async (data: { name: string }) => {
-    setIsPending(true);
-    // toast
-    //   .promise(
-    //     onRename(data).then(() => {
-    //       setOpen(false);
-    //     }),
-    //     {
-    //       loading: "Renaming...",
-    //       success: "Renamed successfully!",
-    //       error: "Failed to rename",
-
-    //     }
-    //   )
-    //   .finally(() => );
-    setIsPending(false);
+  const handleSubmit = (newName: string) => {
+    toast.promise(mutation.mutateAsync(newName), {
+      loading: "Renaming...",
+      success: "Renamed successfully",
+      error: (error: Error) => error?.message || "Rename failed",
+    });
   };
 
   return (
@@ -70,8 +75,9 @@ export function RenameDialog({
 
         <RenameForm
           defaultName={currentName}
-          isPending={isPending}
-          onSubmit={handleSubmit}
+          isPending={mutation.isPending}
+          error={mutation.error?.message}
+          onSubmit={(values) => handleSubmit(values.name)}
           submitButton={(isPending) => (
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" asChild disabled={isPending}>

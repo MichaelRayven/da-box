@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import type z from "zod";
+import { shareSchema } from "~/lib/validation";
 import { Button } from "./ui/button";
 import {
   Form,
@@ -17,15 +18,11 @@ import {
 import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
-const shareSchema = z.object({
-  email: z.string().email("Enter a valid email"),
-  permission: z.enum(["view", "edit"]),
-});
-
 type ShareFormData = z.infer<typeof shareSchema>;
 
 interface ShareFormProps {
   isPending?: boolean;
+  error?: string;
   onSubmit?: (data: ShareFormData) => void;
   submitButton?: (isPending?: boolean) => ReactNode;
 }
@@ -40,6 +37,7 @@ function SubmitButton({ isPending = false }: { isPending?: boolean }) {
 
 export function ShareForm({
   isPending = false,
+  error,
   onSubmit = () => {},
   submitButton = (isPending) => <SubmitButton isPending={isPending} />,
 }: ShareFormProps) {
@@ -50,6 +48,8 @@ export function ShareForm({
       permission: "view",
     },
   });
+
+  if (error) form.setError("email", { message: error }, { shouldFocus: true });
 
   return (
     <Form {...form}>

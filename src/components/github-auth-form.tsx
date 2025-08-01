@@ -2,17 +2,28 @@
 
 import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 
-export function GithubAuthForm() {
+interface GithubAuthFormProps {
+  className?: string;
+  isPending?: boolean;
+}
+
+export function GithubAuthForm({ className, isPending }: GithubAuthFormProps) {
   return (
     <form
       className="flex w-full justify-center"
       action={async () => {
-        await signIn("github");
+        await signIn("github", { redirectTo: "/drive" });
       }}
     >
-      <Button type="submit" variant="secondary" className="w-full">
+      <Button
+        type="submit"
+        variant="secondary"
+        disabled={isPending}
+        className={cn("w-full", className)}
+      >
         Continue with GitHub
         <Image
           src="https://authjs.dev/img/providers/github.svg"

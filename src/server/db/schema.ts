@@ -4,6 +4,7 @@ import {
   type AnyPgColumn,
   foreignKey,
   index,
+  pgEnum,
   pgTableCreator,
   primaryKey,
   unique,
@@ -33,7 +34,6 @@ export const files = createTable(
     size: d.integer("size").notNull(),
     key: d.text("key").notNull().unique(),
     type: d.text("type").notNull(),
-    hidden: d.boolean("hidden").notNull(), // Used to hide file during uploading
     parentId: d
       .text("parentId")
       .notNull()
@@ -43,6 +43,8 @@ export const files = createTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+    trashed: d.boolean("trashed").notNull().default(false),
+    trashedAt: d.timestamp({ withTimezone: true }),
     createdAt: d
       .timestamp({ withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -51,11 +53,10 @@ export const files = createTable(
   (table) => [
     index("owner_files_idx").on(table.ownerId),
     index("parent_files_idx").on(table.parentId),
-    unique("unique_file_per_parent").on(table.parentId, table.name),
   ],
 );
 
-export const filesRelations = relations(files, ({ one }) => ({
+export const filesRelations = relations(files, ({ one, many }) => ({
   owner: one(users, {
     fields: [files.ownerId],
     references: [users.id],
@@ -66,6 +67,14 @@ export const filesRelations = relations(files, ({ one }) => ({
     fields: [files.parentId],
     references: [folders.id],
     relationName: "folder_files", // 👈 must match the one in foldersRelations
+  }),
+
+  shared: many(shared, {
+    relationName: "file_shared",
+  }),
+
+  starred: many(starred, {
+    relationName: "file_starred",
   }),
 }));
 
@@ -84,6 +93,8 @@ export const folders = createTable(
         .notNull()
         .references(() => users.id, { onDelete: "cascade" }),
       modified: d.timestamp({ withTimezone: true }).$onUpdate(() => new Date()),
+      trashed: d.boolean("trashed").notNull().default(false),
+      trashedAt: d.timestamp({ withTimezone: true }),
       createdAt: d
         .timestamp({ withTimezone: true })
         .default(sql`CURRENT_TIMESTAMP`)
@@ -98,7 +109,6 @@ export const folders = createTable(
     }).onDelete("cascade"),
     index("owner_folders_idx").on(table.ownerId),
     index("parent_folders_idx").on(table.parentId),
-    unique("unique_folder_per_parent").on(table.parentId, table.name),
   ],
 );
 
@@ -116,11 +126,109 @@ export const foldersRelations = relations(folders, ({ one, many }) => ({
   }),
 
   files: many(files, {
-    relationName: "folder_files", // 👈 must match parent relationName
+    relationName: "folder_files",
   }),
 
   folders: many(folders, {
     relationName: "folder_children",
+  }),
+
+  shared: many(shared, {
+    relationName: "folder_shared",
+  }),
+
+  starred: many(starred, {
+    relationName: "folder_starred",
+  }),
+}));
+
+export const permission = pgEnum("permission", ["view", "edit"]);
+
+export const shared = createTable(
+  "shared_table",
+  (d) => ({
+    id: d
+      .text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    sharedById: d
+      .text("sharedById")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sharedWithId: d
+      .text("sharedWithId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    parentId: d.text("parentId"),
+    fileId: d
+      .text("fileId")
+      .references(() => files.id, { onDelete: "cascade" }),
+    folderId: d
+      .text("folderId")
+      .references(() => folders.id, { onDelete: "cascade" }),
+    permission: permission().default("view"),
+    createdAt: d
+      .timestamp({ withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  }),
+  (table) => [
+    foreignKey({
+      name: "shared_parent_foreign_key",
+      foreignColumns: [table.id],
+      columns: [table.parentId],
+    }).onDelete("cascade"),
+    unique("unique_file_share").on(table.sharedWithId, table.fileId),
+    unique("unique_folder_share").on(table.sharedWithId, table.folderId),
+  ],
+);
+
+export const sharedRelations = relations(shared, ({ one, many }) => ({
+  folder: one(folders, {
+    fields: [shared.folderId],
+    references: [folders.id],
+    relationName: "folder_shared",
+  }),
+  file: one(files, {
+    fields: [shared.fileId],
+    references: [files.id],
+    relationName: "file_shared",
+  }),
+}));
+
+export const starred = createTable(
+  "starred_table",
+  (d) => ({
+    userId: d
+      .text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    fileId: d
+      .text("fileId")
+      .references(() => files.id, { onDelete: "cascade" }),
+    folderId: d
+      .text("folderId")
+      .references(() => folders.id, { onDelete: "cascade" }),
+    starredAt: d
+      .timestamp({ withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`),
+  }),
+  (table) => [
+    unique("unique_star_file").on(table.userId, table.fileId),
+    unique("unique_star_folder").on(table.userId, table.folderId),
+  ],
+);
+
+export const starredRelations = relations(starred, ({ one, many }) => ({
+  folder: one(folders, {
+    fields: [starred.folderId],
+    references: [folders.id],
+    relationName: "folder_starred",
+  }),
+  file: one(files, {
+    fields: [starred.fileId],
+    references: [files.id],
+    relationName: "file_starred",
   }),
 }));
 

@@ -1,4 +1,8 @@
 import type { AdapterAccountType } from "next-auth/adapters";
+import type {
+  files as filesSchema,
+  folders as foldersSchema,
+} from "~/server/db/schema";
 
 // export interface FileItem {
 //   id: string;
@@ -16,28 +20,38 @@ import type { AdapterAccountType } from "next-auth/adapters";
 export type FileType = {
   id: string;
   name: string;
+  url: string;
   size: number;
-  key: string;
   type: string;
-  hidden: boolean;
-  parentId: string;
-  ownerId: string;
   modified: Date | null;
-  createdAt: Date | null;
+  trashed: boolean;
+  starred: boolean;
+  ownerId: string;
+  parentId: string;
 };
 
 export type FolderType = {
   id: string;
   name: string;
-  parentId: string | null;
-  ownerId: string;
+  url: string;
   modified: Date | null;
-  createdAt: Date | null;
+  trashed: boolean;
+  starred: boolean;
+  ownerId: string;
+};
+
+export type ItemType =
+  | { type: "file"; data: FileType }
+  | { type: "folder"; data: FolderType };
+
+export type Crumb = {
+  name: string;
+  url: string;
 };
 
 export type AccountType = AdapterAccountType | "credentials";
 
-export type ActionResponse<T> =
+export type Result<T> =
   | {
       success: true;
       data: T;

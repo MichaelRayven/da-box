@@ -24,6 +24,7 @@ type RenameFormData = z.infer<typeof renameSchema>;
 interface RenameFormProps {
   defaultName?: string;
   isPending?: boolean;
+  error?: string;
   onSubmit?: (data: RenameFormData) => void;
   submitButton?: (isPending?: boolean) => ReactNode;
 }
@@ -38,6 +39,7 @@ function SubmitButton({ isPending = false }: { isPending?: boolean }) {
 
 export function RenameForm({
   defaultName = "",
+  error,
   isPending = false,
   onSubmit = () => {},
   submitButton = (isPending) => <SubmitButton isPending={isPending} />,
@@ -48,6 +50,8 @@ export function RenameForm({
       name: defaultName,
     },
   });
+
+  if (error) form.setError("name", { message: error }, { shouldFocus: true });
 
   return (
     <Form {...form}>

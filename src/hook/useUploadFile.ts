@@ -5,26 +5,26 @@ import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import type { FileType } from "~/lib/interface";
 import {
+  completeFileUpload,
   completePartialFileUpload,
-  getFileUploadUrl,
-  getUploadFilePartUrl,
-  startPartialFileUpload,
+  initPartialFileUpload,
+  startFilePartUpload,
+  startFileUpload,
 } from "~/server/actions";
+import { files } from "~/server/db/schema";
 
 interface UseUploadFileOptions {
   onSuccess?: (data: FileType[], variables: File[], context: unknown) => void;
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   onError?: (error: any, variables: File[], context: unknown) => void;
   onUpload?: (variables: File[]) => void;
   onFileUpload?: (variables: File) => void;
   onFileUploaded?: (file: FileType) => void;
   onPartUpload?: (file: File, partNumber: number, totalParts: number) => void;
   onFinished?: (
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     data: any,
     error: unknown,
     variables: File[],
-    context: unknown,
+    context: unknown
   ) => void;
 }
 
@@ -43,12 +43,11 @@ export function useUploadFile({
   const parentId = folderId as string | undefined;
 
   const uploadSmallFile = async (file: File, parentId: string) => {
-    const res = await getFileUploadUrl(
-      file.name,
-      file.type,
-      parentId,
-      file.size,
-    );
+    const res = await startFileUpload({
+      name: file.name,
+      parentId: parentId,
+    });
+
     if (!res.success) throw new Error(res.error);
 
     const putRes = await fetch(res.data.url, {
@@ -59,15 +58,25 @@ export function useUploadFile({
 
     if (!putRes.ok) throw new Error("Upload failed");
 
-    return res.data.file;
+    const completeRes = await completeFileUpload({
+      key: res.data.key,
+      name: file.name,
+      parentId: parentId,
+    });
+    if (!completeRes.success) throw new Error(completeRes.error);
+
+    return completeRes.data.file;
   };
 
   const uploadLargeFile = async (
     file: File,
     parentId: string,
-    onPartUpload?: (file: File, partNumber: number, totalParts: number) => void,
+    onPartUpload?: (file: File, partNumber: number, totalParts: number) => void
   ) => {
-    const start = await startPartialFileUpload(file.name, file.size, parentId);
+    const start = await initPartialFileUpload({
+      name: file.name,
+      parentId: parentId,
+    });
     if (!start.success) throw new Error(start.error);
 
     const totalParts = Math.ceil(file.size / PART_SIZE);
@@ -81,11 +90,11 @@ export function useUploadFile({
       const endByte = Math.min(startByte + PART_SIZE, file.size);
       const blob = file.slice(startByte, endByte);
 
-      const presigned = await getUploadFilePartUrl(
-        start.data.key,
-        start.data.uploadId,
-        partNumber,
-      );
+      const presigned = await startFilePartUpload({
+        key: start.data.key,
+        uploadId: start.data.uploadId,
+        partNumber: partNumber,
+      });
       if (!presigned.success) throw new Error(presigned.error);
 
       const uploadRes = await fetch(presigned.data.url, {
@@ -101,11 +110,13 @@ export function useUploadFile({
       parts.push({ PartNumber: partNumber, ETag: eTag });
     }
 
-    const complete = await completePartialFileUpload(
-      start.data.key,
-      start.data.uploadId,
+    const complete = await completePartialFileUpload({
+      key: start.data.key,
+      name: file.name,
+      parentId: parentId,
+      uploadId: start.data.uploadId,
       parts,
-    );
+    });
     if (!complete.success) throw new Error(complete.error);
 
     return complete.data.file;
@@ -124,8 +135,16 @@ export function useUploadFile({
           ? await uploadSmallFile(file, parentId)
           : await uploadLargeFile(file, parentId, onPartUpload);
 
-      uploaded.push(uploadedFile);
-      onFileUploaded?.(uploadedFile);
+      uploaded.push({
+        ...uploadedFile,
+        url: `/drive/files/${uploadedFile.key}`,
+        starred: false,
+      });
+      onFileUploaded?.({
+        ...uploadedFile,
+        url: `/drive/files/${uploadedFile.key}`,
+        starred: false,
+      });
     }
 
     return uploaded;

@@ -33,7 +33,6 @@ export function CreateFolderDialog({
   ),
   ...props
 }: CreateFolderDialogProps) {
-  const addFolder = useDriveStore((s) => s.addFolder);
   const { folderId } = useParams();
 
   const [open, setOpen] = useControllableState({
@@ -43,28 +42,25 @@ export function CreateFolderDialog({
   });
 
   const mutation = useMutation({
-    mutationFn: async (name: string) => {
-      const parent = folderId as string | undefined;
-      if (!parent) throw new Error("No parent folder selected");
-
+    async mutationFn(name: string) {
+      const parent = folderId as string;
       const response = await createFolder(name, parent);
-      if (!response.success) {
-        throw new Error(response.error);
-      }
-
-      return response.data.folder;
+      if (!response.success) throw new Error(response.error);
+      return response;
     },
-    onSuccess: (data, name) => {
-      addFolder(data);
-      toast.success(`Created folder "${name}"`);
+    onSuccess() {
       setOpen(false);
     },
-    onError: (error: Error) => {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
+    onError: (error: Error) => error,
   });
+
+  const handleSubmit = (newName: string) => {
+    toast.promise(mutation.mutateAsync(newName), {
+      loading: "Creating...",
+      success: "Created successfully",
+      error: (error: Error) => error?.message || "Creation failed",
+    });
+  };
 
   return (
     <Dialog {...props} open={open} onOpenChange={setOpen}>
@@ -75,7 +71,7 @@ export function CreateFolderDialog({
           <DialogTitle>Create New Folder</DialogTitle>
         </DialogHeader>
         <CreateFolderForm
-          onSubmit={(values) => mutation.mutateAsync(values.name)}
+          onSubmit={(values) => handleSubmit(values.name)}
           isPending={mutation.isPending}
           error={mutation.error?.message}
           submitButton={(isPending) => (

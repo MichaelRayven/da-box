@@ -1,8 +1,7 @@
 "use client";
 
-import { Clock, HardDrive, Home, Star, Trash2, Users } from "lucide-react";
+import { HardDrive, Home, Star, Trash2, Users } from "lucide-react";
 import Link from "next/link";
-import { CreateFolderDialog } from "~/components/create-folder-dialog";
 import { CreateObjectDropdown } from "~/components/create-object-dropdown";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";

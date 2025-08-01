@@ -15,9 +15,9 @@ import {
 } from "~/components/ui/dialog";
 import { useControllableState } from "~/hook/useControllableState";
 import { useContextMenuStore } from "~/lib/store/context-menu";
-import { deleteFile } from "~/server/actions";
+import { deleteFile, deleteFolder } from "~/server/actions";
 
-interface ShareDialogProps {
+interface DeleteDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
@@ -32,8 +32,8 @@ export function DeleteDialog({
       Share
     </Button>
   ),
-}: ShareDialogProps) {
-  const file = useContextMenuStore((s) => s.selectedFile)!;
+}: DeleteDialogProps) {
+  const { data, type } = useContextMenuStore((s) => s.selectedItem) ?? {};
 
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -43,18 +43,24 @@ export function DeleteDialog({
 
   const mutation = useMutation({
     async mutationFn() {
-      return await deleteFile(file.id);
+      const action = type === "file" ? deleteFile : deleteFolder;
+      const result = await action(data!.id);
+      if (!result.success) throw new Error(result.error);
+      return result;
     },
     onSuccess() {
-      toast.success(`Deleted "${file.name}"`);
       setOpen(false);
     },
-    onError(error: Error) {
-      toast.error(error.message, {
-        icon: <TriangleAlertIcon />,
-      });
-    },
+    onError: (error: Error) => error,
   });
+
+  const handleSubmit = () => {
+    toast.promise(mutation.mutateAsync(), {
+      loading: "Deleting...",
+      success: "Deleted successfully",
+      error: (error: Error) => error?.message || "Delete failed",
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -62,9 +68,9 @@ export function DeleteDialog({
 
       <DialogContent className="gap-6">
         <DialogHeader>
-          <DialogTitle>Delete "{file?.name}"</DialogTitle>
+          <DialogTitle>Delete "{data?.name}"</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this file?
+            Are you sure you want to delete this {type}?
             <br />
             You can't recover it after you proceed.
           </DialogDescription>
@@ -74,7 +80,7 @@ export function DeleteDialog({
           <Button variant="outline" asChild disabled={mutation.isPending}>
             <DialogClose>Cancel</DialogClose>
           </Button>
-          <form action={() => mutation.mutate()}>
+          <form action={handleSubmit}>
             <Button
               type="submit"
               variant={"destructive"}

@@ -1,7 +1,8 @@
 import { notFound, redirect } from "next/navigation";
-import DriveContents from "~/app/(default)/_components/drive-contents";
+import DriveContents from "~/components/drive-contents";
+import { getFiles, getFolders, isSharedFolder } from "~/server/actions";
 import { auth } from "~/server/auth";
-import { getFiles, getFolders, getParentsForFolder } from "~/server/db/queries";
+import { getParentsForFolder } from "~/server/db/queries";
 
 export default async function GoogleDriveClone({
   params,
@@ -12,19 +13,31 @@ export default async function GoogleDriveClone({
 
   const session = await auth();
 
-  if (!session?.user.id) return redirect("/sign-in");
+  if (!session?.userId) return redirect("/sign-in");
 
   // Execute in parallel
-  try {
-    const [folders, files, parents] = await Promise.all([
-      getFolders(folderId),
-      getFiles(folderId),
-      getParentsForFolder(folderId),
-    ]);
+  const [folders, files, parents] = await Promise.all([
+    getFolders(folderId),
+    getFiles(folderId),
+    getParentsForFolder(folderId, session.userId),
+  ]);
 
-    return <DriveContents parents={parents} files={files} folders={folders} />;
-  } catch (e) {
-    console.error(e);
-    return notFound();
+  if (!folders.success || !files.success || !parents.success) return notFound();
+
+  console.log(parents.data);
+
+  const crumbs = parents.data.map((f) => ({
+    name: f.name,
+    url: `/drive/folders/${f.id}`,
+  }));
+
+  if (await isSharedFolder(folderId)) {
+    crumbs.unshift({ name: "Shared", url: "/drive/shared" });
+  } else {
+    crumbs.unshift({ name: "My Drive", url: "/drive" });
   }
+
+  return (
+    <DriveContents crumbs={crumbs} files={files.data} folders={folders.data} />
+  );
 }

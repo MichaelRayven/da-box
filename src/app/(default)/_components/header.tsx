@@ -79,11 +79,11 @@ export default async function Header() {
                   className="cursor-pointer"
                   onClick={async () => {
                     "use server";
-                    await signOut();
+                    await signOut({ redirectTo: "/" });
                   }}
                 >
                   <LogOutIcon className="size-4" />
-                  Log out
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

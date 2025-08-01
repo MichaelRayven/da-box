@@ -1,104 +1,82 @@
 "use client";
 
-import {
-  DownloadIcon,
-  EditIcon,
-  FileTextIcon,
-  FolderIcon,
-  ShareIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { FileTextIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { TableCell, TableRow } from "~/components/ui/table";
-import type { FileType, FolderType } from "~/lib/interface";
+import { useContextMenuAction } from "~/hook/useContextMenuAction";
+import type { FileType, FolderType, ItemType } from "~/lib/interface";
 import { useContextMenuStore } from "~/lib/store/context-menu";
 import { formatFileSize } from "~/lib/utils";
-import { FileDropdownMenu } from "./file-dropdown-menu";
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "./ui/context-menu";
+  favoriteFolder,
+  restoreFile,
+  restoreFolder,
+  trashFile,
+  trashFolder,
+  unfavoriteFolder,
+} from "~/server/actions";
+import { RowContextMenu } from "./row-context-menu";
+import { RowDropdownMenu } from "./row-dropdown-menu";
 
-export function FileRow({ file }: { file: FileType }) {
-  const { openRenameDialog, openShareDialog, openDeleteDialog } =
-    useContextMenuStore();
-  const handleShare = () => openShareDialog(file);
-  const handleRename = () => openRenameDialog(file);
-  const handleDelete = () => openDeleteDialog(file);
-  const handleDownload = () => console.log("Download", file);
+// Shared row component props
+interface RowProps<T> {
+  item: T;
+  type: "file" | "folder";
+}
+
+// Generic row component for files and folders
+function ItemRow({ item }: { item: ItemType }) {
+  const actions = useContextMenuAction(item);
+
+  const isFile = item.type === "file";
+
+  const menuProps = {
+    onShare: actions.share,
+    onRename: actions.rename,
+    onDelete: actions.delete,
+    onDownload: actions.download,
+    onRestore: actions.restore,
+    onTrash: actions.trash,
+    onFavorite: actions.favorite,
+    onUnfavorite: actions.unfavorite,
+  };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
-          <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
-            <Link
-              href={`/drive/files/${file.id}`}
-              className="flex items-center gap-2 px-2"
-            >
-              <FileTextIcon className="size-6" />
-              <span className="max-w-[240px] truncate">{file.name}</span>
-            </Link>
-          </TableCell>
-          <TableCell className="w-1/6 text-gray-300">
-            {/* file.owner */}
-          </TableCell>
-          <TableCell className="w-1/6 text-gray-300">
-            {file.modified?.toDateString()}
-          </TableCell>
-          <TableCell className="w-1/6 text-gray-300">
-            {formatFileSize(file.size) || "—"}
-          </TableCell>
-          <TableCell>
-            <FileDropdownMenu
-              onDownload={handleDownload}
-              onDelete={handleDelete}
-              onShare={handleShare}
-              onRename={handleRename}
-            />
-          </TableCell>
-        </TableRow>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handleDownload} aria-label="Download file">
-          <DownloadIcon /> Download
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleShare} aria-label="Share file">
-          <ShareIcon />
-          Share
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleRename} aria-label="Rename file">
-          <EditIcon />
-          Rename
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleDelete} aria-label="Delete file">
-          <Trash2Icon />
-          Delete
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+    <RowContextMenu {...menuProps}>
+      <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
+        <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
+          <Link href={item.data.url} className="flex items-center gap-2 px-2">
+            {isFile ? (
+              <FileTextIcon className="size-6 shrink-0" />
+            ) : (
+              <FolderIcon className="size-6 shrink-0" />
+            )}
+            <span className="max-w-[240px] truncate">{item.data.name}</span>
+          </Link>
+        </TableCell>
+        <TableCell className="w-1/6 text-gray-300">
+          {/* item.data.owner */}
+        </TableCell>
+        <TableCell className="w-1/6 text-gray-300">
+          {isFile ? item.data.modified?.toDateString() : "—"}
+        </TableCell>
+        <TableCell className="w-1/6 text-gray-300">
+          {isFile ? formatFileSize(item.data.size) : "—"}
+        </TableCell>
+        <TableCell>
+          <RowDropdownMenu {...menuProps} />
+        </TableCell>
+      </TableRow>
+    </RowContextMenu>
   );
 }
 
+// Specific components for files and folders
+export function FileRow({ file }: { file: FileType }) {
+  return <ItemRow item={{ type: "file", data: file }} />;
+}
+
 export function FolderRow({ folder }: { folder: FolderType }) {
-  return (
-    <TableRow className="cursor-pointer border-gray-700 hover:bg-gray-750">
-      <TableCell className="w-1/2 min-w-[200px] p-0 text-white hover:text-blue-400">
-        <Link
-          className="flex items-center gap-2 p-2"
-          href={`/drive/folders/${folder.id}`}
-        >
-          <FolderIcon className="size-6 shrink-0" />
-          <span className="max-w-[240px] truncate">{folder.name}</span>
-        </Link>
-      </TableCell>
-      <TableCell className="w-1/6 text-gray-300">
-        {/* folder.owner */}
-      </TableCell>
-      <TableCell className="w-1/6 text-gray-300">—</TableCell>
-      <TableCell className="w-1/6 text-gray-300">—</TableCell>
-    </TableRow>
-  );
+  return <ItemRow item={{ type: "folder", data: folder }} />;
 }

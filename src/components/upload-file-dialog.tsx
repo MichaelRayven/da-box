@@ -63,7 +63,7 @@ export function UploadFileDialog({
       success: {
         message: "Files uploaded successfully!",
       },
-      error: (err) => (err as Error).message || "Upload failed",
+      error: (err: Error) => err?.message || "Upload failed",
     });
   };
 
