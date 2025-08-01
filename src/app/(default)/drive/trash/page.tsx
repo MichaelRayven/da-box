@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
+import DriveContents from "~/components/drive-contents";
 import { auth } from "~/server/auth";
 import { onboardUser } from "~/server/db/mutations";
 import { getRootFolderForUser, getTrashedForUser } from "~/server/db/queries";
-import DriveContents from "~/components/drive-contents";
 
 export default async function TrashFolderPage() {
   const session = await auth();

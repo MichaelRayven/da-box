@@ -13,9 +13,9 @@ import { GithubAuthForm } from "~/components/github-auth-form";
 import { GoogleAuthForm } from "~/components/google-auth-form";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { getSignInError } from "~/lib/utils";
 import type { emailSignInSchema, signInSchema } from "~/lib/validation";
 import { SignInForm } from "./form";
-import { getSignInError } from "~/lib/utils";
 
 export function SignInDialog() {
   const searchParams = useSearchParams();

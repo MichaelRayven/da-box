@@ -1,5 +1,6 @@
-import { useContextMenuStore } from "~/lib/store/context-menu";
 import { toast } from "sonner";
+import type { ItemType } from "~/lib/interface";
+import { useContextMenuStore } from "~/lib/store/context-menu";
 import {
   favoriteFile,
   favoriteFolder,
@@ -11,7 +12,6 @@ import {
   unfavoriteFile,
   unfavoriteFolder,
 } from "~/server/actions";
-import type { ItemType } from "~/lib/interface";
 
 export function useContextMenuAction(item: ItemType) {
   const { openRenameDialog, openShareDialog, openDeleteDialog } =

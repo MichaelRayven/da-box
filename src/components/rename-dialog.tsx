@@ -1,8 +1,11 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { EditIcon, LoaderIcon, TriangleAlertIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useControllableState } from "~/hook/useControllableState";
+import { useContextMenuStore } from "~/lib/store/context-menu";
+import { renameFile, renameFolder } from "~/server/actions";
 import { RenameForm } from "./rename-form"; // adjust path as needed
 import { Button } from "./ui/button";
 import {
@@ -13,9 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { useContextMenuStore } from "~/lib/store/context-menu";
-import { renameFile, renameFolder } from "~/server/actions";
-import { useMutation } from "@tanstack/react-query";
 
 interface RenameDialogProps {
   open?: boolean;

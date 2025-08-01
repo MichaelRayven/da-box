@@ -12,21 +12,21 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import mime from "mime-types";
+import { revalidatePath } from "next/cache";
 import sharp from "sharp";
 import type z from "zod";
 import { env } from "~/env";
+import * as ERRORS from "~/lib/errors";
 import type { FileType, FolderType, Result } from "~/lib/interface";
 import { fileNameSchema, updateProfileSchema } from "~/lib/validation";
 import type {
   files as filesSchema,
   folders as foldersSchema,
 } from "~/server/db/schema";
+import { auth } from "./auth";
 import * as MUTATIONS from "./db/mutations";
 import * as QUERIES from "./db/queries";
-import * as ERRORS from "~/lib/errors";
-import { auth } from "./auth";
 import { s3 } from "./s3";
-import { revalidatePath } from "next/cache";
 
 export async function getFileViewingUrl(
   fileId: string,

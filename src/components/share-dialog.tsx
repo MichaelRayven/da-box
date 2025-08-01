@@ -1,7 +1,9 @@
 "use client";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { LoaderIcon, Share2Icon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
+import type z from "zod";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -13,7 +15,7 @@ import {
 } from "~/components/ui/dialog";
 import { useControllableState } from "~/hook/useControllableState";
 import { useContextMenuStore } from "~/lib/store/context-menu";
-import { ShareForm } from "./share-form"; // Assuming your form is in share-form.tsx
+import type { shareSchema } from "~/lib/validation";
 import {
   getSharedWithForFile,
   getSharedWithForFolder,
@@ -22,9 +24,7 @@ import {
   unshareFile,
   unshareFolder,
 } from "~/server/actions";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import type { shareSchema } from "~/lib/validation";
-import type z from "zod";
+import { ShareForm } from "./share-form"; // Assuming your form is in share-form.tsx
 
 interface ShareDialogProps {
   open?: boolean;

@@ -1,9 +1,9 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
+import * as ERRORS from "~/lib/errors";
+import type { Result } from "~/lib/interface";
 import { db } from "~/server/db";
 import { files, folders, shared } from "./schema";
-import type { Result } from "~/lib/interface";
-import * as ERRORS from "~/lib/errors";
 
 export type Permission = "view" | "edit" | "share";
 
@@ -19,7 +19,7 @@ export interface PermissionCheck {
  */
 export async function checkFilePermissions(
   fileId: string,
-  userId: string
+  userId: string,
 ): Promise<Result<PermissionCheck>> {
   try {
     const file = await db.query.files.findFirst({
@@ -72,7 +72,7 @@ export async function checkFilePermissions(
  */
 export async function checkFolderPermissions(
   folderId: string,
-  userId: string
+  userId: string,
 ): Promise<Result<PermissionCheck>> {
   try {
     const folder = await db.query.folders.findFirst({
@@ -101,7 +101,7 @@ export async function checkFolderPermissions(
     const share = await db.query.shared.findFirst({
       where: and(
         eq(shared.folderId, folderId),
-        eq(shared.sharedWithId, userId)
+        eq(shared.sharedWithId, userId),
       ),
     });
 
@@ -129,7 +129,7 @@ export async function checkFolderPermissions(
 export async function hasFilePermission(
   fileId: string,
   userId: string,
-  permission: Permission
+  permission: Permission,
 ): Promise<boolean> {
   const result = await checkFilePermissions(fileId, userId);
   if (!result.success) return false;
@@ -152,7 +152,7 @@ export async function hasFilePermission(
 export async function hasFolderPermission(
   folderId: string,
   userId: string,
-  permission: Permission
+  permission: Permission,
 ): Promise<boolean> {
   const result = await checkFolderPermissions(folderId, userId);
   if (!result.success) return false;
@@ -175,7 +175,7 @@ export async function hasFolderPermission(
 export async function requireFilePermission(
   fileId: string,
   userId: string,
-  permission: Permission
+  permission: Permission,
 ): Promise<Result<null>> {
   const hasPermission = await hasFilePermission(fileId, userId, permission);
   if (!hasPermission) {
@@ -190,7 +190,7 @@ export async function requireFilePermission(
 export async function requireFolderPermission(
   folderId: string,
   userId: string,
-  permission: Permission
+  permission: Permission,
 ): Promise<Result<null>> {
   const hasPermission = await hasFolderPermission(folderId, userId, permission);
   if (!hasPermission) {

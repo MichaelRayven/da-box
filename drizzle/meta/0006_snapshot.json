@@ -81,12 +81,8 @@
           "name": "da-box_accounts_table_userId_da-box_users_table_id_fk",
           "tableFrom": "da-box_accounts_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -156,12 +152,8 @@
           "name": "da-box_authenticator_table_userId_da-box_users_table_id_fk",
           "tableFrom": "da-box_authenticator_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -171,9 +163,7 @@
         "da-box_authenticator_table_credentialID_unique": {
           "name": "da-box_authenticator_table_credentialID_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "credentialID"
-          ]
+          "columns": ["credentialID"]
         }
       },
       "policies": {},
@@ -296,12 +286,8 @@
           "name": "da-box_files_table_parentId_da-box_folders_table_id_fk",
           "tableFrom": "da-box_files_table",
           "tableTo": "da-box_folders_table",
-          "columnsFrom": [
-            "parentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parentId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -309,12 +295,8 @@
           "name": "da-box_files_table_ownerId_da-box_users_table_id_fk",
           "tableFrom": "da-box_files_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "ownerId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ownerId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -324,17 +306,12 @@
         "da-box_files_table_key_unique": {
           "name": "da-box_files_table_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "key"
-          ]
+          "columns": ["key"]
         },
         "unique_file_per_parent": {
           "name": "unique_file_per_parent",
           "nullsNotDistinct": false,
-          "columns": [
-            "parentId",
-            "name"
-          ]
+          "columns": ["parentId", "name"]
         }
       },
       "policies": {},
@@ -433,12 +410,8 @@
           "name": "da-box_folders_table_ownerId_da-box_users_table_id_fk",
           "tableFrom": "da-box_folders_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "ownerId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ownerId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -446,12 +419,8 @@
           "name": "parent_foreign_key",
           "tableFrom": "da-box_folders_table",
           "tableTo": "da-box_folders_table",
-          "columnsFrom": [
-            "parentId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parentId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -461,10 +430,7 @@
         "unique_folder_per_parent": {
           "name": "unique_folder_per_parent",
           "nullsNotDistinct": false,
-          "columns": [
-            "parentId",
-            "name"
-          ]
+          "columns": ["parentId", "name"]
         }
       },
       "policies": {},
@@ -500,12 +466,8 @@
           "name": "da-box_sessions_table_userId_da-box_users_table_id_fk",
           "tableFrom": "da-box_sessions_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -572,12 +534,8 @@
           "name": "da-box_shared_table_ownerId_da-box_users_table_id_fk",
           "tableFrom": "da-box_shared_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "ownerId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ownerId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -585,12 +543,8 @@
           "name": "da-box_shared_table_sharedWithId_da-box_users_table_id_fk",
           "tableFrom": "da-box_shared_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "sharedWithId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sharedWithId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -598,12 +552,8 @@
           "name": "da-box_shared_table_fileId_da-box_files_table_id_fk",
           "tableFrom": "da-box_shared_table",
           "tableTo": "da-box_files_table",
-          "columnsFrom": [
-            "fileId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fileId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -611,12 +561,8 @@
           "name": "da-box_shared_table_folderId_da-box_folders_table_id_fk",
           "tableFrom": "da-box_shared_table",
           "tableTo": "da-box_folders_table",
-          "columnsFrom": [
-            "folderId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["folderId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -626,18 +572,12 @@
         "unique_file_share": {
           "name": "unique_file_share",
           "nullsNotDistinct": false,
-          "columns": [
-            "sharedWithId",
-            "fileId"
-          ]
+          "columns": ["sharedWithId", "fileId"]
         },
         "unique_folder_share": {
           "name": "unique_folder_share",
           "nullsNotDistinct": false,
-          "columns": [
-            "sharedWithId",
-            "folderId"
-          ]
+          "columns": ["sharedWithId", "folderId"]
         }
       },
       "policies": {},
@@ -680,12 +620,8 @@
           "name": "da-box_starred_table_userId_da-box_users_table_id_fk",
           "tableFrom": "da-box_starred_table",
           "tableTo": "da-box_users_table",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -693,12 +629,8 @@
           "name": "da-box_starred_table_fileId_da-box_files_table_id_fk",
           "tableFrom": "da-box_starred_table",
           "tableTo": "da-box_files_table",
-          "columnsFrom": [
-            "fileId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fileId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -706,12 +638,8 @@
           "name": "da-box_starred_table_folderId_da-box_folders_table_id_fk",
           "tableFrom": "da-box_starred_table",
           "tableTo": "da-box_folders_table",
-          "columnsFrom": [
-            "folderId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["folderId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -721,18 +649,12 @@
         "unique_star_file": {
           "name": "unique_star_file",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId",
-            "fileId"
-          ]
+          "columns": ["userId", "fileId"]
         },
         "unique_star_folder": {
           "name": "unique_star_folder",
           "nullsNotDistinct": false,
-          "columns": [
-            "userId",
-            "folderId"
-          ]
+          "columns": ["userId", "folderId"]
         }
       },
       "policies": {},
@@ -799,16 +721,12 @@
         "da-box_users_table_email_unique": {
           "name": "da-box_users_table_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "username_unique_index": {
           "name": "username_unique_index",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -851,10 +769,7 @@
     "public.permission": {
       "name": "permission",
       "schema": "public",
-      "values": [
-        "view",
-        "edit"
-      ]
+      "values": ["view", "edit"]
     }
   },
   "schemas": {},

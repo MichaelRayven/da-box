@@ -1,6 +1,6 @@
+import { RedirectType, redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { SignInDialog } from "./dialog";
-import { redirect, RedirectType } from "next/navigation";
 
 export default async function SignInPage() {
   const session = await auth();

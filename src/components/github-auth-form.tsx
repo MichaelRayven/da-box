@@ -2,8 +2,8 @@
 
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { Button } from "./ui/button";
 import { cn } from "~/lib/utils";
+import { Button } from "./ui/button";
 
 interface GithubAuthFormProps {
   className?: string;

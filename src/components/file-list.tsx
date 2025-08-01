@@ -9,11 +9,11 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { FileType, FolderType } from "~/lib/interface";
+import { useContextMenuStore } from "~/lib/store/context-menu";
 import { DeleteDialog } from "./delete-dialog";
 import { FileRow, FolderRow } from "./file-row";
 import { RenameDialog } from "./rename-dialog";
 import { ShareDialog } from "./share-dialog";
-import { useContextMenuStore } from "~/lib/store/context-menu";
 
 export default function FileList({
   folders,

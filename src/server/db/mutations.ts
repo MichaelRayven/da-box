@@ -1,19 +1,19 @@
 import "server-only";
 
 import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import * as ERRORS from "~/lib/errors";
+import type { Result } from "~/lib/interface";
+import { isUniqueConstraintViolation } from "~/lib/utils";
 import { db } from "~/server/db";
+import * as QUERIES from "./queries";
 import {
-  folders as foldersSchema,
   files as filesSchema,
-  users,
+  folders as foldersSchema,
   shared,
   starred,
+  users,
 } from "./schema";
-import { isUniqueConstraintViolation } from "~/lib/utils";
-import type { Result } from "~/lib/interface";
 import { handleError, handleSuccess } from "./utils";
-import * as QUERIES from "./queries";
-import * as ERRORS from "~/lib/errors";
 
 /**
  * Update user profile data.

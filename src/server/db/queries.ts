@@ -1,7 +1,8 @@
 import "server-only";
 
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import * as ERRORS from "~/lib/errors";
-import { and, eq, isNull, desc, or } from "drizzle-orm";
+import type { Result } from "~/lib/interface";
 import { db } from "~/server/db";
 import {
   files as filesSchema,
@@ -10,7 +11,6 @@ import {
   starred,
   users,
 } from "~/server/db/schema";
-import type { Result } from "~/lib/interface";
 import { handleError } from "./utils";
 
 /**
