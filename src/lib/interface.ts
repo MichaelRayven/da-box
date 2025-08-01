@@ -27,6 +27,7 @@ export type FileType = {
   trashed: boolean;
   starred: boolean;
   ownerId: string;
+  parentId: string;
 };
 
 export type FolderType = {
