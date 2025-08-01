@@ -20,7 +20,7 @@ import { handleError } from "./utils";
  */
 export async function getParentsForFolder(
   folderId: string,
-  userId: string,
+  userId: string
 ): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
   const parents: (typeof foldersSchema.$inferSelect)[] = [];
   let currentId: string | null = folderId;
@@ -37,8 +37,8 @@ export async function getParentsForFolder(
           shared,
           and(
             eq(shared.folderId, foldersSchema.id),
-            eq(shared.sharedWithId, userId),
-          ),
+            eq(shared.sharedWithId, userId)
+          )
         )
         .where(eq(foldersSchema.id, currentId));
 
@@ -68,7 +68,7 @@ export async function getParentsForFolder(
  * @returns Folder or error if not found.
  */
 export async function getFolderById(
-  folderId: string,
+  folderId: string
 ): Promise<Result<typeof foldersSchema.$inferSelect>> {
   return db.query.folders
     .findFirst({
@@ -88,7 +88,7 @@ export async function getFolderById(
  * @returns File or error if not found.
  */
 export async function getFileById(
-  fileId: string,
+  fileId: string
 ): Promise<Result<typeof filesSchema.$inferSelect>> {
   return db.query.files
     .findFirst({
@@ -108,13 +108,13 @@ export async function getFileById(
  * @returns Root folder with subfolders or error if not found.
  */
 export async function getRootFolderForUser(
-  userId: string,
+  userId: string
 ): Promise<Result<typeof foldersSchema.$inferSelect>> {
   return db.query.folders
     .findFirst({
       where: and(
         eq(foldersSchema.ownerId, userId),
-        isNull(foldersSchema.parentId),
+        isNull(foldersSchema.parentId)
       ),
     })
     .then((folder) => {
@@ -134,7 +134,7 @@ export async function getFiles(folderId: string, userId: string) {
     .findMany({
       where: and(
         eq(filesSchema.parentId, folderId),
-        eq(filesSchema.trashed, false),
+        eq(filesSchema.trashed, false)
       ),
       with: {
         starred: {
@@ -151,7 +151,7 @@ export async function getFolders(folderId: string, userId: string) {
     .findMany({
       where: and(
         eq(foldersSchema.parentId, folderId),
-        eq(foldersSchema.trashed, false),
+        eq(foldersSchema.trashed, false)
       ),
       with: {
         starred: {
@@ -230,7 +230,7 @@ export async function getSharedWithForFile({
       fileId,
       file.ownerId,
       userId,
-      "share",
+      "share"
     );
     if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
 
@@ -292,7 +292,7 @@ export async function getSharedWithForFolder({
       folderId,
       folder.ownerId,
       userId,
-      "share",
+      "share"
     );
     if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
 
@@ -328,7 +328,7 @@ export async function getSharedWithForFolder({
  * @returns Array of subfolders with their files.
  */
 export async function getAllNestedFolders(
-  folderId: string,
+  folderId: string
 ): Promise<Result<(typeof foldersSchema.$inferSelect)[]>> {
   const allFolders = [];
   const queue: string[] = [folderId];
@@ -349,7 +349,7 @@ export async function getAllNestedFolders(
 }
 
 export async function getAllNestedFiles(
-  folderId: string,
+  folderId: string
 ): Promise<Result<(typeof filesSchema.$inferSelect)[]>> {
   const allFiles: (typeof filesSchema.$inferSelect)[] = [];
   const queue: string[] = [folderId];
@@ -394,14 +394,14 @@ export async function getStarredForUser(userId: string): Promise<
     .from(starred)
     .leftJoin(
       filesSchema,
-      and(eq(starred.fileId, filesSchema.id), eq(filesSchema.trashed, false)),
+      and(eq(starred.fileId, filesSchema.id), eq(filesSchema.trashed, false))
     )
     .leftJoin(
       foldersSchema,
       and(
         eq(starred.folderId, foldersSchema.id),
-        eq(foldersSchema.trashed, false),
-      ),
+        eq(foldersSchema.trashed, false)
+      )
     )
     .where(eq(starred.userId, userId))
     .then((results) => {
@@ -414,25 +414,37 @@ export async function getStarredForUser(userId: string): Promise<
 
 export async function getTrashedForUser(userId: string): Promise<
   Result<{
-    files: (typeof filesSchema.$inferSelect)[];
-    folders: (typeof foldersSchema.$inferSelect)[];
+    files: (typeof filesSchema.$inferSelect & {
+      starred: (typeof starred.$inferSelect)[];
+    })[];
+    folders: (typeof foldersSchema.$inferSelect & {
+      starred: (typeof starred.$inferSelect)[];
+    })[];
   }>
 > {
   return Promise.all([
-    db
-      .select()
-      .from(filesSchema)
-      .where(
-        and(eq(filesSchema.ownerId, userId), eq(filesSchema.trashed, true)),
-      )
-      .catch(() => []),
-    db
-      .select()
-      .from(foldersSchema)
-      .where(
-        and(eq(foldersSchema.ownerId, userId), eq(foldersSchema.trashed, true)),
-      )
-      .catch(() => []),
+    db.query.files.findMany({
+      where: and(
+        eq(filesSchema.ownerId, userId),
+        eq(filesSchema.trashed, true)
+      ),
+      with: {
+        starred: {
+          where: eq(starred.userId, userId),
+        },
+      },
+    }),
+    db.query.folders.findMany({
+      where: and(
+        eq(foldersSchema.ownerId, userId),
+        eq(foldersSchema.trashed, true)
+      ),
+      with: {
+        starred: {
+          where: eq(starred.userId, userId),
+        },
+      },
+    }),
   ])
     .then(([files, folders]) => ({
       success: true as const,
@@ -449,7 +461,7 @@ async function hasAccessToResource(
   resourceId: string,
   ownerId: string,
   userId: string,
-  action: Action,
+  action: Action
 ): Promise<boolean> {
   if (ownerId === userId) return true;
   if (action === "share") return false;
@@ -457,7 +469,7 @@ async function hasAccessToResource(
   const share = await db.query.shared.findFirst({
     where: and(
       eq(type === "file" ? shared.fileId : shared.folderId, resourceId),
-      eq(shared.sharedWithId, userId),
+      eq(shared.sharedWithId, userId)
     ),
   });
 
@@ -489,7 +501,7 @@ export async function requestFileFor({
     fileId,
     file.ownerId,
     userId,
-    action,
+    action
   );
 
   if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
@@ -515,7 +527,7 @@ export async function requestFolderFor({
     folderId,
     folder.ownerId,
     userId,
-    action,
+    action
   );
 
   if (!allowed) return { success: false, error: ERRORS.FORBIDDEN };
@@ -524,7 +536,7 @@ export async function requestFolderFor({
 }
 
 export async function getUserByEmail(
-  email: string,
+  email: string
 ): Promise<
   Result<{ id: string; username: string; email: string; image?: string }>
 > {
@@ -549,14 +561,14 @@ export async function getUserByEmail(
 
 export async function fileExists(
   name: string,
-  parentId: string,
+  parentId: string
 ): Promise<boolean> {
   try {
     const existing = await db.query.files.findFirst({
       where: and(
         eq(filesSchema.name, name),
         eq(filesSchema.parentId, parentId),
-        eq(filesSchema.trashed, false),
+        eq(filesSchema.trashed, false)
       ),
     });
 
@@ -568,14 +580,14 @@ export async function fileExists(
 
 export async function folderExists(
   name: string,
-  parentId: string,
+  parentId: string
 ): Promise<boolean> {
   try {
     const existing = await db.query.folders.findFirst({
       where: and(
         eq(foldersSchema.name, name),
         eq(foldersSchema.parentId, parentId),
-        eq(foldersSchema.trashed, false),
+        eq(foldersSchema.trashed, false)
       ),
     });
 

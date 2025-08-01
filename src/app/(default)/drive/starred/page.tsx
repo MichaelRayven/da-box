@@ -26,10 +26,12 @@ export default async function StarredFolderPage() {
       files={starred.data.files.map((f) => ({
         ...f,
         url: `/drive/files/${f.id}`,
+        starred: true,
       }))}
       folders={starred.data.folders.map((f) => ({
         ...f,
         url: `/drive/folders/${f.id}`,
+        starred: true,
       }))}
     />
   );

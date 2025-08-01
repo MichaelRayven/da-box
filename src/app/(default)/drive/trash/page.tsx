@@ -27,10 +27,12 @@ export default async function TrashFolderPage() {
       files={trashed.data.files.map((f) => ({
         ...f,
         url: `/drive/files/${f.id}`,
+        starred: f.starred.length > 0,
       }))}
       folders={trashed.data.folders.map((f) => ({
         ...f,
         url: `/drive/folders/${f.id}`,
+        starred: f.starred.length > 0,
       }))}
     />
   );
